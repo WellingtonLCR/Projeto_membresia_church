@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block titulo %}Usuários{% endblock %}
+
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Usuários do sistema</h1>
+    <a href="{{ url_for('inserir_usuario') }}" class="btn btn-primary">Novo Usuário</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover table-bordered bg-white">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Perfil</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>{{ usuario.id }}</td>
+                <td>{{ usuario.nome }}</td>
+                <td>{{ usuario.email }}</td>
+                <td>{{ usuario.perfil }}</td>
+                <td>{{ usuario.status }}</td>
+                <td>
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}">Editar</a>
+                    <a class="btn btn-sm btn-outline-danger btn-excluir" href="{{ url_for('excluir_usuario', usuario_id=usuario.id) }}">Excluir</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+
