@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pt-BR">
 
 <head>
@@ -13,21 +13,22 @@
 </head>
 
 <body class="app-shell d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg church-nav shadow-sm">
+    <nav class="navbar navbar-expand-lg church-nav shadow-sm sticky-top" aria-label="Navegação pública">
         <div class="container">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ url_for('index') }}">
                 <img src="{{ url_for('static', filename='imgs/logo_church.png') }}" alt="Logo Igreja Viva" class="brand-logo">
-                <span>Igreja Viva • Sistema de Membresia</span>
+                <span>Igreja Viva • Membresia</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarPublica">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarPublica" aria-controls="navbarPublica" aria-expanded="false" aria-label="Abrir menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarPublica">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Início</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('cadastro') }}">Cadastro</a></li>
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">Início</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'equipe' %}active{% endif %}" href="{{ url_for('equipe') }}">Equipe</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'login' %}active{% endif %}" href="{{ url_for('login') }}">Login</a></li>
+                    <li class="nav-item ms-lg-2"><a class="btn btn-light btn-sm" href="{{ url_for('cadastro') }}">Criar conta</a></li>
                 </ul>
             </div>
         </div>
@@ -36,12 +37,14 @@
     <main class="container py-4 flex-grow-1">
         {% with messages = get_flashed_messages(with_categories=True) %}
         {% if messages %}
-        {% for categoria, mensagem in messages %}
-        <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
-            {{ mensagem }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="toast-stack" aria-live="polite" aria-atomic="true">
+            {% for categoria, mensagem in messages %}
+            <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                {{ mensagem }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
         {% endif %}
         {% endwith %}
 
@@ -53,6 +56,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    </body>
+</body>
 
 </html>

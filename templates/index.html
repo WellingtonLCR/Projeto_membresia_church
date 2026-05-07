@@ -3,45 +3,78 @@
 {% block titulo %}Início • Igreja Viva{% endblock %}
 
 {% block conteudo %}
-<section class="p-5 mb-4 hero-panel shadow-sm border">
-    <div class="container-fluid py-3">
-        <h1 class="display-6 fw-bold">Sistema de Membresia da Igreja Viva</h1>
-        <p class="col-md-10 fs-5">Uma plataforma simples para organizar membros, ministérios e usuários administrativos
-            da igreja local.</p>
-        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg me-2">Entrar no Sistema</a>
-        <a href="{{ url_for('cadastro') }}" class="btn btn-outline-primary btn-lg">Cadastrar-se</a>
+<section class="hero-panel hero-panel--landing shadow-sm border overflow-hidden">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <span class="eyebrow">Cuidado pastoral com organização</span>
+            <h1 class="display-5 fw-bold mt-2">Sistema de Membresia da Igreja Viva</h1>
+            <p class="lead text-muted mb-4">Centralize membros, ministérios e usuários administrativos em uma experiência simples, acolhedora e responsiva para a rotina da igreja local.</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Entrar no sistema</a>
+                <a href="{{ url_for('cadastro') }}" class="btn btn-outline-primary btn-lg">Criar cadastro</a>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="insight-card">
+                <p class="text-uppercase small fw-bold text-muted mb-3">Visão geral</p>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="metric-tile">
+                            <strong>{{ metricas.membros_ativos }}</strong>
+                            <span>Membros ativos</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="metric-tile">
+                            <strong>{{ metricas.ministerios }}</strong>
+                            <span>Ministérios</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="metric-tile">
+                            <strong>{{ metricas.visitantes }}</strong>
+                            <span>Visitantes</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="metric-tile">
+                            <strong>{{ metricas.vagas }}</strong>
+                            <span>Vagas abertas</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
-<section class="row g-4">
+<section class="row g-4 mt-1">
     <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
+        <div class="card h-100 feature-card">
             <div class="card-body">
-                <h5 class="card-title">Gestão de membros</h5>
-                <p class="card-text">Acompanhe dados de contato e participação em ministérios para fortalecer o cuidado
-                    pastoral.</p>
+                <span class="feature-icon">♥</span>
+                <h2 class="h5 card-title mt-3">Gestão de membros</h2>
+                <p class="card-text text-muted">Acompanhe dados de contato, situação atual e participação em ministérios para fortalecer o cuidado pastoral.</p>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
+        <div class="card h-100 feature-card">
             <div class="card-body">
-                <h5 class="card-title">Organização ministerial</h5>
-                <p class="card-text">Cadastre ministérios, líderes responsáveis e disponibilidade de vagas para
-                    voluntários.</p>
+                <span class="feature-icon">✦</span>
+                <h2 class="h5 card-title mt-3">Organização ministerial</h2>
+                <p class="card-text text-muted">Cadastre ministérios, líderes responsáveis, dias de reunião e disponibilidade de vagas para voluntários.</p>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
+        <div class="card h-100 feature-card">
             <div class="card-body">
-                <h5 class="card-title">Equipe administrativa</h5>
-                <p class="card-text">Controle de usuários internos com perfis e status para garantir segurança e
-                    governança.</p>
+                <span class="feature-icon">✓</span>
+                <h2 class="h5 card-title mt-3">Governança simples</h2>
+                <p class="card-text text-muted">Controle usuários internos com perfis, status e validações básicas para manter a operação mais segura.</p>
             </div>
         </div>
     </div>
 </section>
 {% endblock %}
-
-

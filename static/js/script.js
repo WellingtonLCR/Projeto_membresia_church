@@ -1,35 +1,33 @@
-//Confirmacao visual para Buttons de exclusao
-document.querySelectorAll('.btn-excluir').forEach(botao => {
+document.querySelectorAll('.btn-excluir').forEach((botao) => {
     botao.addEventListener('click', (evento) => {
-        const confirmou = window.confirm('Tem certeza que deseja excluir?')
+        const mensagem = botao.dataset.confirmMessage || 'Tem certeza que deseja excluir este registro?';
+        const confirmou = window.confirm(mensagem);
+
         if (!confirmou) {
             evento.preventDefault();
         }
     });
 });
 
-//Aviso temporario para botoes de editar (rota ainda nao implementada)
-document.querySelectorAll('.btn-editar').forEach(botao => {
-    botao.addEventListener('click', () => {
-        window.alert('Funcionalidade de edicao em desenvolvimento.');
-    });
-});
-
 const campoSenha = document.getElementById('senha');
-const forcasenha = document.getElementById('forca-senha');
+const forcaSenha = document.getElementById('forca-senha');
 
-//indica o nivel de seguranca da senha
-if (campoSenha && forcasenha) {
+if (campoSenha && forcaSenha) {
     campoSenha.addEventListener('input', () => {
         const valor = campoSenha.value;
         let nivel = 'Senha fraca';
+        let classe = 'is-weak';
 
         if (valor.length >= 8 && /[A-Z]/.test(valor) && /\d/.test(valor)) {
             nivel = 'Senha forte';
-        } else if (valor.length >= 6) {
+            classe = 'is-strong';
+        } else if (valor.length >= 8 || (valor.length >= 6 && /\d/.test(valor))) {
             nivel = 'Senha média';
+            classe = 'is-medium';
         }
 
-        forcasenha.textContent = `Força da senha: ${nivel}`;
+        forcaSenha.classList.remove('is-weak', 'is-medium', 'is-strong');
+        forcaSenha.classList.add(classe);
+        forcaSenha.textContent = `Força da senha: ${nivel}`;
     });
 }

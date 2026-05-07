@@ -25,8 +25,9 @@
         <div class="col-md-6">
             <label for="status" class="form-label">Status</label>
             <select class="form-select" id="status" name="status" required>
-                <option value="Ativo" {% if usuario.status == 'Ativo' %}selected{% endif %}>Ativo</option>
-                <option value="Inativo" {% if usuario.status == 'Inativo' %}selected{% endif %}>Inativo</option>
+                {% for status in status_opcoes %}
+                <option value="{{ status }}" {% if status == usuario.status %}selected{% endif %}>{{ status }}</option>
+                {% endfor %}
             </select>
         </div>
     </div>
