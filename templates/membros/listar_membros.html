@@ -1,43 +1,72 @@
 {% extends "base.html" %}
 
-{% block titulo %}Membros{% endblock %}
+{% block titulo %}Membros • Painel{% endblock %}
 
 {% block conteudo %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Membros da igreja</h1>
-    <a href="{{ url_for('inserir_membro') }}" class="btn btn-primary">Novo Membro</a>
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Pessoas</span>
+        <h1 class="h2 mb-1">Membros da igreja</h1>
+        <p class="text-muted mb-0">Acompanhe contatos, ministérios e situação de cada pessoa cadastrada.</p>
+    </div>
+    <a href="{{ url_for('inserir_membro') }}" class="btn btn-primary">Novo membro</a>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-hover table-bordered bg-white">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Nome</th>
-                <th>Telefone</th>
-                <th>Ministério</th>
-                <th>Situação</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for membro in membros %}
-            <tr>
-                <td>{{ membro.id }}</td>
-                <td>{{ membro.nome }}</td>
-                <td>{{ membro.telefone }}</td>
-                <td>{{ membro.ministerio }}</td>
-                <td>{{ membro.situacao }}</td>
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="metric-card"><span>Membros ativos</span><strong>{{ metricas.membros_ativos }}</strong></div>
+    </div>
+    <div class="col-md-4">
+        <div class="metric-card"><span>Visitantes</span><strong>{{ metricas.visitantes }}</strong></div>
+    </div>
+    <div class="col-md-4">
+        <div class="metric-card"><span>Total cadastrado</span><strong>{{ total }}</strong></div>
+    </div>
+</div>
 
-                <td>
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('editar_membro', membro_id=membro.id) }}">Editar</a>
-                    <a class="btn btn-sm btn-outline-danger btn-excluir" href="{{ url_for('excluir_membro', membro_id=membro.id) }}">Excluir</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="card data-card">
+    <div class="card-body">
+        <form class="row g-2 align-items-center mb-3" method="get">
+            <div class="col-md-9">
+                <label class="visually-hidden" for="busca">Buscar membros</label>
+                <input class="form-control" id="busca" type="search" name="q" value="{{ busca }}" placeholder="Buscar por nome, telefone, ministério ou situação">
+            </div>
+            <div class="col-md-3 d-grid d-md-flex gap-2 justify-content-md-end">
+                <button class="btn btn-outline-primary" type="submit">Buscar</button>
+                {% if busca %}<a class="btn btn-outline-secondary" href="{{ url_for('listar_membros') }}">Limpar</a>{% endif %}
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>Ministério</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for membro in membros %}
+                    <tr>
+                        <td class="text-muted">#{{ membro.id }}</td>
+                        <td class="fw-semibold">{{ membro.nome }}</td>
+                        <td>{{ membro.telefone }}</td>
+                        <td>{{ membro.ministerio }}</td>
+                        <td><span class="badge rounded-pill badge-status badge-{{ membro.situacao|lower }}">{{ membro.situacao }}</span></td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('editar_membro', membro_id=membro.id) }}">Editar</a>
+                            <a class="btn btn-sm btn-outline-danger btn-excluir" data-confirm-message="Deseja excluir o membro {{ membro.nome }}?" href="{{ url_for('excluir_membro', membro_id=membro.id) }}">Excluir</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Nenhum membro encontrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
-
-

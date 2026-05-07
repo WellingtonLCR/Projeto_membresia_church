@@ -1,32 +1,29 @@
 {% extends "base_publica.html" %}
 
-{% block titulo %}Login{% endblock %}
+{% block titulo %}Login • Igreja Viva{% endblock %}
 
 {% block conteudo %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h2 class="h4 mb-3">Acessar sistema</h2>
-                <form method="post">
+<div class="row justify-content-center align-items-center auth-page">
+    <div class="col-lg-5">
+        <div class="card auth-card">
+            <div class="card-body p-4 p-lg-5">
+                <span class="eyebrow">Área administrativa</span>
+                <h1 class="h3 mt-2 mb-2">Acessar sistema</h1>
+                <p class="text-muted mb-4">Entre com seu e-mail institucional para gerenciar membros e ministérios.</p>
+                <form method="post" novalidate>
                     <div class="mb-3">
                         <label for="email" class="form-label">E-mail</label>
-                        <input type="email" class="form-control" id="email" name="email"
-                            placeholder="seuemail@igreja.org" required>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="seuemail@igreja.org" autocomplete="email" required>
                     </div>
                     <div class="mb-3">
                         <label for="senha" class="form-label">Senha</label>
-                        <input type="password" class="form-control" id="senha" name="senha"
-                            placeholder="Digite sua senha" required>
+                        <input type="password" class="form-control" id="senha" name="senha" placeholder="Digite sua senha" autocomplete="current-password" required>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Entrar</button>
                 </form>
-                <p class="mt-3 mb-0 text-center">Não possui conta? <a
-                        href="{{ url_for('cadastro') }}">Cadastre-se</a></p>
+                <p class="mt-3 mb-0 text-center">Não possui conta? <a href="{{ url_for('cadastro') }}">Cadastre-se</a></p>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-
-

@@ -1,42 +1,60 @@
 {% extends "base.html" %}
 
-{% block titulo %}Usuários{% endblock %}
+{% block titulo %}Usuários • Painel{% endblock %}
 
 {% block conteudo %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Usuários do sistema</h1>
-    <a href="{{ url_for('inserir_usuario') }}" class="btn btn-primary">Novo Usuário</a>
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Acesso</span>
+        <h1 class="h2 mb-1">Usuários do sistema</h1>
+        <p class="text-muted mb-0">Gerencie perfis, status e dados de acesso da equipe administrativa.</p>
+    </div>
+    <a href="{{ url_for('inserir_usuario') }}" class="btn btn-primary">Novo usuário</a>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-hover table-bordered bg-white">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Perfil</th>
-                <th>Status</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for usuario in usuarios %}
-            <tr>
-                <td>{{ usuario.id }}</td>
-                <td>{{ usuario.nome }}</td>
-                <td>{{ usuario.email }}</td>
-                <td>{{ usuario.perfil }}</td>
-                <td>{{ usuario.status }}</td>
-                <td>
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}">Editar</a>
-                    <a class="btn btn-sm btn-outline-danger btn-excluir" href="{{ url_for('excluir_usuario', usuario_id=usuario.id) }}">Excluir</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="card data-card">
+    <div class="card-body">
+        <form class="row g-2 align-items-center mb-3" method="get">
+            <div class="col-md-9">
+                <label class="visually-hidden" for="busca">Buscar usuários</label>
+                <input class="form-control" id="busca" type="search" name="q" value="{{ busca }}" placeholder="Buscar por nome, e-mail, perfil ou status">
+            </div>
+            <div class="col-md-3 d-grid d-md-flex gap-2 justify-content-md-end">
+                <button class="btn btn-outline-primary" type="submit">Buscar</button>
+                {% if busca %}<a class="btn btn-outline-secondary" href="{{ url_for('listar_usuarios') }}">Limpar</a>{% endif %}
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                        <th>Perfil</th>
+                        <th>Status</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td class="text-muted">#{{ usuario.id }}</td>
+                        <td class="fw-semibold">{{ usuario.nome }}</td>
+                        <td>{{ usuario.email }}</td>
+                        <td>{{ usuario.perfil }}</td>
+                        <td><span class="badge rounded-pill badge-status badge-{{ usuario.status|lower }}">{{ usuario.status }}</span></td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}">Editar</a>
+                            <a class="btn btn-sm btn-outline-danger btn-excluir" data-confirm-message="Deseja excluir o usuário {{ usuario.nome }}?" href="{{ url_for('excluir_usuario', usuario_id=usuario.id) }}">Excluir</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Nenhum usuário encontrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
-
-
