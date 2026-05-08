@@ -33,6 +33,7 @@
                         <th>E-mail</th>
                         <th>Perfil</th>
                         <th>Status</th>
+                        <th>Último acesso</th>
                         <th class="text-end">Ações</th>
                     </tr>
                 </thead>
@@ -44,13 +45,14 @@
                         <td>{{ usuario.email }}</td>
                         <td>{{ usuario.perfil }}</td>
                         <td><span class="badge rounded-pill badge-status badge-{{ usuario.status|lower }}">{{ usuario.status }}</span></td>
+                        <td>{{ usuario.ultimo_acesso or "Nunca acessou" }}</td>
                         <td class="text-end">
                             <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}">Editar</a>
-                            <a class="btn btn-sm btn-outline-danger btn-excluir" data-confirm-message="Deseja excluir o usuário {{ usuario.nome }}?" href="{{ url_for('excluir_usuario', usuario_id=usuario.id) }}">Excluir</a>
+                            <a class="btn btn-sm btn-outline-danger btn-excluir" data-confirm-message="Deseja inativar o usuário {{ usuario.nome }}? O registro permanecerá preservado." href="{{ url_for('excluir_usuario', usuario_id=usuario.id) }}">Excluir lógico</a>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6" class="text-center text-muted py-4">Nenhum usuário encontrado.</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted py-4">Nenhum usuário encontrado.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

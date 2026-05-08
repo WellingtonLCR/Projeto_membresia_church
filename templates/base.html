@@ -15,7 +15,7 @@
 <body class="app-shell d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg church-nav church-nav--dark shadow-sm sticky-top" aria-label="Navegação principal">
         <div class="container">
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ url_for('listar_membros') }}">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ url_for('dashboard') }}">
                 <img src="{{ url_for('static', filename='imgs/logo_church.png') }}" alt="Logo Igreja Viva" class="brand-logo">
                 <span>Painel • Igreja Viva</span>
             </a>
@@ -25,13 +25,38 @@
 
             <div class="collapse navbar-collapse" id="navbarPrivada">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint in ['listar_membros', 'inserir_membro', 'editar_membro'] %}active{% endif %}" href="{{ url_for('listar_membros') }}">Membros</a></li>
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint in ['listar_ministerios', 'inserir_ministerio', 'editar_ministerio'] %}active{% endif %}" href="{{ url_for('listar_ministerios') }}">Ministérios</a></li>
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint in ['listar_usuarios', 'inserir_usuario', 'editar_usuario'] %}active{% endif %}" href="{{ url_for('listar_usuarios') }}">Usuários</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint in ['listar_membros', 'listar_visitantes', 'inserir_membro', 'editar_membro', 'historico_membro', 'listar_presencas'] %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Pessoas</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('listar_membros') }}">Membros</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('listar_visitantes') }}">Visitantes</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('listar_presencas') }}">Presença</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint in ['listar_ministerios', 'inserir_ministerio', 'editar_ministerio', 'listar_celulas', 'listar_eventos'] %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Organização</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('listar_ministerios') }}">Ministérios</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('listar_celulas') }}">Células</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('listar_eventos') }}">Eventos</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint in ['listar_financeiro', 'listar_comunicacao', 'listar_relatorios', 'listar_usuarios', 'inserir_usuario', 'editar_usuario', 'listar_configuracoes'] %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Gestão</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('listar_financeiro') }}">Financeiro</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('listar_comunicacao') }}">Comunicação</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('listar_relatorios') }}">Relatórios</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('listar_usuarios') }}">Usuários</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('listar_configuracoes') }}">Configurações</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'equipe' %}active{% endif %}" href="{{ url_for('equipe') }}">Equipe</a></li>
                 </ul>
                 <div class="d-flex align-items-center gap-3">
-                    <span class="user-pill d-none d-lg-inline-flex">{{ usuario_logado }}</span>
+                    <span class="user-pill d-none d-lg-inline-flex">{{ usuario_nome or usuario_logado }}{% if usuario_perfil %} • {{ usuario_perfil }}{% endif %}</span>
                     <a class="btn btn-outline-light btn-sm" href="{{ url_for('logout') }}">Logout</a>
                 </div>
             </div>

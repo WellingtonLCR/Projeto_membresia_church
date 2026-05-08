@@ -7,30 +7,42 @@
     <div>
         <span class="eyebrow">Serviço</span>
         <h1 class="h2 mb-1">Ministérios</h1>
-        <p class="text-muted mb-0">Gerencie líderes, dias de reunião e vagas para voluntários.</p>
+        <p class="text-muted mb-0">Gerencie líderes, participantes, atividades, status e relatórios por ministério.</p>
     </div>
     <a href="{{ url_for('inserir_ministerio') }}" class="btn btn-primary">Novo ministério</a>
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="metric-card"><span>Ministérios cadastrados</span><strong>{{ total }}</strong></div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
+        <div class="metric-card"><span>Ministérios ativos</span><strong>{{ metricas.ministerios }}</strong></div>
+    </div>
+    <div class="col-md-4">
         <div class="metric-card"><span>Vagas disponíveis</span><strong>{{ metricas.vagas }}</strong></div>
     </div>
 </div>
 
 <div class="card data-card">
     <div class="card-body">
-        <form class="row g-2 align-items-center mb-3" method="get">
-            <div class="col-md-9">
-                <label class="visually-hidden" for="busca">Buscar ministérios</label>
-                <input class="form-control" id="busca" type="search" name="q" value="{{ busca }}" placeholder="Buscar por ministério, líder, dia ou vagas">
+        <form class="row g-2 align-items-end mb-3" method="get">
+            <div class="col-lg-7">
+                <label class="form-label" for="busca">Buscar</label>
+                <input class="form-control" id="busca" type="search" name="q" value="{{ busca }}" placeholder="Buscar por ministério, líder, dia, vagas ou status">
             </div>
-            <div class="col-md-3 d-grid d-md-flex gap-2 justify-content-md-end">
-                <button class="btn btn-outline-primary" type="submit">Buscar</button>
-                {% if busca %}<a class="btn btn-outline-secondary" href="{{ url_for('listar_ministerios') }}">Limpar</a>{% endif %}
+            <div class="col-lg-3">
+                <label class="form-label" for="status">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Todos</option>
+                    {% for status in status_opcoes %}
+                    <option value="{{ status }}" {% if status == status_atual %}selected{% endif %}>{{ status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 d-grid d-lg-flex gap-2 justify-content-lg-end">
+                <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+                {% if busca or status_atual %}<a class="btn btn-outline-secondary" href="{{ url_for('listar_ministerios') }}">Limpar</a>{% endif %}
             </div>
         </form>
         <div class="table-responsive">
@@ -41,7 +53,9 @@
                         <th>Nome</th>
                         <th>Líder</th>
                         <th>Dia de reunião</th>
+                        <th>Participantes</th>
                         <th>Vagas</th>
+                        <th>Status</th>
                         <th class="text-end">Ações</th>
                     </tr>
                 </thead>
@@ -52,14 +66,16 @@
                         <td class="fw-semibold">{{ ministerio.nome }}</td>
                         <td>{{ ministerio.lider }}</td>
                         <td>{{ ministerio.dia_reuniao }}</td>
+                        <td>{{ ministerio.participantes|length }}</td>
                         <td><span class="badge rounded-pill text-bg-light">{{ ministerio.vagas }} vagas</span></td>
+                        <td><span class="badge rounded-pill badge-status badge-{{ ministerio.status|lower }}">{{ ministerio.status }}</span></td>
                         <td class="text-end">
                             <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('editar_ministerio', ministerio_id=ministerio.id) }}">Editar</a>
-                            <a class="btn btn-sm btn-outline-danger btn-excluir" data-confirm-message="Deseja excluir o ministério {{ ministerio.nome }}?" href="{{ url_for('excluir_ministerio', ministerio_id=ministerio.id) }}">Excluir</a>
+                            <a class="btn btn-sm btn-outline-danger btn-excluir" data-confirm-message="Deseja inativar o ministério {{ ministerio.nome }}? O registro permanecerá preservado." href="{{ url_for('excluir_ministerio', ministerio_id=ministerio.id) }}">Excluir lógico</a>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6" class="text-center text-muted py-4">Nenhum ministério encontrado.</td></tr>
+                    <tr><td colspan="8" class="text-center text-muted py-4">Nenhum ministério encontrado.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

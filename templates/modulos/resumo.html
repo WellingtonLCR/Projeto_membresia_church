@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ titulo }} • Painel{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Módulo</span>
+        <h1 class="h2 mb-1">{{ titulo }}</h1>
+        <p class="text-muted mb-0">{{ subtitulo }}</p>
+    </div>
+</div>
+
+{% if cards %}
+<div class="row g-3 mb-4">
+    {% for card in cards %}
+    <div class="col-md-4">
+        <div class="metric-card"><span>{{ card.label }}</span><strong>{{ card.valor }}</strong></div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card data-card">
+    <div class="card-body">
+        {% if filtros %}
+        <form class="row g-2 align-items-end mb-3" method="get">
+            {% for filtro in filtros %}
+            <div class="col-md-5">
+                <label class="form-label" for="{{ filtro.name }}">{{ filtro.label }}</label>
+                <input class="form-control" id="{{ filtro.name }}" type="{{ filtro.type }}" name="{{ filtro.name }}" value="{{ filtro.value }}" placeholder="{{ filtro.placeholder }}">
+            </div>
+            {% endfor %}
+            <div class="col-md-2 d-grid d-md-flex gap-2">
+                <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+                <a class="btn btn-outline-secondary" href="{{ request.path }}">Limpar</a>
+            </div>
+        </form>
+        {% endif %}
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        {% for cabecalho in cabecalhos %}
+                        <th>{{ cabecalho }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for linha in linhas %}
+                    <tr>
+                        {% for valor in linha %}
+                        <td>{{ valor }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="{{ cabecalhos|length }}" class="text-center text-muted py-4">Nenhum registro encontrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

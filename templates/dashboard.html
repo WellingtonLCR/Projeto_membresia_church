@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dashboard • Igreja Viva{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Visão geral</span>
+        <h1 class="h2 mb-1">Dashboard</h1>
+        <p class="text-muted mb-0">Resumo operacional da membresia, ministérios, células, presença e gestão administrativa.</p>
+    </div>
+    <a href="{{ url_for('inserir_membro') }}" class="btn btn-primary">Cadastrar pessoa</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card"><span>Membros ativos</span><strong>{{ metricas.membros_ativos }}</strong></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card"><span>Visitantes</span><strong>{{ metricas.visitantes }}</strong></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card"><span>Células</span><strong>{{ metricas.celulas }}</strong></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card"><span>Saldo financeiro</span><strong>{{ metricas.saldo|moeda_br }}</strong></div>
+    </div>
+</div>
+
+<section class="module-grid mb-4">
+    {% for modulo in modulos %}
+    <a class="module-card" href="{{ url_for(modulo.rota) }}">
+        <span>{{ modulo.titulo }}</span>
+        <strong>{{ modulo.valor }}</strong>
+        <small>{{ modulo.descricao }}</small>
+    </a>
+    {% endfor %}
+</section>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card data-card h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Cadastros recentes</h2>
+                <div class="list-group list-group-flush">
+                    {% for membro in membros_recentes %}
+                    <a class="list-group-item list-group-item-action px-0" href="{{ url_for('editar_membro', membro_id=membro.id) }}">
+                        <span class="fw-semibold d-block">{{ membro.nome }}</span>
+                        <span class="text-muted small">{{ membro.situacao }} • {{ membro.telefone }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card data-card h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Próximos eventos</h2>
+                <div class="list-group list-group-flush">
+                    {% for evento in eventos %}
+                    <a class="list-group-item list-group-item-action px-0" href="{{ url_for('listar_eventos') }}">
+                        <span class="fw-semibold d-block">{{ evento.nome }}</span>
+                        <span class="text-muted small">{{ evento.data|data_br }} • {{ evento.status }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block titulo %}Histórico Espiritual{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Cuidado pastoral</span>
+        <h1 class="h3 mb-1">Histórico espiritual de {{ membro.nome }}</h1>
+        <p class="text-muted mb-0">Registre batismo, conversão, discipulado, aconselhamentos, pedidos de oração e acompanhamento pastoral.</p>
+    </div>
+    <a href="{{ url_for('editar_membro', membro_id=membro.id) }}" class="btn btn-outline-secondary">Voltar ao cadastro</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <form method="post" class="card card-body shadow-sm bg-white">
+            <h2 class="h5 mb-3">Novo registro</h2>
+            <div class="mb-3">
+                <label for="tipo" class="form-label">Tipo</label>
+                <select class="form-select" id="tipo" name="tipo" required>
+                    <option value="">Selecione</option>
+                    {% for tipo in tipos_historico %}
+                    <option value="{{ tipo }}">{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="data" class="form-label">Data</label>
+                <input type="date" class="form-control" id="data" name="data" required>
+            </div>
+            <div class="mb-3">
+                <label for="descricao" class="form-label">Descrição</label>
+                <textarea class="form-control" id="descricao" name="descricao" rows="5" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-success">Registrar</button>
+        </form>
+    </div>
+    <div class="col-lg-7">
+        <div class="card data-card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Linha do tempo</h2>
+                <div class="timeline-list">
+                    {% for registro in membro.historico_espiritual|sort(attribute="data", reverse=True) %}
+                    <article class="timeline-item">
+                        <div>
+                            <span class="badge text-bg-light">{{ registro.tipo }}</span>
+                            <h3 class="h6 mt-2 mb-1">{{ registro.data|data_br }}</h3>
+                            <p class="mb-1">{{ registro.descricao }}</p>
+                            <span class="text-muted small">Responsável: {{ registro.responsavel }}</span>
+                        </div>
+                    </article>
+                    {% else %}
+                    <p class="text-muted mb-0">Nenhum registro espiritual cadastrado.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
