@@ -83,13 +83,17 @@
                         </td>
                         <td>{{ membro.data_entrada|data_br }}</td>
                         <td class="text-end">
-                            <div class="btn-group btn-group-sm" role="group" aria-label="Ações de {{ membro.nome }}">
-                                <a class="btn btn-outline-primary" href="{{ url_for('historico_membro', membro_id=membro.id) }}">Histórico</a>
-                                <a class="btn btn-outline-secondary" href="{{ url_for('editar_membro', membro_id=membro.id) }}">Editar</a>
+                            <div class="action-row" aria-label="Ações de {{ membro.nome }}">
+                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('historico_membro', membro_id=membro.id) }}">Histórico</a>
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('editar_membro', membro_id=membro.id) }}">Editar</a>
                                 {% if membro.situacao != "Inativo" %}
-                                <a class="btn btn-outline-warning btn-excluir" data-confirm-message="Deseja inativar {{ membro.nome }}?" href="{{ url_for('inativar_membro', membro_id=membro.id) }}">Inativar</a>
+                                <form method="post" action="{{ url_for('inativar_membro', membro_id=membro.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning btn-excluir" data-confirm-message="Deseja inativar {{ membro.nome }}?">Inativar</button>
+                                </form>
                                 {% endif %}
-                                <a class="btn btn-outline-danger btn-excluir" data-confirm-message="Deseja remover {{ membro.nome }} da listagem? O registro permanecerá preservado." href="{{ url_for('excluir_membro', membro_id=membro.id) }}">Excluir lógico</a>
+                                <form method="post" action="{{ url_for('excluir_membro', membro_id=membro.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger btn-excluir" data-confirm-message="Deseja remover {{ membro.nome }} da listagem? O registro permanecerá preservado.">Excluir lógico</button>
+                                </form>
                             </div>
                         </td>
                     </tr>

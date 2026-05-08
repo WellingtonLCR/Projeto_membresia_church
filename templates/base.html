@@ -12,77 +12,121 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 
-<body class="app-shell d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg church-nav church-nav--dark shadow-sm sticky-top" aria-label="Navegação principal">
-        <div class="container">
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ url_for('dashboard') }}">
-                <img src="{{ url_for('static', filename='imgs/logo_church.png') }}" alt="Logo Igreja Viva" class="brand-logo">
-                <span>Painel • Igreja Viva</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarPrivada" aria-controls="navbarPrivada" aria-expanded="false" aria-label="Abrir menu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+<body class="app-shell app-shell-private min-vh-100">
+    <div class="private-layout">
+        <aside class="app-sidebar d-none d-lg-flex" aria-label="Menu lateral principal">
+            <div class="sidebar-brand">
+                <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ url_for('dashboard') }}">
+                    <img src="{{ url_for('static', filename='imgs/logo_church.png') }}" alt="Logo Igreja Viva" class="brand-logo">
+                    <span>Painel • Igreja Viva</span>
+                </a>
+            </div>
 
-            <div class="collapse navbar-collapse" id="navbarPrivada">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.endpoint in ['listar_membros', 'listar_visitantes', 'inserir_membro', 'editar_membro', 'historico_membro', 'listar_presencas'] %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Pessoas</a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('listar_membros') }}">Membros</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('listar_visitantes') }}">Visitantes</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('listar_presencas') }}">Presença</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.endpoint in ['listar_ministerios', 'inserir_ministerio', 'editar_ministerio', 'listar_celulas', 'listar_eventos'] %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Organização</a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('listar_ministerios') }}">Ministérios</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('listar_celulas') }}">Células</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('listar_eventos') }}">Eventos</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.endpoint in ['listar_financeiro', 'listar_comunicacao', 'listar_relatorios', 'listar_usuarios', 'inserir_usuario', 'editar_usuario', 'listar_configuracoes'] %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Gestão</a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('listar_financeiro') }}">Financeiro</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('listar_comunicacao') }}">Comunicação</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('listar_relatorios') }}">Relatórios</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('listar_usuarios') }}">Usuários</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('listar_configuracoes') }}">Configurações</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'equipe' %}active{% endif %}" href="{{ url_for('equipe') }}">Equipe</a></li>
-                </ul>
-                <div class="d-flex align-items-center gap-3">
-                    <span class="user-pill d-none d-lg-inline-flex">{{ usuario_nome or usuario_logado }}{% if usuario_perfil %} • {{ usuario_perfil }}{% endif %}</span>
-                    <a class="btn btn-outline-light btn-sm" href="{{ url_for('logout') }}">Logout</a>
+            <div class="sidebar-user">
+                <span class="sidebar-user-name">{{ usuario_nome or usuario_logado }}</span>
+                {% if usuario_perfil %}<span class="sidebar-user-role">{{ usuario_perfil }}</span>{% endif %}
+            </div>
+
+            <nav class="sidebar-nav">
+                <a class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
+
+                <span class="sidebar-section">Pessoas</span>
+                <a class="sidebar-link {% if request.endpoint in ['listar_membros', 'inserir_membro', 'editar_membro', 'historico_membro'] %}active{% endif %}" href="{{ url_for('listar_membros') }}">Membros</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_visitantes' %}active{% endif %}" href="{{ url_for('listar_visitantes') }}">Visitantes</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_presencas' %}active{% endif %}" href="{{ url_for('listar_presencas') }}">Presença</a>
+
+                <span class="sidebar-section">Organização</span>
+                <a class="sidebar-link {% if request.endpoint in ['listar_ministerios', 'inserir_ministerio', 'editar_ministerio'] %}active{% endif %}" href="{{ url_for('listar_ministerios') }}">Ministérios</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_celulas' %}active{% endif %}" href="{{ url_for('listar_celulas') }}">Células</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_eventos' %}active{% endif %}" href="{{ url_for('listar_eventos') }}">Eventos</a>
+
+                <span class="sidebar-section">Gestão</span>
+                <a class="sidebar-link {% if request.endpoint == 'listar_financeiro' %}active{% endif %}" href="{{ url_for('listar_financeiro') }}">Financeiro</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_comunicacao' %}active{% endif %}" href="{{ url_for('listar_comunicacao') }}">Comunicação</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_relatorios' %}active{% endif %}" href="{{ url_for('listar_relatorios') }}">Relatórios</a>
+                <a class="sidebar-link {% if request.endpoint in ['listar_usuarios', 'inserir_usuario', 'editar_usuario'] %}active{% endif %}" href="{{ url_for('listar_usuarios') }}">Usuários</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_configuracoes' %}active{% endif %}" href="{{ url_for('listar_configuracoes') }}">Configurações</a>
+                <a class="sidebar-link {% if request.endpoint == 'equipe' %}active{% endif %}" href="{{ url_for('equipe') }}">Equipe</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a class="btn btn-outline-light w-100" href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </aside>
+
+        <div class="private-main">
+            <header class="mobile-appbar d-lg-none">
+                <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ url_for('dashboard') }}">
+                    <img src="{{ url_for('static', filename='imgs/logo_church.png') }}" alt="Logo Igreja Viva" class="brand-logo">
+                    <span>Painel • Igreja Viva</span>
+                </a>
+                <button class="btn btn-outline-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateralMobile" aria-controls="menuLateralMobile" aria-label="Abrir menu">
+                    Menu
+                </button>
+            </header>
+
+            <main class="private-content py-4 flex-grow-1">
+                {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                <div class="toast-stack" aria-live="polite" aria-atomic="true">
+                    {% for categoria, mensagem in messages %}
+                    <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                        {{ mensagem }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                    {% endfor %}
                 </div>
-            </div>
+                {% endif %}
+                {% endwith %}
+
+                {% block conteudo %}{% endblock %}
+            </main>
+
+            <footer class="footer-privada py-3 text-center text-white mt-auto">
+                Sistema de Membresia • Igreja Viva • {{ metricas_layout.membros_ativos }} membros ativos • {{ metricas_layout.ministerios }} ministérios
+            </footer>
         </div>
-    </nav>
+    </div>
 
-    <main class="container py-4 flex-grow-1">
-        {% with messages = get_flashed_messages(with_categories=True) %}
-        {% if messages %}
-        <div class="toast-stack" aria-live="polite" aria-atomic="true">
-            {% for categoria, mensagem in messages %}
-            <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
-                {{ mensagem }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    <div class="offcanvas offcanvas-start app-sidebar-mobile" tabindex="-1" id="menuLateralMobile" aria-labelledby="menuLateralMobileLabel">
+        <div class="offcanvas-header">
+            <div class="d-flex align-items-center gap-2">
+                <img src="{{ url_for('static', filename='imgs/logo_church.png') }}" alt="Logo Igreja Viva" class="brand-logo">
+                <h2 class="h5 mb-0" id="menuLateralMobileLabel">Igreja Viva</h2>
             </div>
-            {% endfor %}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
         </div>
-        {% endif %}
-        {% endwith %}
+        <div class="offcanvas-body">
+            <div class="sidebar-user mb-3">
+                <span class="sidebar-user-name">{{ usuario_nome or usuario_logado }}</span>
+                {% if usuario_perfil %}<span class="sidebar-user-role">{{ usuario_perfil }}</span>{% endif %}
+            </div>
 
-        {% block conteudo %}{% endblock %}
-    </main>
+            <nav class="sidebar-nav">
+                <a class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
 
-    <footer class="footer-privada py-3 text-center text-white mt-auto">
-        Sistema de Membresia • Igreja Viva • {{ metricas_layout.membros_ativos }} membros ativos • {{ metricas_layout.ministerios }} ministérios
-    </footer>
+                <span class="sidebar-section">Pessoas</span>
+                <a class="sidebar-link {% if request.endpoint in ['listar_membros', 'inserir_membro', 'editar_membro', 'historico_membro'] %}active{% endif %}" href="{{ url_for('listar_membros') }}">Membros</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_visitantes' %}active{% endif %}" href="{{ url_for('listar_visitantes') }}">Visitantes</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_presencas' %}active{% endif %}" href="{{ url_for('listar_presencas') }}">Presença</a>
+
+                <span class="sidebar-section">Organização</span>
+                <a class="sidebar-link {% if request.endpoint in ['listar_ministerios', 'inserir_ministerio', 'editar_ministerio'] %}active{% endif %}" href="{{ url_for('listar_ministerios') }}">Ministérios</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_celulas' %}active{% endif %}" href="{{ url_for('listar_celulas') }}">Células</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_eventos' %}active{% endif %}" href="{{ url_for('listar_eventos') }}">Eventos</a>
+
+                <span class="sidebar-section">Gestão</span>
+                <a class="sidebar-link {% if request.endpoint == 'listar_financeiro' %}active{% endif %}" href="{{ url_for('listar_financeiro') }}">Financeiro</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_comunicacao' %}active{% endif %}" href="{{ url_for('listar_comunicacao') }}">Comunicação</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_relatorios' %}active{% endif %}" href="{{ url_for('listar_relatorios') }}">Relatórios</a>
+                <a class="sidebar-link {% if request.endpoint in ['listar_usuarios', 'inserir_usuario', 'editar_usuario'] %}active{% endif %}" href="{{ url_for('listar_usuarios') }}">Usuários</a>
+                <a class="sidebar-link {% if request.endpoint == 'listar_configuracoes' %}active{% endif %}" href="{{ url_for('listar_configuracoes') }}">Configurações</a>
+                <a class="sidebar-link {% if request.endpoint == 'equipe' %}active{% endif %}" href="{{ url_for('equipe') }}">Equipe</a>
+            </nav>
+
+            <a class="btn btn-outline-light w-100 mt-4" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>

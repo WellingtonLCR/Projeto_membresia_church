@@ -58,6 +58,32 @@ class MembresiaAppTestCase(unittest.TestCase):
         self.assertEqual(resposta.status_code, 200)
         self.assertIn("Informe um telefone v".encode(), resposta.data)
 
+    def test_login_redireciona_para_listagem_de_usuarios(self):
+        resposta = self.client.post(
+            "/login",
+            data={"email": "admin@igreja.org", "senha": "admin123"},
+            follow_redirects=False,
+        )
+
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn("/usuarios/listar", resposta.headers["Location"])
+
+    def test_exclusao_logica_nao_aceita_get(self):
+        self.autenticar()
+
+        for rota in ["/membros/excluir/101", "/membros/inativar/101", "/ministerios/excluir/201", "/usuarios/excluir/1"]:
+            with self.subTest(rota=rota):
+                resposta = self.client.get(rota)
+                self.assertEqual(resposta.status_code, 405)
+
+    def test_inativar_membro_usa_post_com_redirect(self):
+        self.autenticar()
+
+        resposta = self.client.post("/membros/inativar/103", follow_redirects=False)
+
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn("/membros/listar", resposta.headers["Location"])
+
 
 if __name__ == "__main__":
     unittest.main()

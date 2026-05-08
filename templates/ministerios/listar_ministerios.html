@@ -70,8 +70,12 @@
                         <td><span class="badge rounded-pill text-bg-light">{{ ministerio.vagas }} vagas</span></td>
                         <td><span class="badge rounded-pill badge-status badge-{{ ministerio.status|lower }}">{{ ministerio.status }}</span></td>
                         <td class="text-end">
-                            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('editar_ministerio', ministerio_id=ministerio.id) }}">Editar</a>
-                            <a class="btn btn-sm btn-outline-danger btn-excluir" data-confirm-message="Deseja inativar o ministério {{ ministerio.nome }}? O registro permanecerá preservado." href="{{ url_for('excluir_ministerio', ministerio_id=ministerio.id) }}">Excluir lógico</a>
+                            <div class="action-row">
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('editar_ministerio', ministerio_id=ministerio.id) }}">Editar</a>
+                                <form method="post" action="{{ url_for('excluir_ministerio', ministerio_id=ministerio.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger btn-excluir" data-confirm-message="Deseja inativar o ministério {{ ministerio.nome }}? O registro permanecerá preservado.">Excluir lógico</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% else %}

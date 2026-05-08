@@ -138,6 +138,19 @@ Configurações contempladas:
 
 As migrações ficam em `database/migrations`.
 
+O helper `db.py` segue o padrão das aulas de Programação para Internet: centraliza a conexão com MySQL, usa pool de conexões e executa SQL parametrizado com placeholders `%s` para evitar SQL Injection.
+
+Variáveis de ambiente aceitas:
+
+```text
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=sua_senha
+MYSQL_DATABASE=membresia_church
+MYSQL_POOL_SIZE=5
+```
+
 Ordem recomendada:
 
 ```sql
@@ -210,15 +223,33 @@ python -m unittest discover -s tests -q
 - Backend em Python/Flask.
 - Templates HTML com Bootstrap.
 - Estrutura MySQL planejada.
+- `db.py` com `execute_query()` e `execute_one()` usando queries parametrizadas.
 - Senhas criptografadas no protótipo.
 - Validação de formulários.
 - Login seguro para fluxo inicial.
 - Exclusão lógica nos cadastros principais.
+- Exclusões e inativações executadas via POST, nunca por link GET.
 - Busca e filtros.
 - Base para auditoria de ações.
 - Base para permissões por módulo.
 - Base para exportação de relatórios.
 - Organização por módulos.
+
+## Aderência às Aulas 01 a 09
+
+O projeto foi revisado conforme a Aula 09, que cobra a revisão das Aulas 01 a 08.
+
+- HTML5 com `lang="pt-BR"`, `charset="UTF-8"` e `viewport`.
+- Flask com rotas públicas e protegidas.
+- Templates Jinja2 com herança por `base_publica.html` e `base.html`.
+- Bootstrap aplicado em formulários, tabelas, cards, alertas e grid responsivo.
+- Formulários com GET para filtros e POST para criação, edição e exclusão lógica.
+- Padrão PRG: após POST bem-sucedido, a aplicação redireciona com `redirect(url_for(...))`.
+- Validação obrigatória no back-end.
+- CRUD completo simulado em listas Python para usuários, membros e ministérios.
+- Estrutura MySQL com migrations e seeds.
+- `requirements.txt` atualizado e `.gitignore` com `venv/`, `.venv/` e `__pycache__/`.
+- Login redireciona para `/usuarios/listar`, conforme roteiro de apresentação do T1.
 
 ## Próximos Passos Recomendados
 

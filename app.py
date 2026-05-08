@@ -574,7 +574,7 @@ def login():
         session["usuario_nome"] = usuario["nome"]
         session["usuario_perfil"] = usuario["perfil"]
         flash("Login realizado com sucesso!", "success")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("listar_usuarios"))
 
     return render_template("login.html")
 
@@ -733,7 +733,7 @@ def editar_usuario(usuario_id):
     return render_template("usuarios/editar_usuario.html", usuario=usuario, perfis=PERFIS_USUARIO, status_opcoes=STATUS_USUARIO)
 
 
-@app.route("/usuarios/excluir/<int:usuario_id>")
+@app.route("/usuarios/excluir/<int:usuario_id>", methods=["POST"])
 @login_required
 def excluir_usuario(usuario_id):
     usuario = encontrar_por_id(USUARIOS, usuario_id)
@@ -918,7 +918,7 @@ def editar_membro(membro_id):
     )
 
 
-@app.route("/membros/inativar/<int:membro_id>")
+@app.route("/membros/inativar/<int:membro_id>", methods=["POST"])
 @login_required
 def inativar_membro(membro_id):
     membro = encontrar_por_id(MEMBROS, membro_id)
@@ -931,7 +931,7 @@ def inativar_membro(membro_id):
     return redirect(url_for("listar_membros"))
 
 
-@app.route("/membros/excluir/<int:membro_id>")
+@app.route("/membros/excluir/<int:membro_id>", methods=["POST"])
 @login_required
 def excluir_membro(membro_id):
     membro = encontrar_por_id(MEMBROS, membro_id)
@@ -1079,7 +1079,7 @@ def editar_ministerio(ministerio_id):
     return render_template("ministerios/editar_ministerio.html", ministerio=ministerio, dias=DIAS_REUNIAO, status_opcoes=STATUS_MINISTERIO)
 
 
-@app.route("/ministerios/excluir/<int:ministerio_id>")
+@app.route("/ministerios/excluir/<int:ministerio_id>", methods=["POST"])
 @login_required
 def excluir_ministerio(ministerio_id):
     ministerio = encontrar_por_id(MINISTERIOS, ministerio_id)
