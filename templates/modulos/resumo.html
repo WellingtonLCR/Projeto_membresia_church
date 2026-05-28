@@ -9,6 +9,12 @@
         <h1 class="h2 mb-1">{{ titulo }}</h1>
         <p class="text-muted mb-0">{{ subtitulo }}</p>
     </div>
+    <div class="d-flex gap-2 flex-wrap">
+        {% if acao_url and acao_label %}
+        <a href="{{ acao_url }}" class="btn btn-primary">{{ acao_label }}</a>
+        {% endif %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
+    </div>
 </div>
 
 {% if cards %}

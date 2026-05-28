@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block titulo %}Inserir Aviso - Painel{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Comunicacao</span>
+        <h1 class="h2 mb-1">Inserir aviso</h1>
+        <p class="text-muted mb-0">Crie um comunicado para rascunho, publicacao ou arquivamento.</p>
+    </div>
+    <a href="{{ url_for('listar_mural') }}" class="btn btn-outline-secondary">Voltar</a>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="card form-card">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-8">
+                <label class="form-label" for="titulo">Titulo</label>
+                <input class="form-control" id="titulo" name="titulo" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="categoria">Categoria</label>
+                <input class="form-control" id="categoria" name="categoria" placeholder="Aviso, culto, evento">
+            </div>
+            <div class="col-md-8">
+                <label class="form-label" for="imagem">Imagem</label>
+                <input class="form-control" id="imagem" name="imagem" type="file" accept=".jpg,.jpeg,.png,.webp">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="status">Status</label>
+                <select class="form-select" id="status" name="status">
+                    {% for status in status_opcoes %}
+                    <option value="{{ status }}">{{ status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-12">
+                <label class="form-label" for="conteudo">Conteudo</label>
+                <textarea class="form-control" id="conteudo" name="conteudo" rows="6" required></textarea>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-primary" type="submit">Salvar</button>
+            <a class="btn btn-secondary" href="{{ url_for('listar_mural') }}">Cancelar</a>
+        </div>
+    </div>
+</form>
+{% endblock %}

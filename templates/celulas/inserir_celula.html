@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block titulo %}Cadastrar Célula{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Organização</span>
+        <h1 class="h3 mb-1">Cadastrar célula</h1>
+        <p class="text-muted mb-0">Informe os dados básicos do grupo pequeno.</p>
+    </div>
+</div>
+
+<form method="post" class="card card-body shadow-sm bg-white">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label for="nome" class="form-label">Nome da célula</label>
+            <input type="text" class="form-control" id="nome" name="nome" required>
+        </div>
+        <div class="col-md-6">
+            <label for="lider" class="form-label">Líder responsável</label>
+            <input type="text" class="form-control" id="lider" name="lider" required>
+        </div>
+        <div class="col-md-4">
+            <label for="bairro" class="form-label">Bairro</label>
+            <input type="text" class="form-control" id="bairro" name="bairro" required>
+        </div>
+        <div class="col-md-4">
+            <label for="dia_reuniao" class="form-label">Dia da reunião</label>
+            <select class="form-select" id="dia_reuniao" name="dia_reuniao" required>
+                <option value="">Selecione</option>
+                {% for dia in dias %}
+                <option value="{{ dia }}">{{ dia }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="horario" class="form-label">Horário</label>
+            <input type="time" class="form-control" id="horario" name="horario">
+        </div>
+        <div class="col-12">
+            <label for="endereco" class="form-label">Endereço</label>
+            <input type="text" class="form-control" id="endereco" name="endereco">
+        </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-success">Salvar</button>
+        <a href="{{ url_for('listar_celulas') }}" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+{% endblock %}

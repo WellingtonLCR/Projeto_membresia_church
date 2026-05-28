@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block titulo %}Fornecedores - Painel{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Gestao</span>
+        <h1 class="h2 mb-1">Fornecedores</h1>
+        <p class="text-muted mb-0">Cadastre fornecedores para qualificar os gastos registrados no financeiro.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('inserir_fornecedor') }}" class="btn btn-primary">Novo fornecedor</a>
+        <a href="{{ url_for('listar_financeiro') }}" class="btn btn-outline-secondary">Voltar ao financeiro</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="metric-card"><span>Fornecedores ativos</span><strong>{{ metricas.fornecedores }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Saidas</span><strong>{{ metricas.saidas|moeda_br }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Saldo</span><strong>{{ metricas.saldo|moeda_br }}</strong></div></div>
+</div>
+
+<div class="card data-card">
+    <div class="card-body">
+        <form class="row g-2 align-items-end mb-3" method="get">
+            <div class="col-md-10">
+                <label class="form-label" for="q">Buscar</label>
+                <input class="form-control" id="q" name="q" value="{{ busca }}" placeholder="Nome, documento, telefone ou e-mail">
+            </div>
+            <div class="col-md-2 d-grid d-md-flex gap-2">
+                <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+                <a class="btn btn-outline-secondary" href="{{ url_for('listar_fornecedores') }}">Limpar</a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Fornecedor</th>
+                        <th>Documento</th>
+                        <th>Telefone</th>
+                        <th>E-mail</th>
+                        <th>Endereco</th>
+                        <th>Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fornecedor in fornecedores %}
+                    <tr>
+                        <td class="text-muted">#{{ fornecedor.id }}</td>
+                        <td class="fw-semibold">{{ fornecedor.nome }}</td>
+                        <td>{{ fornecedor.documento or "-" }}</td>
+                        <td>{{ fornecedor.telefone or "-" }}</td>
+                        <td>{{ fornecedor.email or "-" }}</td>
+                        <td>{{ fornecedor.endereco or "-" }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('excluir_fornecedor', fornecedor_id=fornecedor.id) }}">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">Nenhum fornecedor cadastrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

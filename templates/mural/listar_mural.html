@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block titulo %}Mural - Painel{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Comunicacao</span>
+        <h1 class="h2 mb-1">Mural</h1>
+        <p class="text-muted mb-0">Cadastre avisos e publique comunicados internos para a igreja.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('inserir_mural') }}" class="btn btn-primary">Novo aviso</a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="metric-card"><span>Avisos</span><strong>{{ avisos|length }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Publicados</span><strong>{{ publicados }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Rascunhos</span><strong>{{ rascunhos }}</strong></div></div>
+</div>
+
+<div class="card data-card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Imagem</th>
+                        <th>Titulo</th>
+                        <th>Categoria</th>
+                        <th>Status</th>
+                        <th>Publicado em</th>
+                        <th>Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for aviso in avisos %}
+                    <tr>
+                        <td>
+                            {% if aviso.imagem_path %}
+                            <img src="{{ url_for('static', filename=aviso.imagem_path) }}" alt="Imagem {{ aviso.titulo }}" class="table-thumb">
+                            {% else %}
+                            <span class="text-muted small">Sem imagem</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="fw-semibold d-block">{{ aviso.titulo }}</span>
+                            <span class="text-muted small">{{ aviso.conteudo[:90] }}{% if aviso.conteudo|length > 90 %}...{% endif %}</span>
+                        </td>
+                        <td>{{ aviso.categoria or "-" }}</td>
+                        <td><span class="badge rounded-pill text-bg-light">{{ aviso.status }}</span></td>
+                        <td>{{ aviso.publicado_em|data_br }}</td>
+                        <td>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% if aviso.status != 'Publicado' %}
+                                <form method="post" action="{{ url_for('publicar_mural', aviso_id=aviso.id) }}">
+                                    <button class="btn btn-sm btn-outline-primary" type="submit">Publicar</button>
+                                </form>
+                                {% endif %}
+                                {% if aviso.status != 'Arquivado' %}
+                                <form method="post" action="{{ url_for('arquivar_mural', aviso_id=aviso.id) }}">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Arquivar</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Nenhum aviso cadastrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -50,7 +50,7 @@
                             <div class="action-row">
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}">Editar</a>
                                 <form method="post" action="{{ url_for('excluir_usuario', usuario_id=usuario.id) }}" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger btn-excluir" data-confirm-message="Deseja inativar o usuário {{ usuario.nome }}? O registro permanecerá preservado.">Excluir lógico</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger btn-excluir" data-confirm-message="Deseja inativar o usuário {{ usuario.nome }}? O registro permanecerá preservado.">Excluir</button>
                                 </form>
                             </div>
                         </td>

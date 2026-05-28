@@ -94,4 +94,34 @@ VALUES
   ('frequencia.baixa.percentual', '50', 'Percentual mínimo de presença mensal antes de alerta'),
   ('paginacao.tamanho_padrao', '20', 'Quantidade padrão de registros por página');
 
+INSERT IGNORE INTO usuarios (nome, email, senha_hash, ativo, bloqueado)
+VALUES (
+  'Administrador Igreja Viva',
+  'admin@igreja.org',
+  'scrypt:32768:8:1$QjlGjHTL3kypUIAE$d2f8abe5c73fe8f6f866543494b73b0cf327788aadcd551b4a3557e60947e043ae56cde65941ecc7f00006e64d5e8948fcabf8be6cd7c154cb1eb86d565cec90',
+  1,
+  0
+);
+
+INSERT IGNORE INTO usuario_perfil (usuario_id, perfil_id)
+SELECT u.id, p.id
+FROM usuarios u
+JOIN perfis p ON p.nome = 'ADMINISTRADOR'
+WHERE u.email = 'admin@igreja.org';
+
+INSERT IGNORE INTO igrejas (nome, email, telefone, endereco, logo_path)
+VALUES ('Igreja Viva', NULL, NULL, NULL, 'static/imgs/logo_church.png');
+
+INSERT IGNORE INTO categorias_financeiras (nome, tipo)
+VALUES
+  ('Dizimo', 'Entrada'),
+  ('Oferta', 'Entrada'),
+  ('Contribuicao', 'Entrada'),
+  ('Manutencao', 'Saida'),
+  ('Agua e luz', 'Saida'),
+  ('Material de consumo', 'Saida');
+
+INSERT IGNORE INTO contas_financeiras (nome, banco, saldo_inicial)
+VALUES ('Conta principal', NULL, 0);
+
 COMMIT;

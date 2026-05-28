@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block titulo %}Eventos • Painel{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Organização</span>
+        <h1 class="h2 mb-1">Eventos</h1>
+        <p class="text-muted mb-0">Cadastre eventos, acompanhe inscrições e use o banner para facilitar a gestão visual da agenda.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('inserir_evento') }}" class="btn btn-primary">Novo evento</a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="metric-card"><span>Eventos ativos</span><strong>{{ metricas.eventos }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Membros inscritos</span><strong>{{ membros_inscritos }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Visitantes inscritos</span><strong>{{ visitantes_inscritos }}</strong></div></div>
+</div>
+
+<div class="card data-card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Banner</th>
+                        <th>Evento</th>
+                        <th>Data</th>
+                        <th>Local</th>
+                        <th>Status</th>
+                        <th>Membros</th>
+                        <th>Visitantes</th>
+                        <th>Presentes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for evento in eventos %}
+                    <tr>
+                        <td>
+                            {% if evento.banner_path %}
+                            <img src="{{ url_for('static', filename=evento.banner_path) }}" alt="Banner {{ evento.nome }}" class="table-thumb">
+                            {% else %}
+                            <span class="text-muted small">Sem banner</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-semibold">{{ evento.nome }}</td>
+                        <td>{{ evento.data_inicio|data_br }}</td>
+                        <td>{{ evento.local or "-" }}</td>
+                        <td><span class="badge rounded-pill text-bg-light">{{ evento.status }}</span></td>
+                        <td>{{ evento.membros or 0 }}</td>
+                        <td>{{ evento.visitantes or 0 }}</td>
+                        <td>{{ evento.presentes or 0 }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8" class="text-center text-muted py-4">Nenhum evento cadastrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

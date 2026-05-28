@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block titulo %}Novo Lançamento{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Gestão</span>
+        <h1 class="h3 mb-1">Cadastrar lançamento</h1>
+        <p class="text-muted mb-0">Registre entradas ou gastos usando categorias e contas do banco.</p>
+    </div>
+</div>
+
+<form method="post" class="card card-body shadow-sm bg-white">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label for="tipo" class="form-label">Tipo</label>
+            <select class="form-select" id="tipo" name="tipo" required>
+                <option value="">Selecione</option>
+                <option value="Entrada">Entrada</option>
+                <option value="Saida">Saída</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="categoria_id" class="form-label">Categoria</label>
+            <select class="form-select" id="categoria_id" name="categoria_id" required>
+                <option value="">Selecione</option>
+                {% for categoria in categorias %}
+                <option value="{{ categoria.id }}">{{ categoria.nome }} • {{ "Saída" if categoria.tipo == "Saida" else "Entrada" }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="conta_id" class="form-label">Conta</label>
+            <select class="form-select" id="conta_id" name="conta_id" required>
+                <option value="">Selecione</option>
+                {% for conta in contas %}
+                <option value="{{ conta.id }}">{{ conta.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="data_lancamento" class="form-label">Data</label>
+            <input type="date" class="form-control" id="data_lancamento" name="data_lancamento" required>
+        </div>
+        <div class="col-md-3">
+            <label for="valor" class="form-label">Valor</label>
+            <input type="number" class="form-control" id="valor" name="valor" min="0" step="0.01" required>
+        </div>
+        <div class="col-md-5">
+            <label for="membro_id" class="form-label">Membro vinculado</label>
+            <select class="form-select" id="membro_id" name="membro_id">
+                <option value="">Sem vínculo</option>
+                {% for membro in membros %}
+                <option value="{{ membro.id }}">{{ membro.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="fornecedor_id" class="form-label">Fornecedor</label>
+            <select class="form-select" id="fornecedor_id" name="fornecedor_id">
+                <option value="">Sem fornecedor</option>
+                {% for fornecedor in fornecedores %}
+                <option value="{{ fornecedor.id }}">{{ fornecedor.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="descricao" class="form-label">Descrição</label>
+            <input type="text" class="form-control" id="descricao" name="descricao">
+        </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-success">Salvar</button>
+        <a href="{{ url_for('listar_financeiro') }}" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+{% endblock %}

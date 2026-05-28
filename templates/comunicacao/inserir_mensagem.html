@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block titulo %}Nova Mensagem{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Gestão</span>
+        <h1 class="h3 mb-1">Registrar mensagem</h1>
+        <p class="text-muted mb-0">Controle comunicados enviados, agendados ou mantidos como rascunho.</p>
+    </div>
+</div>
+
+<form method="post" class="card card-body shadow-sm bg-white">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label for="canal" class="form-label">Canal</label>
+            <select class="form-select" id="canal" name="canal" required>
+                {% for canal in canais %}
+                <option value="{{ canal }}">{{ canal }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="destino_tipo" class="form-label">Destino</label>
+            <select class="form-select" id="destino_tipo" name="destino_tipo" required>
+                {% for destino in destinos %}
+                <option value="{{ destino }}">{{ destino }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="status" class="form-label">Status</label>
+            <select class="form-select" id="status" name="status" required>
+                {% for status in status_opcoes %}
+                <option value="{{ status }}">{{ status }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-8">
+            <label for="assunto" class="form-label">Assunto</label>
+            <input type="text" class="form-control" id="assunto" name="assunto" required>
+        </div>
+        <div class="col-md-4">
+            <label for="agendada_para" class="form-label">Agendada para</label>
+            <input type="datetime-local" class="form-control" id="agendada_para" name="agendada_para">
+        </div>
+        <div class="col-12">
+            <label for="corpo" class="form-label">Mensagem</label>
+            <textarea class="form-control" id="corpo" name="corpo" rows="6" required></textarea>
+        </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-success">Salvar</button>
+        <a href="{{ url_for('listar_comunicacao') }}" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+{% endblock %}

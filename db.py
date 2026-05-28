@@ -13,6 +13,7 @@ DB_CONFIG = {
     "database": os.environ.get("MYSQL_DATABASE", "membresia_church"),
     "charset": "utf8mb4",
     "use_unicode": True,
+    "use_pure": True,
     "autocommit": False,
     "connection_timeout": 10,
     "time_zone": "-03:00",

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block titulo %}Configurações • Painel{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Gestão</span>
+        <h1 class="h2 mb-1">Configurações</h1>
+        <p class="text-muted mb-0">Atualize os dados da igreja e parâmetros usados pelo sistema.</p>
+    </div>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="metric-card"><span>Igreja</span><strong>{{ igreja.nome }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Perfis</span><strong>{{ perfis_total }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Último backup</span><strong class="metric-text">{{ ultimo_backup }}</strong></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <form method="post" class="card card-body shadow-sm bg-white h-100">
+            <input type="hidden" name="acao" value="igreja">
+            <h2 class="h5 mb-3">Dados da igreja</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="nome" class="form-label">Nome</label>
+                    <input type="text" class="form-control" id="nome" name="nome" value="{{ igreja.nome }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="email" class="form-label">E-mail</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ igreja.email or '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="telefone" class="form-label">Telefone</label>
+                    <input type="tel" class="form-control" id="telefone" name="telefone" value="{{ igreja.telefone or '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="endereco" class="form-label">Endereço</label>
+                    <input type="text" class="form-control" id="endereco" name="endereco" value="{{ igreja.endereco or '' }}">
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success">Salvar dados</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-lg-5">
+        <form method="post" class="card card-body shadow-sm bg-white h-100">
+            <input type="hidden" name="acao" value="parametros">
+            <h2 class="h5 mb-3">Parâmetros</h2>
+            <div class="mb-3">
+                <label for="paginacao" class="form-label">Registros por página</label>
+                <input type="number" min="1" class="form-control" id="paginacao" name="paginacao" value="{{ paginacao }}">
+            </div>
+            <div class="mb-3">
+                <label for="frequencia" class="form-label">Baixa frequência (%)</label>
+                <input type="number" min="1" max="100" class="form-control" id="frequencia" name="frequencia" value="{{ frequencia }}">
+            </div>
+            <div class="mb-3">
+                <label for="backup" class="form-label">Agendamento de backup</label>
+                <input type="text" class="form-control" id="backup" name="backup" value="{{ backup }}">
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="submit" class="btn btn-success">Salvar parâmetros</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card data-card mt-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+            <h2 class="h5 mb-0">Valores gravados no banco</h2>
+            <form method="post">
+                <input type="hidden" name="acao" value="backup">
+                <button type="submit" class="btn btn-outline-primary">Registrar backup</button>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Configuração</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in configuracoes %}
+                    <tr>
+                        <td class="fw-semibold">{{ item.chave }}</td>
+                        <td>{{ item.valor or "-" }}</td>
+                        <td>Ativo</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3" class="text-center text-muted py-4">Nenhuma configuração cadastrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

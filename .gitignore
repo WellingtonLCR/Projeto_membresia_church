@@ -5,4 +5,8 @@ __pycache__/
 *.log
 .env
 .pytest_cache/
+.coverage
+htmlcov/
 instance/
+static/imgs/eventos/*
+static/imgs/mural/*

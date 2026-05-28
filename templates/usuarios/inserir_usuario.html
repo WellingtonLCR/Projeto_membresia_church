@@ -23,6 +23,11 @@
                 {% endfor %}
             </select>
         </div>
+        <div class="col-md-6">
+            <label for="senha_provisoria" class="form-label">Senha provisória</label>
+            <input type="password" class="form-control" id="senha_provisoria" name="senha_provisoria" value="Mudar@123" minlength="8" required>
+            <div class="form-text">Esta senha será usada no primeiro acesso do usuário.</div>
+        </div>
     </div>
     <div class="mt-4 d-flex gap-2">
         <button type="submit" class="btn btn-success">Salvar</button>

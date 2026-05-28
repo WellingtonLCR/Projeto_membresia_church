@@ -1,392 +1,58 @@
 import os
-from datetime import datetime
+from io import BytesIO
+from datetime import date, datetime
 from functools import wraps
 from re import fullmatch
 
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, Response, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
+
+from db import execute_one, execute_query, get_connection
+
 
 app = Flask(__name__, static_folder="static")
 app.secret_key = os.environ.get("SECRET_KEY", "chave-dev-membresia-igreja-viva")
 
 PERFIS_USUARIO = ["Administrador", "Pastor", "Secretaria", "Líder", "Financeiro"]
+PERFIL_DB = {
+    "Administrador": "ADMINISTRADOR",
+    "Pastor": "PASTOR",
+    "Secretaria": "SECRETARIA",
+    "Líder": "LIDER",
+    "Financeiro": "FINANCEIRO",
+}
+PERFIL_TELA = {valor: chave for chave, valor in PERFIL_DB.items()}
+
 STATUS_USUARIO = ["Ativo", "Bloqueado", "Inativo"]
 SITUACOES_MEMBRO = ["Ativo", "Inativo", "Visitante", "Afastado"]
 STATUS_MINISTERIO = ["Ativo", "Inativo"]
+STATUS_DOACAO = ["Recebida", "Pendente", "Cancelada"]
+TIPOS_DOACAO = ["Dizimo", "Oferta", "Contribuicao", "Campanha", "Missao"]
+FORMAS_RECEBIMENTO = ["Dinheiro", "PIX", "Cartao", "Transferencia", "Boleto"]
+STATUS_MURAL = ["Rascunho", "Publicado", "Arquivado"]
+STATUS_PEDIDO_ORACAO = ["Pendente", "Em oracao", "Respondido", "Arquivado"]
+ORACAO_CATEGORIAS = ["Saude", "Familia", "Trabalho", "Vida espiritual", "Outro"]
 ESTADOS_CIVIS = ["Solteiro(a)", "Casado(a)", "Divorciado(a)", "Viúvo(a)", "União estável"]
 DIAS_REUNIAO = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
 TIPOS_HISTORICO = [
     "Batismo",
     "Conversão",
     "Profissão de fé",
-    "Transferência de igreja",
+    "Transferência",
     "Desligamento",
     "Discipulado",
     "Acompanhamento pastoral",
     "Pedido de oração",
     "Testemunho",
     "Aconselhamento",
-    "Observação espiritual",
+    "Observação",
 ]
 
 EMAIL_PATTERN = r"^[^\s@]+@[^\s@]+\.[^\s@]+$"
 TELEFONE_PATTERN = r"^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$"
 CPF_PATTERN = r"^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$"
-
-
-USUARIOS = [
-    {
-        "id": 1,
-        "nome": "Administrador Igreja Viva",
-        "email": "admin@igreja.org",
-        "senha_hash": generate_password_hash("admin123"),
-        "perfil": "Administrador",
-        "status": "Ativo",
-        "ultimo_acesso": None,
-        "excluido": False,
-    },
-    {
-        "id": 2,
-        "nome": "Ana Paula Lima",
-        "email": "ana@igreja.org",
-        "senha_hash": generate_password_hash("secretaria123"),
-        "perfil": "Secretaria",
-        "status": "Ativo",
-        "ultimo_acesso": "07/05/2026 18:20",
-        "excluido": False,
-    },
-    {
-        "id": 3,
-        "nome": "Carlos Mendes",
-        "email": "carlos@igreja.org",
-        "senha_hash": generate_password_hash("financeiro123"),
-        "perfil": "Financeiro",
-        "status": "Ativo",
-        "ultimo_acesso": "07/05/2026 09:45",
-        "excluido": False,
-    },
-    {
-        "id": 4,
-        "nome": "Fernanda Alves",
-        "email": "fernanda@igreja.org",
-        "senha_hash": generate_password_hash("pastoral123"),
-        "perfil": "Pastor",
-        "status": "Ativo",
-        "ultimo_acesso": "06/05/2026 21:10",
-        "excluido": False,
-    },
-]
-
-MINISTERIOS = [
-    {
-        "id": 201,
-        "nome": "Louvor",
-        "lider": "Débora Martins",
-        "dia_reuniao": "Quinta",
-        "vagas": 4,
-        "status": "Ativo",
-        "participantes": [101, 105],
-        "atividades": ["Escala do culto de domingo", "Ensaio geral"],
-        "excluido": False,
-    },
-    {
-        "id": 202,
-        "nome": "Infantil",
-        "lider": "Rafaela Costa",
-        "dia_reuniao": "Sábado",
-        "vagas": 2,
-        "status": "Ativo",
-        "participantes": [],
-        "atividades": ["Classe infantil", "Treinamento de voluntários"],
-        "excluido": False,
-    },
-    {
-        "id": 203,
-        "nome": "Intercessão",
-        "lider": "André Silva",
-        "dia_reuniao": "Terça",
-        "vagas": 6,
-        "status": "Ativo",
-        "participantes": [102],
-        "atividades": ["Relógio de oração", "Vigília mensal"],
-        "excluido": False,
-    },
-    {
-        "id": 204,
-        "nome": "Recepção",
-        "lider": "Paulo Henrique",
-        "dia_reuniao": "Domingo",
-        "vagas": 3,
-        "status": "Ativo",
-        "participantes": [103],
-        "atividades": ["Acolhimento no culto", "Integração de visitantes"],
-        "excluido": False,
-    },
-    {
-        "id": 205,
-        "nome": "Mídia",
-        "lider": "Juliana Rocha",
-        "dia_reuniao": "Sexta",
-        "vagas": 1,
-        "status": "Ativo",
-        "participantes": [105],
-        "atividades": ["Transmissão ao vivo", "Captação de fotos"],
-        "excluido": False,
-    },
-]
-
-CELULAS = [
-    {
-        "id": 301,
-        "nome": "Célula Jardim",
-        "lider": "Patrícia Souza",
-        "bairro": "Jardim América",
-        "dia_reuniao": "Quarta",
-        "membros": [101, 102],
-        "visitantes": 2,
-        "crescimento_percentual": 12,
-        "status": "Ativo",
-        "reunioes": [
-            {"data": "2026-05-06", "presentes": 8, "visitantes": 1},
-            {"data": "2026-04-29", "presentes": 7, "visitantes": 1},
-        ],
-    },
-    {
-        "id": 302,
-        "nome": "Célula Centro",
-        "lider": "Ricardo Nunes",
-        "bairro": "Centro",
-        "dia_reuniao": "Sexta",
-        "membros": [103, 105],
-        "visitantes": 1,
-        "crescimento_percentual": 8,
-        "status": "Ativo",
-        "reunioes": [
-            {"data": "2026-05-01", "presentes": 10, "visitantes": 0},
-            {"data": "2026-04-24", "presentes": 9, "visitantes": 1},
-        ],
-    },
-]
-
-MEMBROS = [
-    {
-        "id": 101,
-        "nome": "Marcos Pereira",
-        "cpf": "123.456.789-10",
-        "email": "marcos@exemplo.com",
-        "telefone": "(14) 99911-1001",
-        "whatsapp": "(14) 99911-1001",
-        "data_nascimento": "1984-03-12",
-        "endereco": "Rua das Oliveiras, 120",
-        "estado_civil": "Casado(a)",
-        "profissao": "Professor",
-        "data_entrada": "2018-02-04",
-        "data_batismo": "2018-06-10",
-        "ministerios": ["Louvor"],
-        "celula": "Célula Jardim",
-        "cargo_funcao": "Vocal",
-        "situacao": "Ativo",
-        "excluido": False,
-        "historico_espiritual": [
-            {
-                "id": 1,
-                "tipo": "Batismo",
-                "data": "2018-06-10",
-                "descricao": "Batizado em culto público.",
-                "responsavel": "Pastor Daniel",
-            }
-        ],
-    },
-    {
-        "id": 102,
-        "nome": "Patrícia Souza",
-        "cpf": "234.567.890-21",
-        "email": "patricia@exemplo.com",
-        "telefone": "(14) 99822-2002",
-        "whatsapp": "(14) 99822-2002",
-        "data_nascimento": "1990-08-21",
-        "endereco": "Av. Esperança, 45",
-        "estado_civil": "Solteiro(a)",
-        "profissao": "Enfermeira",
-        "data_entrada": "2020-09-13",
-        "data_batismo": "2021-01-17",
-        "ministerios": ["Intercessão"],
-        "celula": "Célula Jardim",
-        "cargo_funcao": "Líder de oração",
-        "situacao": "Ativo",
-        "excluido": False,
-        "historico_espiritual": [
-            {
-                "id": 1,
-                "tipo": "Discipulado",
-                "data": "2021-02-05",
-                "descricao": "Concluiu trilha inicial de discipulado.",
-                "responsavel": "Ana Paula Lima",
-            }
-        ],
-    },
-    {
-        "id": 103,
-        "nome": "Ricardo Nunes",
-        "cpf": "345.678.901-32",
-        "email": "ricardo@exemplo.com",
-        "telefone": "(14) 99733-3003",
-        "whatsapp": "(14) 99733-3003",
-        "data_nascimento": "1978-11-02",
-        "endereco": "Rua Central, 900",
-        "estado_civil": "Casado(a)",
-        "profissao": "Comerciante",
-        "data_entrada": "2016-04-24",
-        "data_batismo": "2016-08-14",
-        "ministerios": ["Recepção"],
-        "celula": "Célula Centro",
-        "cargo_funcao": "Diácono",
-        "situacao": "Ativo",
-        "excluido": False,
-        "historico_espiritual": [],
-    },
-    {
-        "id": 104,
-        "nome": "Sandra Oliveira",
-        "cpf": "456.789.012-43",
-        "email": "sandra@exemplo.com",
-        "telefone": "(14) 99644-4004",
-        "whatsapp": "(14) 99644-4004",
-        "data_nascimento": "1995-01-30",
-        "endereco": "Rua Ipê, 28",
-        "estado_civil": "Solteiro(a)",
-        "profissao": "Designer",
-        "data_entrada": "2026-04-12",
-        "data_batismo": "",
-        "ministerios": [],
-        "celula": "",
-        "cargo_funcao": "",
-        "situacao": "Visitante",
-        "excluido": False,
-        "historico_espiritual": [
-            {
-                "id": 1,
-                "tipo": "Acompanhamento pastoral",
-                "data": "2026-04-20",
-                "descricao": "Primeiro contato após visita ao culto.",
-                "responsavel": "Fernanda Alves",
-            }
-        ],
-    },
-    {
-        "id": 105,
-        "nome": "Tiago Ferreira",
-        "cpf": "567.890.123-54",
-        "email": "tiago@exemplo.com",
-        "telefone": "(14) 99555-5005",
-        "whatsapp": "(14) 99555-5005",
-        "data_nascimento": "1989-12-18",
-        "endereco": "Rua dos Cedros, 310",
-        "estado_civil": "Casado(a)",
-        "profissao": "Analista de sistemas",
-        "data_entrada": "2019-07-07",
-        "data_batismo": "2019-10-20",
-        "ministerios": ["Mídia", "Louvor"],
-        "celula": "Célula Centro",
-        "cargo_funcao": "Operador de transmissão",
-        "situacao": "Afastado",
-        "excluido": False,
-        "historico_espiritual": [],
-    },
-]
-
-PRESENCAS = [
-    {"id": 401, "data": "2026-05-03", "tipo": "Culto", "referencia": "Culto de celebração", "membro_id": 101, "presente": True},
-    {"id": 402, "data": "2026-05-03", "tipo": "Culto", "referencia": "Culto de celebração", "membro_id": 102, "presente": True},
-    {"id": 403, "data": "2026-05-03", "tipo": "Culto", "referencia": "Culto de celebração", "membro_id": 105, "presente": False},
-    {"id": 404, "data": "2026-05-06", "tipo": "Célula", "referencia": "Célula Jardim", "membro_id": 101, "presente": True},
-    {"id": 405, "data": "2026-05-06", "tipo": "Célula", "referencia": "Célula Jardim", "membro_id": 102, "presente": True},
-]
-
-EVENTOS = [
-    {
-        "id": 501,
-        "nome": "Conferência de Famílias",
-        "data": "2026-06-14",
-        "status": "Agendado",
-        "inscritos_membros": [101, 102, 103],
-        "inscritos_visitantes": ["Sandra Oliveira"],
-        "presentes": 0,
-    },
-    {
-        "id": 502,
-        "nome": "Treinamento de líderes",
-        "data": "2026-05-30",
-        "status": "Agendado",
-        "inscritos_membros": [102, 103],
-        "inscritos_visitantes": [],
-        "presentes": 0,
-    },
-]
-
-LANCAMENTOS_FINANCEIROS = [
-    {"id": 601, "data": "2026-05-01", "tipo": "Entrada", "categoria": "Dízimo", "membro_id": 101, "conta": "Conta principal", "valor": 350.00},
-    {"id": 602, "data": "2026-05-02", "tipo": "Entrada", "categoria": "Oferta", "membro_id": None, "conta": "Conta principal", "valor": 720.00},
-    {"id": 603, "data": "2026-05-04", "tipo": "Saída", "categoria": "Manutenção", "membro_id": None, "conta": "Conta principal", "valor": 180.50},
-    {"id": 604, "data": "2026-05-05", "tipo": "Entrada", "categoria": "Contribuição fixa", "membro_id": 103, "conta": "Conta missionária", "valor": 120.00},
-]
-
-MENSAGENS = [
-    {"id": 701, "canal": "WhatsApp", "destino": "Célula Jardim", "assunto": "Lembrete de reunião", "enviada_em": "2026-05-06 10:00", "status": "Enviada"},
-    {"id": 702, "canal": "E-mail", "destino": "Ministério de Louvor", "assunto": "Escala de domingo", "enviada_em": "2026-05-05 15:30", "status": "Enviada"},
-    {"id": 703, "canal": "Interna", "destino": "Aniversariantes", "assunto": "Mensagem de aniversário", "enviada_em": "2026-05-01 09:00", "status": "Agendada"},
-]
-
-CONFIGURACOES = {
-    "nome_igreja": "Igreja Viva",
-    "logo": "static/imgs/logo_church.png",
-    "backup": "Diário às 02:00",
-    "mensagem_aniversario": "Que Deus abençoe sua vida neste novo ciclo!",
-    "parametros": "Paginação: 20 registros por página; baixa frequência: menos de 50% no mês",
-}
-
-
-def registros_visiveis(lista):
-    return [item for item in lista if not item.get("excluido")]
-
-
-def encontrar_por_id(lista, item_id, incluir_excluidos=False):
-    return next(
-        (
-            item
-            for item in lista
-            if item.get("id") == item_id and (incluir_excluidos or not item.get("excluido"))
-        ),
-        None,
-    )
-
-
-def proximo_id(lista):
-    if not lista:
-        return 1
-    return max(item.get("id", 0) for item in lista) + 1
-
-
-def obter_opcoes_ministerio():
-    return [
-        ministerio["nome"]
-        for ministerio in registros_visiveis(MINISTERIOS)
-        if ministerio["status"] == "Ativo"
-    ]
-
-
-def obter_opcoes_celula():
-    return [celula["nome"] for celula in CELULAS if celula["status"] == "Ativo"]
-
-
-def email_em_uso(email, usuario_id=None):
-    email_normalizado = email.lower()
-    return any(
-        usuario["email"].lower() == email_normalizado
-        and usuario["id"] != usuario_id
-        and not usuario.get("excluido")
-        for usuario in USUARIOS
-    )
+BANNER_EXTENSOES = {"jpg", "jpeg", "png", "webp"}
 
 
 def validar_email(email):
@@ -401,95 +67,767 @@ def validar_cpf(cpf):
     return not cpf or bool(fullmatch(CPF_PATTERN, cpf))
 
 
-def filtrar_registros(registros, termo, campos):
-    if not termo:
-        return registros
-
-    termo_normalizado = termo.lower()
-    return [
-        registro
-        for registro in registros
-        if any(termo_normalizado in str(registro.get(campo, "")).lower() for campo in campos)
-    ]
+def valor_ou_none(valor):
+    valor = (valor or "").strip()
+    return valor or None
 
 
-def filtrar_membros(membros, termo="", situacao="", apenas_visitantes=False):
-    resultado = registros_visiveis(membros)
+def perfil_para_tela(perfil_db):
+    return PERFIL_TELA.get((perfil_db or "").upper(), perfil_db or "Secretaria")
 
-    if apenas_visitantes:
-        resultado = [membro for membro in resultado if membro["situacao"] == "Visitante"]
-    elif situacao:
-        resultado = [membro for membro in resultado if membro["situacao"] == situacao]
 
-    if not termo:
-        return resultado
+def perfil_para_db(perfil):
+    return PERFIL_DB.get(perfil, (perfil or "").upper())
 
-    termo_normalizado = termo.lower()
-    campos = ["nome", "telefone", "whatsapp", "email", "cpf", "situacao", "celula", "cargo_funcao"]
-    return [
-        membro
-        for membro in resultado
-        if any(termo_normalizado in str(membro.get(campo, "")).lower() for campo in campos)
-        or any(termo_normalizado in ministerio.lower() for ministerio in membro.get("ministerios", []))
-    ]
+
+def status_usuario(row):
+    if row.get("excluido_em") or not row.get("ativo"):
+        return "Inativo"
+    if row.get("bloqueado"):
+        return "Bloqueado"
+    return "Ativo"
+
+
+def aplicar_status_usuario(status):
+    return {
+        "Ativo": (1, 0),
+        "Bloqueado": (1, 1),
+        "Inativo": (0, 0),
+    }.get(status, (1, 0))
+
+
+def db_select(sql, params=None):
+    try:
+        return execute_query(sql, params, fetch=True)
+    except Exception as erro:
+        app.logger.error("Erro MySQL SELECT: %s", erro)
+        return []
+
+
+def db_one(sql, params=None):
+    try:
+        return execute_one(sql, params)
+    except Exception as erro:
+        app.logger.error("Erro MySQL SELECT ONE: %s", erro)
+        return None
+
+
+def db_scalar(sql, params=None, default=0):
+    row = db_one(sql, params)
+    if not row:
+        return default
+    return row.get("valor", default) or default
+
+
+def db_write(sql, params=None):
+    return execute_query(sql, params, fetch=False)
+
+
+def usuario_from_row(row):
+    if not row:
+        return None
+    usuario = dict(row)
+    usuario["perfil"] = perfil_para_tela(usuario.get("perfil_db"))
+    usuario["status"] = status_usuario(usuario)
+    ultimo = usuario.get("ultimo_login_em")
+    usuario["ultimo_acesso"] = data_hora_br(ultimo) if ultimo else None
+    return usuario
+
+
+def obter_usuario(usuario_id):
+    row = db_one(
+        """
+        SELECT u.*, p.nome AS perfil_db
+        FROM usuarios u
+        LEFT JOIN usuario_perfil up ON up.usuario_id = u.id
+        LEFT JOIN perfis p ON p.id = up.perfil_id
+        WHERE u.id = %s AND u.excluido_em IS NULL
+        LIMIT 1
+        """,
+        (usuario_id,),
+    )
+    return usuario_from_row(row)
 
 
 def obter_usuario_por_email(email):
-    return next(
-        (
-            usuario
-            for usuario in USUARIOS
-            if usuario["email"].lower() == email.lower() and not usuario.get("excluido")
-        ),
-        None,
+    row = db_one(
+        """
+        SELECT u.*, p.nome AS perfil_db
+        FROM usuarios u
+        LEFT JOIN usuario_perfil up ON up.usuario_id = u.id
+        LEFT JOIN perfis p ON p.id = up.perfil_id
+        WHERE u.email = %s AND u.excluido_em IS NULL
+        LIMIT 1
+        """,
+        (email.lower(),),
+    )
+    return usuario_from_row(row)
+
+
+def email_em_uso(email, usuario_id=None):
+    sql = "SELECT id FROM usuarios WHERE email = %s AND excluido_em IS NULL"
+    params = [email.lower()]
+    if usuario_id:
+        sql += " AND id <> %s"
+        params.append(usuario_id)
+    return db_one(sql, params) is not None
+
+
+def criar_usuario(nome, email, senha, perfil):
+    perfil_db = perfil_para_db(perfil)
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        try:
+            cursor.execute(
+                """
+                INSERT INTO usuarios (nome, email, senha_hash, ativo, bloqueado)
+                VALUES (%s, %s, %s, 1, 0)
+                """,
+                (nome, email.lower(), generate_password_hash(senha)),
+            )
+            usuario_id = cursor.lastrowid
+            cursor.execute(
+                """
+                INSERT INTO usuario_perfil (usuario_id, perfil_id)
+                SELECT %s, id FROM perfis WHERE nome = %s
+                """,
+                (usuario_id, perfil_db),
+            )
+            connection.commit()
+            return usuario_id
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            cursor.close()
+
+
+def atualizar_usuario(usuario_id, nome, email, perfil, status):
+    perfil_db = perfil_para_db(perfil)
+    ativo, bloqueado = aplicar_status_usuario(status)
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        try:
+            cursor.execute(
+                """
+                UPDATE usuarios
+                SET nome = %s, email = %s, ativo = %s, bloqueado = %s
+                WHERE id = %s AND excluido_em IS NULL
+                """,
+                (nome, email.lower(), ativo, bloqueado, usuario_id),
+            )
+            cursor.execute("DELETE FROM usuario_perfil WHERE usuario_id = %s", (usuario_id,))
+            cursor.execute(
+                """
+                INSERT INTO usuario_perfil (usuario_id, perfil_id)
+                SELECT %s, id FROM perfis WHERE nome = %s
+                """,
+                (usuario_id, perfil_db),
+            )
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            cursor.close()
+
+
+def listar_usuarios_db(busca=""):
+    sql = """
+        SELECT u.*, p.nome AS perfil_db
+        FROM usuarios u
+        LEFT JOIN usuario_perfil up ON up.usuario_id = u.id
+        LEFT JOIN perfis p ON p.id = up.perfil_id
+        WHERE u.excluido_em IS NULL
+    """
+    params = []
+    if busca:
+        sql += """
+            AND (
+                u.nome LIKE %s OR u.email LIKE %s OR p.nome LIKE %s
+                OR CASE
+                    WHEN u.ativo = 0 THEN 'Inativo'
+                    WHEN u.bloqueado = 1 THEN 'Bloqueado'
+                    ELSE 'Ativo'
+                END LIKE %s
+            )
+        """
+        termo = f"%{busca}%"
+        params.extend([termo, termo, termo, termo])
+    sql += " ORDER BY u.nome"
+    return [usuario_from_row(row) for row in db_select(sql, params)]
+
+
+def obter_ministerios_membro(membro_id):
+    rows = db_select(
+        """
+        SELECT mi.nome
+        FROM membro_ministerio mm
+        JOIN ministerios mi ON mi.id = mm.ministerio_id
+        WHERE mm.membro_id = %s
+          AND mm.ativo = 1
+          AND mi.excluido_em IS NULL
+        ORDER BY mi.nome
+        """,
+        (membro_id,),
+    )
+    return [row["nome"] for row in rows]
+
+
+def obter_historico_membro(membro_id):
+    return db_select(
+        """
+        SELECT h.id,
+               h.tipo,
+               h.data_registro AS data,
+               h.descricao,
+               COALESCE(u.nome, 'Sistema') AS responsavel
+        FROM historico_espiritual h
+        LEFT JOIN usuarios u ON u.id = h.responsavel_usuario_id
+        WHERE h.membro_id = %s
+        ORDER BY h.data_registro DESC, h.id DESC
+        """,
+        (membro_id,),
     )
 
 
+def membro_from_row(row, incluir_historico=False):
+    if not row:
+        return None
+    membro = dict(row)
+    membro["situacao"] = membro.pop("status")
+    membro["celula"] = membro.get("celula") or ""
+    membro["ministerios"] = obter_ministerios_membro(membro["id"])
+    if incluir_historico:
+        membro["historico_espiritual"] = obter_historico_membro(membro["id"])
+    return membro
+
+
+def obter_membro(membro_id, incluir_historico=False):
+    row = db_one(
+        """
+        SELECT m.*, c.nome AS celula
+        FROM membros m
+        LEFT JOIN celulas c ON c.id = m.celula_id
+        WHERE m.id = %s AND m.excluido_em IS NULL
+        LIMIT 1
+        """,
+        (membro_id,),
+    )
+    return membro_from_row(row, incluir_historico)
+
+
+def listar_membros_db(busca="", situacao="", apenas_visitantes=False):
+    sql = """
+        SELECT DISTINCT m.*, c.nome AS celula
+        FROM membros m
+        LEFT JOIN celulas c ON c.id = m.celula_id
+        LEFT JOIN membro_ministerio mm ON mm.membro_id = m.id AND mm.ativo = 1
+        LEFT JOIN ministerios mi ON mi.id = mm.ministerio_id
+        WHERE m.excluido_em IS NULL
+    """
+    params = []
+    if apenas_visitantes:
+        sql += " AND m.status = 'Visitante'"
+    elif situacao:
+        sql += " AND m.status = %s"
+        params.append(situacao)
+    if busca:
+        termo = f"%{busca}%"
+        sql += """
+            AND (
+                m.nome LIKE %s OR m.telefone LIKE %s OR m.whatsapp LIKE %s
+                OR m.email LIKE %s OR m.cpf LIKE %s OR m.status LIKE %s
+                OR c.nome LIKE %s OR m.cargo_funcao LIKE %s OR mi.nome LIKE %s
+            )
+        """
+        params.extend([termo] * 9)
+    sql += " ORDER BY m.nome"
+    return [membro_from_row(row) for row in db_select(sql, params)]
+
+
+def obter_opcoes_ministerio():
+    rows = db_select(
+        """
+        SELECT nome
+        FROM ministerios
+        WHERE ativo = 1 AND excluido_em IS NULL
+        ORDER BY nome
+        """
+    )
+    return [row["nome"] for row in rows]
+
+
+def obter_opcoes_celula():
+    rows = db_select(
+        """
+        SELECT nome
+        FROM celulas
+        WHERE ativo = 1 AND excluido_em IS NULL
+        ORDER BY nome
+        """
+    )
+    return [row["nome"] for row in rows]
+
+
+def obter_celula_id(nome):
+    if not nome:
+        return None
+    row = db_one(
+        "SELECT id FROM celulas WHERE nome = %s AND ativo = 1 AND excluido_em IS NULL",
+        (nome,),
+    )
+    return row["id"] if row else None
+
+
+def salvar_vinculos_ministerio(cursor, membro_id, ministerios):
+    cursor.execute("DELETE FROM membro_ministerio WHERE membro_id = %s", (membro_id,))
+    for nome in ministerios:
+        cursor.execute(
+            """
+            INSERT INTO membro_ministerio (membro_id, ministerio_id, ativo)
+            SELECT %s, id, 1
+            FROM ministerios
+            WHERE nome = %s AND ativo = 1 AND excluido_em IS NULL
+            """,
+            (membro_id, nome),
+        )
+
+
+def obter_dados_membro_form():
+    return {
+        "nome": request.form.get("nome", "").strip(),
+        "cpf": request.form.get("cpf", "").strip(),
+        "email": request.form.get("email", "").strip().lower(),
+        "telefone": request.form.get("telefone", "").strip(),
+        "whatsapp": request.form.get("whatsapp", "").strip(),
+        "data_nascimento": valor_ou_none(request.form.get("data_nascimento")),
+        "endereco": request.form.get("endereco", "").strip(),
+        "estado_civil": request.form.get("estado_civil", "").strip(),
+        "profissao": request.form.get("profissao", "").strip(),
+        "data_entrada": valor_ou_none(request.form.get("data_entrada")),
+        "data_batismo": valor_ou_none(request.form.get("data_batismo")),
+        "ministerios": request.form.getlist("ministerios") or request.form.getlist("ministerio"),
+        "celula": request.form.get("celula", "").strip(),
+        "cargo_funcao": request.form.get("cargo_funcao", "").strip(),
+        "situacao": request.form.get("situacao", "Ativo").strip(),
+    }
+
+
+def validar_dados_membro(dados, rota, **kwargs):
+    if not dados["nome"] or not dados["telefone"] or not dados["situacao"]:
+        flash("Nome, telefone e situacao sao obrigatorios.", "danger")
+        return redirect(url_for(rota, **kwargs))
+
+    if not validar_telefone(dados["telefone"]):
+        flash("Informe um telefone valido com DDD.", "danger")
+        return redirect(url_for(rota, **kwargs))
+
+    if dados["whatsapp"] and not validar_telefone(dados["whatsapp"]):
+        flash("Informe um WhatsApp valido com DDD.", "danger")
+        return redirect(url_for(rota, **kwargs))
+
+    if dados["email"] and not validar_email(dados["email"]):
+        flash("Informe um e-mail valido.", "danger")
+        return redirect(url_for(rota, **kwargs))
+
+    if not validar_cpf(dados["cpf"]):
+        flash("Informe um CPF valido.", "danger")
+        return redirect(url_for(rota, **kwargs))
+
+    if dados["situacao"] not in SITUACOES_MEMBRO:
+        flash("Selecione uma situacao valida.", "danger")
+        return redirect(url_for(rota, **kwargs))
+
+    if dados["estado_civil"] and dados["estado_civil"] not in ESTADOS_CIVIS:
+        flash("Selecione um estado civil valido.", "danger")
+        return redirect(url_for(rota, **kwargs))
+
+    if dados["celula"] and dados["celula"] not in obter_opcoes_celula():
+        flash("Selecione uma celula valida.", "danger")
+        return redirect(url_for(rota, **kwargs))
+
+    return None
+
+
+def inserir_membro_db(dados):
+    celula_id = obter_celula_id(dados["celula"])
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        try:
+            cursor.execute(
+                """
+                INSERT INTO membros (
+                    nome, cpf, data_nascimento, endereco, telefone, whatsapp,
+                    email, estado_civil, profissao, data_entrada, data_batismo,
+                    celula_id, cargo_funcao, status
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    dados["nome"],
+                    valor_ou_none(dados["cpf"]),
+                    dados["data_nascimento"],
+                    valor_ou_none(dados["endereco"]),
+                    valor_ou_none(dados["telefone"]),
+                    valor_ou_none(dados["whatsapp"]),
+                    valor_ou_none(dados["email"]),
+                    valor_ou_none(dados["estado_civil"]),
+                    valor_ou_none(dados["profissao"]),
+                    dados["data_entrada"],
+                    dados["data_batismo"],
+                    celula_id,
+                    valor_ou_none(dados["cargo_funcao"]),
+                    dados["situacao"],
+                ),
+            )
+            membro_id = cursor.lastrowid
+            salvar_vinculos_ministerio(cursor, membro_id, dados["ministerios"])
+            connection.commit()
+            return membro_id
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            cursor.close()
+
+
+def atualizar_membro_db(membro_id, dados):
+    celula_id = obter_celula_id(dados["celula"])
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        try:
+            cursor.execute(
+                """
+                UPDATE membros
+                SET nome = %s,
+                    cpf = %s,
+                    data_nascimento = %s,
+                    endereco = %s,
+                    telefone = %s,
+                    whatsapp = %s,
+                    email = %s,
+                    estado_civil = %s,
+                    profissao = %s,
+                    data_entrada = %s,
+                    data_batismo = %s,
+                    celula_id = %s,
+                    cargo_funcao = %s,
+                    status = %s
+                WHERE id = %s AND excluido_em IS NULL
+                """,
+                (
+                    dados["nome"],
+                    valor_ou_none(dados["cpf"]),
+                    dados["data_nascimento"],
+                    valor_ou_none(dados["endereco"]),
+                    valor_ou_none(dados["telefone"]),
+                    valor_ou_none(dados["whatsapp"]),
+                    valor_ou_none(dados["email"]),
+                    valor_ou_none(dados["estado_civil"]),
+                    valor_ou_none(dados["profissao"]),
+                    dados["data_entrada"],
+                    dados["data_batismo"],
+                    celula_id,
+                    valor_ou_none(dados["cargo_funcao"]),
+                    dados["situacao"],
+                    membro_id,
+                ),
+            )
+            salvar_vinculos_ministerio(cursor, membro_id, dados["ministerios"])
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            cursor.close()
+
+
 def obter_nome_membro(membro_id):
-    membro = encontrar_por_id(MEMBROS, membro_id)
-    return membro["nome"] if membro else "Visitante/Não vinculado"
+    if not membro_id:
+        return "Visitante/Nao vinculado"
+    row = db_one("SELECT nome FROM membros WHERE id = %s AND excluido_em IS NULL", (membro_id,))
+    return row["nome"] if row else "Visitante/Nao vinculado"
+
+
+def listar_membros_select():
+    return db_select(
+        """
+        SELECT id, nome
+        FROM membros
+        WHERE excluido_em IS NULL
+        ORDER BY nome
+        """
+    )
+
+
+def listar_categorias_financeiras(tipo=None):
+    sql = "SELECT id, nome, tipo FROM categorias_financeiras WHERE ativo = 1"
+    params = []
+    if tipo:
+        sql += " AND tipo = %s"
+        params.append(tipo)
+    sql += " ORDER BY tipo, nome"
+    return db_select(sql, params)
+
+
+def listar_contas_financeiras():
+    return db_select(
+        """
+        SELECT id, nome
+        FROM contas_financeiras
+        WHERE ativo = 1
+        ORDER BY nome
+        """
+    )
+
+
+def listar_fornecedores_select():
+    return db_select(
+        """
+        SELECT id, nome
+        FROM fornecedores
+        WHERE ativo = 1 AND excluido_em IS NULL
+        ORDER BY nome
+        """
+    )
+
+
+def salvar_upload_imagem(arquivo, subpasta):
+    if not arquivo or not arquivo.filename:
+        return None
+
+    nome_seguro = secure_filename(arquivo.filename)
+    extensao = nome_seguro.rsplit(".", 1)[-1].lower() if "." in nome_seguro else ""
+    if extensao not in BANNER_EXTENSOES:
+        return None
+
+    pasta = os.path.join(app.static_folder, "imgs", subpasta)
+    os.makedirs(pasta, exist_ok=True)
+    nome_final = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{nome_seguro}"
+    arquivo.save(os.path.join(pasta, nome_final))
+    return f"imgs/{subpasta}/{nome_final}"
+
+
+def salvar_banner_evento(arquivo):
+    return salvar_upload_imagem(arquivo, "eventos")
+
+
+def salvar_imagem_mural(arquivo):
+    return salvar_upload_imagem(arquivo, "mural")
+
+
+def obter_config(chave, padrao=""):
+    row = db_one("SELECT valor FROM configuracoes_sistema WHERE chave = %s", (chave,))
+    return row["valor"] if row and row.get("valor") is not None else padrao
+
+
+def salvar_config(chave, valor, descricao):
+    db_write(
+        """
+        INSERT INTO configuracoes_sistema (chave, valor, descricao)
+        VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE valor = VALUES(valor), descricao = VALUES(descricao)
+        """,
+        (chave, valor, descricao),
+    )
+
+
+def obter_igreja():
+    igreja = db_one("SELECT * FROM igrejas ORDER BY id LIMIT 1")
+    if igreja:
+        return igreja
+    return {
+        "nome": obter_config("igreja.nome", "Igreja Viva"),
+        "email": "",
+        "telefone": "",
+        "endereco": "",
+        "logo_path": "static/imgs/logo_church.png",
+    }
+
+
+def montar_linhas_relatorio():
+    metricas = gerar_metricas()
+    return [
+        ["Membros ativos", "Pessoas", metricas["membros_ativos"], "Disponivel"],
+        ["Membros inativos", "Pessoas", metricas["membros_inativos"], "Disponivel"],
+        ["Visitantes", "Pessoas", metricas["visitantes"], "Disponivel"],
+        ["Familias", "Pessoas", metricas["familias"], "Disponivel"],
+        ["Batizados", "Eclesiastico", db_scalar("SELECT COUNT(*) AS valor FROM historico_espiritual WHERE tipo = 'Batismo'"), "Disponivel"],
+        ["Novos membros", "Crescimento", db_scalar("SELECT COUNT(*) AS valor FROM membros WHERE excluido_em IS NULL"), "Disponivel"],
+        ["Membros por ministerio", "Ministerios", metricas["ministerios"], "Disponivel"],
+        ["Membros por celula", "Celulas", metricas["celulas"], "Disponivel"],
+        ["Presenca", "Frequencia", metricas["presencas"], "Disponivel"],
+        ["Financeiro", "Financeiro", moeda_br(metricas["saldo"]), "Disponivel"],
+        ["Fornecedores", "Financeiro", metricas["fornecedores"], "Disponivel"],
+        ["Doacoes", "Financeiro", moeda_br(metricas["doacoes_valor"]), "Disponivel"],
+        ["Mural", "Comunicacao", metricas["mural"], "Disponivel"],
+        ["Pedidos de oracao", "Cuidado", metricas["pedidos_oracao"], "Disponivel"],
+    ]
+
+
+def pdf_simples(titulo, linhas):
+    conteudo = [titulo, "", "Relatorio | Modulo | Indicador | Status"]
+    conteudo.extend(" | ".join(str(valor) for valor in linha) for linha in linhas)
+    comandos = ["BT /F1 11 Tf 50 790 Td 14 TL"]
+    for linha in conteudo:
+        texto = linha[:95].replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+        comandos.append(f"({texto}) Tj T*")
+    comandos.append("ET")
+    stream = "\n".join(comandos)
+    objetos = [
+        b"1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n",
+        b"2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n",
+        b"3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj\n",
+        b"4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n",
+    ]
+    stream_bytes = stream.encode("latin-1", errors="replace")
+    objetos.append(
+        f"5 0 obj << /Length {len(stream_bytes)} >> stream\n".encode("latin-1")
+        + stream_bytes
+        + b"\nendstream endobj\n"
+    )
+    buffer = BytesIO()
+    buffer.write(b"%PDF-1.4\n")
+    offsets = []
+    for objeto in objetos:
+        offsets.append(buffer.tell())
+        buffer.write(objeto)
+    xref = buffer.tell()
+    buffer.write(f"xref\n0 {len(objetos) + 1}\n0000000000 65535 f \n".encode("latin-1"))
+    for offset in offsets:
+        buffer.write(f"{offset:010d} 00000 n \n".encode("latin-1"))
+    buffer.write(
+        f"trailer << /Size {len(objetos) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF".encode("latin-1")
+    )
+    return buffer.getvalue()
+
+
+def ministerio_from_row(row):
+    ministerio = dict(row)
+    ministerio["lider"] = ministerio.get("lider_nome") or ""
+    ministerio["status"] = "Ativo" if ministerio.get("ativo") else "Inativo"
+    ministerio["participantes"] = [None] * int(ministerio.get("participantes_total") or 0)
+    return ministerio
+
+
+def listar_ministerios_db(busca="", status=""):
+    sql = """
+        SELECT mi.*,
+               COUNT(mm.membro_id) AS participantes_total
+        FROM ministerios mi
+        LEFT JOIN membro_ministerio mm ON mm.ministerio_id = mi.id AND mm.ativo = 1
+        WHERE mi.excluido_em IS NULL
+    """
+    params = []
+    if status == "Ativo":
+        sql += " AND mi.ativo = 1"
+    elif status == "Inativo":
+        sql += " AND mi.ativo = 0"
+    if busca:
+        termo = f"%{busca}%"
+        sql += """
+            AND (
+                mi.nome LIKE %s OR mi.lider_nome LIKE %s
+                OR mi.dia_reuniao LIKE %s OR mi.vagas LIKE %s
+                OR CASE WHEN mi.ativo = 1 THEN 'Ativo' ELSE 'Inativo' END LIKE %s
+            )
+        """
+        params.extend([termo] * 5)
+    sql += " GROUP BY mi.id ORDER BY mi.nome"
+    return [ministerio_from_row(row) for row in db_select(sql, params)]
+
+
+def obter_ministerio(ministerio_id):
+    row = db_one(
+        """
+        SELECT mi.*,
+               COUNT(mm.membro_id) AS participantes_total
+        FROM ministerios mi
+        LEFT JOIN membro_ministerio mm ON mm.ministerio_id = mi.id AND mm.ativo = 1
+        WHERE mi.id = %s AND mi.excluido_em IS NULL
+        GROUP BY mi.id
+        """,
+        (ministerio_id,),
+    )
+    return ministerio_from_row(row) if row else None
 
 
 def gerar_metricas():
-    membros_visiveis = registros_visiveis(MEMBROS)
-    ministerios_visiveis = registros_visiveis(MINISTERIOS)
-    entradas = sum(item["valor"] for item in LANCAMENTOS_FINANCEIROS if item["tipo"] == "Entrada")
-    saidas = sum(item["valor"] for item in LANCAMENTOS_FINANCEIROS if item["tipo"] == "Saída")
-    presentes = sum(1 for presenca in PRESENCAS if presenca["presente"])
-    ausentes = sum(1 for presenca in PRESENCAS if not presenca["presente"])
-
+    entradas = db_scalar(
+        "SELECT COALESCE(SUM(valor), 0) AS valor FROM lancamentos_financeiros WHERE tipo = 'Entrada'"
+    )
+    saidas = db_scalar(
+        "SELECT COALESCE(SUM(valor), 0) AS valor FROM lancamentos_financeiros WHERE tipo = 'Saida'"
+    )
     return {
-        "usuarios_ativos": sum(1 for usuario in registros_visiveis(USUARIOS) if usuario["status"] == "Ativo"),
-        "membros_ativos": sum(1 for membro in membros_visiveis if membro["situacao"] == "Ativo"),
-        "membros_inativos": sum(1 for membro in membros_visiveis if membro["situacao"] == "Inativo"),
-        "visitantes": sum(1 for membro in membros_visiveis if membro["situacao"] == "Visitante"),
-        "afastados": sum(1 for membro in membros_visiveis if membro["situacao"] == "Afastado"),
-        "ministerios": sum(1 for ministerio in ministerios_visiveis if ministerio["status"] == "Ativo"),
-        "vagas": sum(ministerio["vagas"] for ministerio in ministerios_visiveis if ministerio["status"] == "Ativo"),
-        "celulas": sum(1 for celula in CELULAS if celula["status"] == "Ativo"),
-        "eventos": sum(1 for evento in EVENTOS if evento["status"] != "Cancelado"),
-        "presencas": presentes,
-        "ausencias": ausentes,
+        "usuarios_ativos": db_scalar(
+            "SELECT COUNT(*) AS valor FROM usuarios WHERE ativo = 1 AND bloqueado = 0 AND excluido_em IS NULL"
+        ),
+        "membros_ativos": db_scalar(
+            "SELECT COUNT(*) AS valor FROM membros WHERE status = 'Ativo' AND excluido_em IS NULL"
+        ),
+        "membros_inativos": db_scalar(
+            "SELECT COUNT(*) AS valor FROM membros WHERE status = 'Inativo' AND excluido_em IS NULL"
+        ),
+        "visitantes": db_scalar(
+            "SELECT COUNT(*) AS valor FROM membros WHERE status = 'Visitante' AND excluido_em IS NULL"
+        ),
+        "familias": db_scalar(
+            "SELECT COUNT(*) AS valor FROM familias WHERE ativo = 1 AND excluido_em IS NULL"
+        ),
+        "afastados": db_scalar(
+            "SELECT COUNT(*) AS valor FROM membros WHERE status = 'Afastado' AND excluido_em IS NULL"
+        ),
+        "ministerios": db_scalar(
+            "SELECT COUNT(*) AS valor FROM ministerios WHERE ativo = 1 AND excluido_em IS NULL"
+        ),
+        "vagas": db_scalar(
+            "SELECT COALESCE(SUM(vagas), 0) AS valor FROM ministerios WHERE ativo = 1 AND excluido_em IS NULL"
+        ),
+        "celulas": db_scalar(
+            "SELECT COUNT(*) AS valor FROM celulas WHERE ativo = 1 AND excluido_em IS NULL"
+        ),
+        "eventos": db_scalar(
+            "SELECT COUNT(*) AS valor FROM eventos WHERE status <> 'Cancelado'"
+        ),
+        "presencas": db_scalar("SELECT COUNT(*) AS valor FROM presencas WHERE presente = 1"),
+        "ausencias": db_scalar("SELECT COUNT(*) AS valor FROM presencas WHERE presente = 0"),
         "entradas": entradas,
         "saidas": saidas,
         "saldo": entradas - saidas,
-        "mensagens": len(MENSAGENS),
+        "mensagens": db_scalar("SELECT COUNT(*) AS valor FROM mensagens"),
+        "fornecedores": db_scalar(
+            "SELECT COUNT(*) AS valor FROM fornecedores WHERE ativo = 1 AND excluido_em IS NULL"
+        ),
+        "mural": db_scalar("SELECT COUNT(*) AS valor FROM mural_avisos WHERE status <> 'Arquivado'"),
+        "pedidos_oracao": db_scalar("SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status <> 'Arquivado'"),
+        "doacoes": db_scalar("SELECT COUNT(*) AS valor FROM doacoes WHERE status <> 'Cancelada'"),
+        "doacoes_valor": db_scalar(
+            "SELECT COALESCE(SUM(valor), 0) AS valor FROM doacoes WHERE status = 'Recebida'"
+        ),
     }
 
 
 def montar_modulos_dashboard():
+    metricas = gerar_metricas()
     return [
-        {"titulo": "Membros", "descricao": "Cadastro, edição, status e histórico espiritual.", "rota": "listar_membros", "valor": gerar_metricas()["membros_ativos"]},
-        {"titulo": "Visitantes", "descricao": "Acompanhamento de visitantes e integração.", "rota": "listar_visitantes", "valor": gerar_metricas()["visitantes"]},
-        {"titulo": "Ministérios", "descricao": "Líderes, participantes, atividades e relatórios.", "rota": "listar_ministerios", "valor": gerar_metricas()["ministerios"]},
-        {"titulo": "Células", "descricao": "Grupos pequenos, reuniões, presença e crescimento.", "rota": "listar_celulas", "valor": gerar_metricas()["celulas"]},
-        {"titulo": "Presença", "descricao": "Frequência por culto, evento, célula e membro.", "rota": "listar_presencas", "valor": gerar_metricas()["presencas"]},
-        {"titulo": "Eventos", "descricao": "Inscrições, participantes e listas de presença.", "rota": "listar_eventos", "valor": gerar_metricas()["eventos"]},
-        {"titulo": "Financeiro", "descricao": "Dízimos, ofertas, contribuições, contas e relatórios.", "rota": "listar_financeiro", "valor": f"R$ {gerar_metricas()['saldo']:.2f}"},
-        {"titulo": "Comunicação", "descricao": "WhatsApp, e-mail, listas e histórico de mensagens.", "rota": "listar_comunicacao", "valor": gerar_metricas()["mensagens"]},
-        {"titulo": "Relatórios", "descricao": "Indicadores pastorais, financeiros e de crescimento.", "rota": "listar_relatorios", "valor": "10+"},
-        {"titulo": "Usuários", "descricao": "Perfis, permissões, bloqueio e auditoria.", "rota": "listar_usuarios", "valor": gerar_metricas()["usuarios_ativos"]},
-        {"titulo": "Configurações", "descricao": "Dados da igreja, logo, cargos, backups e parâmetros.", "rota": "listar_configuracoes", "valor": "OK"},
+        {"titulo": "Membros", "descricao": "Cadastro, edicao, status e historico espiritual.", "rota": "listar_membros", "valor": metricas["membros_ativos"]},
+        {"titulo": "Visitantes", "descricao": "Acompanhamento de visitantes e integracao.", "rota": "listar_visitantes", "valor": metricas["visitantes"]},
+        {"titulo": "Familias", "descricao": "Nucleos familiares, responsaveis e membros vinculados.", "rota": "listar_familias", "valor": metricas["familias"]},
+        {"titulo": "Ministerios", "descricao": "Lideres, participantes, atividades e relatorios.", "rota": "listar_ministerios", "valor": metricas["ministerios"]},
+        {"titulo": "Celulas", "descricao": "Grupos pequenos, reunioes, presenca e crescimento.", "rota": "listar_celulas", "valor": metricas["celulas"]},
+        {"titulo": "Presenca", "descricao": "Frequencia por culto, evento, celula e membro.", "rota": "listar_presencas", "valor": metricas["presencas"]},
+        {"titulo": "Eventos", "descricao": "Inscricoes, participantes e listas de presenca.", "rota": "listar_eventos", "valor": metricas["eventos"]},
+        {"titulo": "Financeiro", "descricao": "Dizimos, ofertas, contribuicoes, contas e relatorios.", "rota": "listar_financeiro", "valor": f"R$ {metricas['saldo']:.2f}"},
+        {"titulo": "Fornecedores", "descricao": "Cadastros usados no controle de gastos e saidas.", "rota": "listar_fornecedores", "valor": metricas["fornecedores"]},
+        {"titulo": "Doacoes", "descricao": "Registro de doacoes recebidas, pendentes e recorrentes.", "rota": "listar_doacoes", "valor": metricas["doacoes"]},
+        {"titulo": "Comunicacao", "descricao": "WhatsApp, e-mail, listas e historico de mensagens.", "rota": "listar_comunicacao", "valor": metricas["mensagens"]},
+        {"titulo": "Mural", "descricao": "Avisos e conteudos publicados para a igreja.", "rota": "listar_mural", "valor": metricas["mural"]},
+        {"titulo": "Intercessao", "descricao": "Pedidos de oracao, acompanhamento e respostas.", "rota": "listar_intercessao", "valor": metricas["pedidos_oracao"]},
+        {"titulo": "Relatorios", "descricao": "Indicadores pastorais, financeiros e de crescimento.", "rota": "listar_relatorios", "valor": "10+"},
+        {"titulo": "Usuarios", "descricao": "Perfis, permissoes, bloqueio e auditoria.", "rota": "listar_usuarios", "valor": metricas["usuarios_ativos"]},
+        {"titulo": "Configuracoes", "descricao": "Dados da igreja, logo, cargos, backups e parametros.", "rota": "listar_configuracoes", "valor": "OK"},
     ]
 
 
@@ -504,19 +842,29 @@ def login_required(function):
     return wrapper
 
 
+def data_hora_br(valor):
+    if isinstance(valor, datetime):
+        return valor.strftime("%d/%m/%Y %H:%M")
+    return str(valor)
+
+
 @app.template_filter("data_br")
 def data_br(valor):
     if not valor:
         return "-"
+    if isinstance(valor, datetime):
+        return valor.strftime("%d/%m/%Y")
+    if isinstance(valor, date):
+        return valor.strftime("%d/%m/%Y")
     try:
-        return datetime.strptime(valor[:10], "%Y-%m-%d").strftime("%d/%m/%Y")
+        return datetime.strptime(str(valor)[:10], "%Y-%m-%d").strftime("%d/%m/%Y")
     except ValueError:
         return valor
 
 
 @app.template_filter("moeda_br")
 def moeda_br(valor):
-    return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"R$ {float(valor or 0):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
 @app.context_processor
@@ -537,12 +885,29 @@ def index():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    membros_recentes = db_select(
+        """
+        SELECT id, nome, status AS situacao, telefone
+        FROM membros
+        WHERE excluido_em IS NULL
+        ORDER BY criado_em DESC, id DESC
+        LIMIT 3
+        """
+    )
+    eventos = db_select(
+        """
+        SELECT id, nome, data_inicio AS data, status
+        FROM eventos
+        ORDER BY data_inicio
+        LIMIT 3
+        """
+    )
     return render_template(
         "dashboard.html",
         metricas=gerar_metricas(),
         modulos=montar_modulos_dashboard(),
-        membros_recentes=registros_visiveis(MEMBROS)[-3:],
-        eventos=EVENTOS[:3],
+        membros_recentes=membros_recentes,
+        eventos=eventos,
     )
 
 
@@ -557,19 +922,20 @@ def login():
             return redirect(url_for("login"))
 
         if not validar_email(email):
-            flash("Informe um e-mail válido para acessar o sistema.", "danger")
+            flash("Informe um e-mail valido para acessar o sistema.", "danger")
             return redirect(url_for("login"))
 
         usuario = obter_usuario_por_email(email)
         if not usuario or not check_password_hash(usuario["senha_hash"], senha):
-            flash("Credenciais inválidas.", "danger")
+            flash("Credenciais invalidas.", "danger")
             return redirect(url_for("login"))
 
         if usuario["status"] != "Ativo":
-            flash("Usuário bloqueado ou inativo. Procure um administrador.", "danger")
+            flash("Usuario bloqueado ou inativo. Procure um administrador.", "danger")
             return redirect(url_for("login"))
 
-        usuario["ultimo_acesso"] = datetime.now().strftime("%d/%m/%Y %H:%M")
+        db_write("UPDATE usuarios SET ultimo_login_em = NOW() WHERE id = %s", (usuario["id"],))
+        session["usuario_id"] = usuario["id"]
         session["usuario_logado"] = usuario["email"]
         session["usuario_nome"] = usuario["nome"]
         session["usuario_perfil"] = usuario["perfil"]
@@ -584,10 +950,10 @@ def recuperar_senha():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         if not email or not validar_email(email):
-            flash("Informe um e-mail válido para recuperação de senha.", "danger")
+            flash("Informe um e-mail valido para recuperacao de senha.", "danger")
             return redirect(url_for("recuperar_senha"))
 
-        flash("Se o e-mail estiver cadastrado, as instruções de recuperação serão enviadas.", "info")
+        flash("Se o e-mail estiver cadastrado, as instrucoes de recuperacao serao enviadas.", "info")
         return redirect(url_for("login"))
 
     return render_template("recuperar_senha.html")
@@ -606,11 +972,7 @@ def cadastro():
             return redirect(url_for("cadastro"))
 
         if not validar_email(email):
-            flash("Informe um e-mail válido.", "danger")
-            return redirect(url_for("cadastro"))
-
-        if email_em_uso(email):
-            flash("Já existe um usuário com este e-mail.", "danger")
+            flash("Informe um e-mail valido.", "danger")
             return redirect(url_for("cadastro"))
 
         if len(senha) < 8:
@@ -618,21 +980,20 @@ def cadastro():
             return redirect(url_for("cadastro"))
 
         if senha != confirmar_senha:
-            flash("A confirmação de senha não confere.", "danger")
+            flash("A confirmacao de senha nao confere.", "danger")
             return redirect(url_for("cadastro"))
 
-        USUARIOS.append(
-            {
-                "id": proximo_id(USUARIOS),
-                "nome": nome,
-                "email": email,
-                "senha_hash": generate_password_hash(senha),
-                "perfil": "Secretaria",
-                "status": "Ativo",
-                "ultimo_acesso": None,
-                "excluido": False,
-            }
-        )
+        if email_em_uso(email):
+            flash("Ja existe um usuario com este e-mail.", "danger")
+            return redirect(url_for("cadastro"))
+
+        try:
+            criar_usuario(nome, email, senha, "Secretaria")
+        except Exception as erro:
+            app.logger.error("Erro ao cadastrar usuario: %s", erro)
+            flash("Nao foi possivel cadastrar o usuario no banco.", "danger")
+            return redirect(url_for("cadastro"))
+
         flash("Cadastro realizado com sucesso! Agora realize o login para acessar o sistema.", "success")
         return redirect(url_for("login"))
 
@@ -650,12 +1011,13 @@ def logout():
 @login_required
 def listar_usuarios():
     busca = request.args.get("q", "").strip()
-    usuarios = filtrar_registros(
-        registros_visiveis(USUARIOS),
-        busca,
-        ["nome", "email", "perfil", "status", "ultimo_acesso"],
+    usuarios = listar_usuarios_db(busca)
+    return render_template(
+        "usuarios/listar_usuarios.html",
+        usuarios=usuarios,
+        busca=busca,
+        total=db_scalar("SELECT COUNT(*) AS valor FROM usuarios WHERE excluido_em IS NULL"),
     )
-    return render_template("usuarios/listar_usuarios.html", usuarios=usuarios, busca=busca, total=len(registros_visiveis(USUARIOS)))
 
 
 @app.route("/usuarios/inserir", methods=["GET", "POST"])
@@ -665,36 +1027,36 @@ def inserir_usuario():
         nome = request.form.get("nome", "").strip()
         email = request.form.get("email", "").strip().lower()
         perfil = request.form.get("perfil", "").strip()
+        senha_provisoria = request.form.get("senha_provisoria", "").strip()
 
-        if not nome or not email or not perfil:
-            flash("Nome, e-mail e perfil são obrigatórios.", "danger")
+        if not nome or not email or not perfil or not senha_provisoria:
+            flash("Nome, e-mail, perfil e senha provisoria sao obrigatorios.", "danger")
             return redirect(url_for("inserir_usuario"))
 
         if not validar_email(email):
-            flash("Informe um e-mail válido.", "danger")
+            flash("Informe um e-mail valido.", "danger")
             return redirect(url_for("inserir_usuario"))
 
         if perfil not in PERFIS_USUARIO:
-            flash("Selecione um perfil válido.", "danger")
+            flash("Selecione um perfil valido.", "danger")
+            return redirect(url_for("inserir_usuario"))
+
+        if len(senha_provisoria) < 8:
+            flash("A senha provisoria deve ter pelo menos 8 caracteres.", "danger")
             return redirect(url_for("inserir_usuario"))
 
         if email_em_uso(email):
-            flash("Já existe um usuário com este e-mail.", "danger")
+            flash("Ja existe um usuario com este e-mail.", "danger")
             return redirect(url_for("inserir_usuario"))
 
-        USUARIOS.append(
-            {
-                "id": proximo_id(USUARIOS),
-                "nome": nome,
-                "email": email,
-                "senha_hash": generate_password_hash("Mudar@123"),
-                "perfil": perfil,
-                "status": "Ativo",
-                "ultimo_acesso": None,
-                "excluido": False,
-            }
-        )
-        flash("Usuário cadastrado com sucesso! Senha inicial: Mudar@123", "success")
+        try:
+            criar_usuario(nome, email, senha_provisoria, perfil)
+        except Exception as erro:
+            app.logger.error("Erro ao inserir usuario: %s", erro)
+            flash("Nao foi possivel salvar o usuario no banco.", "danger")
+            return redirect(url_for("inserir_usuario"))
+
+        flash("Usuario cadastrado com sucesso. Informe a senha provisoria para o primeiro acesso.", "success")
         return redirect(url_for("listar_usuarios"))
 
     return render_template("usuarios/inserir_usuario.html", perfis=PERFIS_USUARIO)
@@ -703,9 +1065,9 @@ def inserir_usuario():
 @app.route("/usuarios/editar/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
 def editar_usuario(usuario_id):
-    usuario = encontrar_por_id(USUARIOS, usuario_id)
+    usuario = obter_usuario(usuario_id)
     if not usuario:
-        flash("Usuário não encontrado.", "danger")
+        flash("Usuario nao encontrado.", "danger")
         return redirect(url_for("listar_usuarios"))
 
     if request.method == "POST":
@@ -723,11 +1085,17 @@ def editar_usuario(usuario_id):
             return redirect(url_for("editar_usuario", usuario_id=usuario_id))
 
         if email_em_uso(email, usuario_id):
-            flash("Já existe outro usuário com este e-mail.", "danger")
+            flash("Ja existe outro usuario com este e-mail.", "danger")
             return redirect(url_for("editar_usuario", usuario_id=usuario_id))
 
-        usuario.update({"nome": nome, "email": email, "perfil": perfil, "status": status})
-        flash("Usuário atualizado com sucesso.", "success")
+        try:
+            atualizar_usuario(usuario_id, nome, email, perfil, status)
+        except Exception as erro:
+            app.logger.error("Erro ao editar usuario: %s", erro)
+            flash("Nao foi possivel atualizar o usuario no banco.", "danger")
+            return redirect(url_for("editar_usuario", usuario_id=usuario_id))
+
+        flash("Usuario atualizado com sucesso.", "success")
         return redirect(url_for("listar_usuarios"))
 
     return render_template("usuarios/editar_usuario.html", usuario=usuario, perfis=PERFIS_USUARIO, status_opcoes=STATUS_USUARIO)
@@ -736,14 +1104,13 @@ def editar_usuario(usuario_id):
 @app.route("/usuarios/excluir/<int:usuario_id>", methods=["POST"])
 @login_required
 def excluir_usuario(usuario_id):
-    usuario = encontrar_por_id(USUARIOS, usuario_id)
+    usuario = obter_usuario(usuario_id)
     if not usuario:
-        flash("Usuário não encontrado.", "danger")
+        flash("Usuario nao encontrado.", "danger")
         return redirect(url_for("listar_usuarios"))
 
-    usuario["status"] = "Inativo"
-    usuario["excluido"] = True
-    flash("Usuário inativado por exclusão lógica.", "success")
+    db_write("UPDATE usuarios SET ativo = 0, excluido_em = NOW() WHERE id = %s", (usuario_id,))
+    flash("Usuario inativado por exclusao logica.", "success")
     return redirect(url_for("listar_usuarios"))
 
 
@@ -754,20 +1121,20 @@ def listar_membros():
     situacao = request.args.get("status", "").strip()
     if situacao not in SITUACOES_MEMBRO:
         situacao = ""
-    membros = filtrar_membros(MEMBROS, busca, situacao)
+    membros = listar_membros_db(busca, situacao)
     return render_template(
         "membros/listar_membros.html",
         membros=membros,
         busca=busca,
         status_atual=situacao,
         status_opcoes=SITUACOES_MEMBRO,
-        total=len(registros_visiveis(MEMBROS)),
-        metricas=gerar_metricas(),
-        titulo_lista="Membros da igreja",
-        descricao_lista="Acompanhe dados pessoais, vínculo ministerial, célula e situação de cada pessoa.",
-        novo_label="Novo membro",
+        titulo_lista="Membros",
+        descricao_lista="Gerencie cadastros, status, contato, ministerios e historico espiritual.",
         novo_url=url_for("inserir_membro"),
+        novo_label="Cadastrar membro",
         modo_visitantes=False,
+        metricas=gerar_metricas(),
+        total=db_scalar("SELECT COUNT(*) AS valor FROM membros WHERE excluido_em IS NULL"),
     )
 
 
@@ -775,85 +1142,124 @@ def listar_membros():
 @login_required
 def listar_visitantes():
     busca = request.args.get("q", "").strip()
-    membros = filtrar_membros(MEMBROS, busca, apenas_visitantes=True)
+    membros = listar_membros_db(busca, apenas_visitantes=True)
     return render_template(
         "membros/listar_membros.html",
         membros=membros,
         busca=busca,
         status_atual="Visitante",
-        status_opcoes=["Visitante"],
-        total=len(membros),
-        metricas=gerar_metricas(),
+        status_opcoes=SITUACOES_MEMBRO,
         titulo_lista="Visitantes",
-        descricao_lista="Acompanhe visitantes, contatos e encaminhamento para integração.",
-        novo_label="Novo visitante",
+        descricao_lista="Acompanhe visitantes e encaminhe o cuidado inicial.",
         novo_url=url_for("inserir_membro", situacao="Visitante"),
+        novo_label="Cadastrar visitante",
         modo_visitantes=True,
+        metricas=gerar_metricas(),
+        total=len(membros),
     )
 
 
-def obter_dados_membro_form():
-    ministerios_form = request.form.getlist("ministerios")
-    ministerio_legado = request.form.get("ministerio", "").strip()
-    if ministerio_legado and ministerio_legado not in ministerios_form:
-        ministerios_form.append(ministerio_legado)
+@app.route("/familias/listar")
+@login_required
+def listar_familias():
+    busca = request.args.get("q", "").strip()
+    sql = """
+        SELECT f.id, f.nome, f.telefone, f.endereco, f.ativo,
+               r.nome AS responsavel,
+               COUNT(fm.membro_id) AS membros_total,
+               GROUP_CONCAT(m.nome ORDER BY m.nome SEPARATOR ', ') AS membros
+        FROM familias f
+        LEFT JOIN membros r ON r.id = f.responsavel_membro_id
+        LEFT JOIN familia_membros fm ON fm.familia_id = f.id
+        LEFT JOIN membros m ON m.id = fm.membro_id
+        WHERE f.excluido_em IS NULL
+    """
+    params = []
+    if busca:
+        termo = f"%{busca}%"
+        sql += " AND (f.nome LIKE %s OR f.telefone LIKE %s OR r.nome LIKE %s OR m.nome LIKE %s)"
+        params.extend([termo, termo, termo, termo])
+    sql += " GROUP BY f.id ORDER BY f.nome"
+    familias = db_select(sql, params)
+    return render_template(
+        "familias/listar_familias.html",
+        familias=familias,
+        busca=busca,
+        metricas=gerar_metricas(),
+    )
 
-    ministerios_validos = set(obter_opcoes_ministerio())
-    ministerios = [ministerio for ministerio in ministerios_form if ministerio in ministerios_validos]
 
-    return {
-        "nome": request.form.get("nome", "").strip(),
-        "cpf": request.form.get("cpf", "").strip(),
-        "email": request.form.get("email", "").strip().lower(),
-        "telefone": request.form.get("telefone", "").strip(),
-        "whatsapp": request.form.get("whatsapp", "").strip(),
-        "data_nascimento": request.form.get("data_nascimento", "").strip(),
-        "endereco": request.form.get("endereco", "").strip(),
-        "estado_civil": request.form.get("estado_civil", "").strip(),
-        "profissao": request.form.get("profissao", "").strip(),
-        "data_entrada": request.form.get("data_entrada", "").strip(),
-        "data_batismo": request.form.get("data_batismo", "").strip(),
-        "ministerios": ministerios,
-        "celula": request.form.get("celula", "").strip(),
-        "cargo_funcao": request.form.get("cargo_funcao", "").strip(),
-        "situacao": request.form.get("situacao", "Ativo").strip(),
-    }
+@app.route("/familias/inserir", methods=["GET", "POST"])
+@login_required
+def inserir_familia():
+    membros = listar_membros_select()
+
+    if request.method == "POST":
+        nome = request.form.get("nome", "").strip()
+        responsavel_membro_id = request.form.get("responsavel_membro_id", "").strip()
+        telefone = request.form.get("telefone", "").strip()
+        endereco = request.form.get("endereco", "").strip()
+        observacoes = request.form.get("observacoes", "").strip()
+        membros_ids = request.form.getlist("membros")
+
+        if not nome:
+            flash("Nome da familia e obrigatorio.", "danger")
+            return redirect(url_for("inserir_familia"))
+
+        if telefone and not validar_telefone(telefone):
+            flash("Informe um telefone valido com DDD.", "danger")
+            return redirect(url_for("inserir_familia"))
+
+        membros_vinculados = {int(membro_id) for membro_id in membros_ids if membro_id.isdigit()}
+        responsavel_id = int(responsavel_membro_id) if responsavel_membro_id.isdigit() else None
+        if responsavel_id:
+            membros_vinculados.add(responsavel_id)
+
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute(
+                    """
+                    INSERT INTO familias (nome, responsavel_membro_id, telefone, endereco, observacoes, ativo)
+                    VALUES (%s, %s, %s, %s, %s, 1)
+                    """,
+                    (
+                        nome,
+                        responsavel_id,
+                        valor_ou_none(telefone),
+                        valor_ou_none(endereco),
+                        valor_ou_none(observacoes),
+                    ),
+                )
+                familia_id = cursor.lastrowid
+                for membro_id in membros_vinculados:
+                    parentesco = "Responsavel" if membro_id == responsavel_id else "Membro"
+                    cursor.execute(
+                        """
+                        INSERT INTO familia_membros (familia_id, membro_id, parentesco)
+                        VALUES (%s, %s, %s)
+                        """,
+                        (familia_id, membro_id, parentesco),
+                    )
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
+            finally:
+                cursor.close()
+
+        flash("Familia cadastrada com sucesso.", "success")
+        return redirect(url_for("listar_familias"))
+
+    return render_template("familias/inserir_familia.html", membros=membros)
 
 
-def validar_dados_membro(dados, rota, **kwargs):
-    if not dados["nome"] or not dados["telefone"] or not dados["situacao"]:
-        flash("Nome, telefone e situação são obrigatórios.", "danger")
-        return redirect(url_for(rota, **kwargs))
-
-    if not validar_telefone(dados["telefone"]):
-        flash("Informe um telefone válido com DDD.", "danger")
-        return redirect(url_for(rota, **kwargs))
-
-    if dados["whatsapp"] and not validar_telefone(dados["whatsapp"]):
-        flash("Informe um WhatsApp válido com DDD.", "danger")
-        return redirect(url_for(rota, **kwargs))
-
-    if dados["email"] and not validar_email(dados["email"]):
-        flash("Informe um e-mail válido.", "danger")
-        return redirect(url_for(rota, **kwargs))
-
-    if not validar_cpf(dados["cpf"]):
-        flash("Informe um CPF válido.", "danger")
-        return redirect(url_for(rota, **kwargs))
-
-    if dados["situacao"] not in SITUACOES_MEMBRO:
-        flash("Selecione uma situação válida.", "danger")
-        return redirect(url_for(rota, **kwargs))
-
-    if dados["estado_civil"] and dados["estado_civil"] not in ESTADOS_CIVIS:
-        flash("Selecione um estado civil válido.", "danger")
-        return redirect(url_for(rota, **kwargs))
-
-    if dados["celula"] and dados["celula"] not in obter_opcoes_celula():
-        flash("Selecione uma célula válida.", "danger")
-        return redirect(url_for(rota, **kwargs))
-
-    return None
+@app.route("/familias/excluir/<int:familia_id>", methods=["POST"])
+@login_required
+def excluir_familia(familia_id):
+    db_write("UPDATE familias SET ativo = 0, excluido_em = NOW() WHERE id = %s", (familia_id,))
+    flash("Familia removida da listagem por exclusao logica.", "success")
+    return redirect(url_for("listar_familias"))
 
 
 @app.route("/membros/inserir", methods=["GET", "POST"])
@@ -869,14 +1275,13 @@ def inserir_membro():
         if erro:
             return erro
 
-        MEMBROS.append(
-            {
-                "id": proximo_id(MEMBROS),
-                **dados,
-                "historico_espiritual": [],
-                "excluido": False,
-            }
-        )
+        try:
+            inserir_membro_db(dados)
+        except Exception as erro:
+            app.logger.error("Erro ao inserir membro: %s", erro)
+            flash("Nao foi possivel salvar a pessoa no banco.", "danger")
+            return redirect(url_for("inserir_membro", situacao=situacao_padrao))
+
         flash("Pessoa cadastrada com sucesso!", "success")
         return redirect(url_for("listar_visitantes" if dados["situacao"] == "Visitante" else "listar_membros"))
 
@@ -893,9 +1298,9 @@ def inserir_membro():
 @app.route("/membros/editar/<int:membro_id>", methods=["GET", "POST"])
 @login_required
 def editar_membro(membro_id):
-    membro = encontrar_por_id(MEMBROS, membro_id)
+    membro = obter_membro(membro_id)
     if not membro:
-        flash("Membro não encontrado.", "danger")
+        flash("Membro nao encontrado.", "danger")
         return redirect(url_for("listar_membros"))
 
     if request.method == "POST":
@@ -904,9 +1309,15 @@ def editar_membro(membro_id):
         if erro:
             return erro
 
-        membro.update(dados)
+        try:
+            atualizar_membro_db(membro_id, dados)
+        except Exception as erro:
+            app.logger.error("Erro ao editar membro: %s", erro)
+            flash("Nao foi possivel atualizar a pessoa no banco.", "danger")
+            return redirect(url_for("editar_membro", membro_id=membro_id))
+
         flash("Cadastro atualizado com sucesso.", "success")
-        return redirect(url_for("listar_visitantes" if membro["situacao"] == "Visitante" else "listar_membros"))
+        return redirect(url_for("listar_visitantes" if dados["situacao"] == "Visitante" else "listar_membros"))
 
     return render_template(
         "membros/editar_membro.html",
@@ -921,12 +1332,12 @@ def editar_membro(membro_id):
 @app.route("/membros/inativar/<int:membro_id>", methods=["POST"])
 @login_required
 def inativar_membro(membro_id):
-    membro = encontrar_por_id(MEMBROS, membro_id)
+    membro = obter_membro(membro_id)
     if not membro:
-        flash("Membro não encontrado.", "danger")
+        flash("Membro nao encontrado.", "danger")
         return redirect(url_for("listar_membros"))
 
-    membro["situacao"] = "Inativo"
+    db_write("UPDATE membros SET status = 'Inativo' WHERE id = %s AND excluido_em IS NULL", (membro_id,))
     flash("Membro inativado com sucesso.", "success")
     return redirect(url_for("listar_membros"))
 
@@ -934,23 +1345,25 @@ def inativar_membro(membro_id):
 @app.route("/membros/excluir/<int:membro_id>", methods=["POST"])
 @login_required
 def excluir_membro(membro_id):
-    membro = encontrar_por_id(MEMBROS, membro_id)
+    membro = obter_membro(membro_id)
     if not membro:
-        flash("Membro não encontrado.", "danger")
+        flash("Membro nao encontrado.", "danger")
         return redirect(url_for("listar_membros"))
 
-    membro["situacao"] = "Inativo"
-    membro["excluido"] = True
-    flash("Membro removido da listagem por exclusão lógica.", "success")
+    db_write(
+        "UPDATE membros SET status = 'Inativo', excluido_em = NOW() WHERE id = %s",
+        (membro_id,),
+    )
+    flash("Membro removido da listagem por exclusao logica.", "success")
     return redirect(url_for("listar_membros"))
 
 
 @app.route("/membros/historico/<int:membro_id>", methods=["GET", "POST"])
 @login_required
 def historico_membro(membro_id):
-    membro = encontrar_por_id(MEMBROS, membro_id)
+    membro = obter_membro(membro_id, incluir_historico=True)
     if not membro:
-        flash("Membro não encontrado.", "danger")
+        flash("Membro nao encontrado.", "danger")
         return redirect(url_for("listar_membros"))
 
     if request.method == "POST":
@@ -959,19 +1372,18 @@ def historico_membro(membro_id):
         descricao = request.form.get("descricao", "").strip()
 
         if tipo not in TIPOS_HISTORICO or not data or not descricao:
-            flash("Tipo, data e descrição são obrigatórios para registrar o histórico.", "danger")
+            flash("Tipo, data e descricao sao obrigatorios para registrar o historico.", "danger")
             return redirect(url_for("historico_membro", membro_id=membro_id))
 
-        membro.setdefault("historico_espiritual", []).append(
-            {
-                "id": proximo_id(membro.get("historico_espiritual", [])),
-                "tipo": tipo,
-                "data": data,
-                "descricao": descricao,
-                "responsavel": session.get("usuario_nome") or session.get("usuario_logado"),
-            }
+        db_write(
+            """
+            INSERT INTO historico_espiritual
+                (membro_id, tipo, data_registro, descricao, responsavel_usuario_id)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (membro_id, tipo, data, descricao, session.get("usuario_id")),
         )
-        flash("Histórico espiritual registrado com sucesso.", "success")
+        flash("Historico espiritual registrado com sucesso.", "success")
         return redirect(url_for("historico_membro", membro_id=membro_id))
 
     return render_template("membros/historico_membro.html", membro=membro, tipos_historico=TIPOS_HISTORICO)
@@ -982,17 +1394,16 @@ def historico_membro(membro_id):
 def listar_ministerios():
     busca = request.args.get("q", "").strip()
     status = request.args.get("status", "").strip()
-    ministerios = registros_visiveis(MINISTERIOS)
-    if status in STATUS_MINISTERIO:
-        ministerios = [ministerio for ministerio in ministerios if ministerio["status"] == status]
-    ministerios = filtrar_registros(ministerios, busca, ["nome", "lider", "dia_reuniao", "vagas", "status"])
+    if status not in STATUS_MINISTERIO:
+        status = ""
+    ministerios = listar_ministerios_db(busca, status)
     return render_template(
         "ministerios/listar_ministerios.html",
         ministerios=ministerios,
         busca=busca,
         status_atual=status,
         status_opcoes=STATUS_MINISTERIO,
-        total=len(registros_visiveis(MINISTERIOS)),
+        total=db_scalar("SELECT COUNT(*) AS valor FROM ministerios WHERE excluido_em IS NULL"),
         metricas=gerar_metricas(),
     )
 
@@ -1007,37 +1418,31 @@ def inserir_ministerio():
         vagas_raw = request.form.get("vagas", "0").strip()
 
         if not nome or not lider or not dia_reuniao or not vagas_raw:
-            flash("Nome, líder, dia de reunião e vagas são obrigatórios.", "danger")
+            flash("Nome, lider, dia de reuniao e vagas sao obrigatorios.", "danger")
             return redirect(url_for("inserir_ministerio"))
 
         if dia_reuniao not in DIAS_REUNIAO:
-            flash("Selecione um dia de reunião válido.", "danger")
+            flash("Selecione um dia de reuniao valido.", "danger")
             return redirect(url_for("inserir_ministerio"))
 
         try:
             vagas = int(vagas_raw)
         except ValueError:
-            flash("Informe uma quantidade de vagas válida.", "danger")
+            flash("Informe uma quantidade de vagas valida.", "danger")
             return redirect(url_for("inserir_ministerio"))
 
         if vagas < 0:
-            flash("Vagas não pode ser negativo.", "danger")
+            flash("Vagas nao pode ser negativo.", "danger")
             return redirect(url_for("inserir_ministerio"))
 
-        MINISTERIOS.append(
-            {
-                "id": proximo_id(MINISTERIOS),
-                "nome": nome,
-                "lider": lider,
-                "dia_reuniao": dia_reuniao,
-                "vagas": vagas,
-                "status": "Ativo",
-                "participantes": [],
-                "atividades": [],
-                "excluido": False,
-            }
+        db_write(
+            """
+            INSERT INTO ministerios (nome, lider_nome, dia_reuniao, vagas, ativo)
+            VALUES (%s, %s, %s, %s, 1)
+            """,
+            (nome, lider, dia_reuniao, vagas),
         )
-        flash("Ministério cadastrado com sucesso!", "success")
+        flash("Ministerio cadastrado com sucesso!", "success")
         return redirect(url_for("listar_ministerios"))
 
     return render_template("ministerios/inserir_ministerio.html", dias=DIAS_REUNIAO)
@@ -1046,9 +1451,9 @@ def inserir_ministerio():
 @app.route("/ministerios/editar/<int:ministerio_id>", methods=["GET", "POST"])
 @login_required
 def editar_ministerio(ministerio_id):
-    ministerio = encontrar_por_id(MINISTERIOS, ministerio_id)
+    ministerio = obter_ministerio(ministerio_id)
     if not ministerio:
-        flash("Ministério não encontrado.", "danger")
+        flash("Ministerio nao encontrado.", "danger")
         return redirect(url_for("listar_ministerios"))
 
     if request.method == "POST":
@@ -1065,15 +1470,22 @@ def editar_ministerio(ministerio_id):
         try:
             vagas = int(vagas_raw)
         except ValueError:
-            flash("Informe uma quantidade de vagas válida.", "danger")
+            flash("Informe uma quantidade de vagas valida.", "danger")
             return redirect(url_for("editar_ministerio", ministerio_id=ministerio_id))
 
         if dia_reuniao not in DIAS_REUNIAO or vagas < 0 or status not in STATUS_MINISTERIO:
             flash("Revise os dados informados antes de salvar.", "danger")
             return redirect(url_for("editar_ministerio", ministerio_id=ministerio_id))
 
-        ministerio.update({"nome": nome, "lider": lider, "dia_reuniao": dia_reuniao, "vagas": vagas, "status": status})
-        flash("Ministério atualizado com sucesso.", "success")
+        db_write(
+            """
+            UPDATE ministerios
+            SET nome = %s, lider_nome = %s, dia_reuniao = %s, vagas = %s, ativo = %s
+            WHERE id = %s AND excluido_em IS NULL
+            """,
+            (nome, lider, dia_reuniao, vagas, 1 if status == "Ativo" else 0, ministerio_id),
+        )
+        flash("Ministerio atualizado com sucesso.", "success")
         return redirect(url_for("listar_ministerios"))
 
     return render_template("ministerios/editar_ministerio.html", ministerio=ministerio, dias=DIAS_REUNIAO, status_opcoes=STATUS_MINISTERIO)
@@ -1082,230 +1494,911 @@ def editar_ministerio(ministerio_id):
 @app.route("/ministerios/excluir/<int:ministerio_id>", methods=["POST"])
 @login_required
 def excluir_ministerio(ministerio_id):
-    ministerio = encontrar_por_id(MINISTERIOS, ministerio_id)
+    ministerio = obter_ministerio(ministerio_id)
     if not ministerio:
-        flash("Ministério não encontrado.", "danger")
+        flash("Ministerio nao encontrado.", "danger")
         return redirect(url_for("listar_ministerios"))
 
-    ministerio["status"] = "Inativo"
-    ministerio["excluido"] = True
-    flash("Ministério inativado por exclusão lógica.", "success")
+    db_write("UPDATE ministerios SET ativo = 0, excluido_em = NOW() WHERE id = %s", (ministerio_id,))
+    flash("Ministerio inativado por exclusao logica.", "success")
     return redirect(url_for("listar_ministerios"))
 
 
 @app.route("/celulas/listar")
 @login_required
 def listar_celulas():
-    linhas = [
-        [
-            f"#{celula['id']}",
-            celula["nome"],
-            celula["lider"],
-            celula["bairro"],
-            celula["dia_reuniao"],
-            len(celula["membros"]),
-            celula["visitantes"],
-            f"{celula['crescimento_percentual']}%",
-        ]
-        for celula in CELULAS
-    ]
-    return render_template(
-        "modulos/resumo.html",
-        titulo="Células e grupos pequenos",
-        subtitulo="Controle líderes, membros vinculados, reuniões, presença, visitantes e crescimento.",
-        cards=[
-            {"label": "Células ativas", "valor": gerar_metricas()["celulas"]},
-            {"label": "Membros vinculados", "valor": sum(len(celula["membros"]) for celula in CELULAS)},
-            {"label": "Visitantes em células", "valor": sum(celula["visitantes"] for celula in CELULAS)},
-        ],
-        cabecalhos=["ID", "Nome", "Líder", "Bairro", "Dia", "Membros", "Visitantes", "Crescimento"],
-        linhas=linhas,
+    celulas = db_select(
+        """
+        SELECT c.id, c.nome, c.lider_nome, c.bairro, c.dia_reuniao,
+               COUNT(m.id) AS membros,
+               SUM(CASE WHEN m.status = 'Visitante' THEN 1 ELSE 0 END) AS visitantes
+        FROM celulas c
+        LEFT JOIN membros m ON m.celula_id = c.id AND m.excluido_em IS NULL
+        WHERE c.excluido_em IS NULL
+        GROUP BY c.id
+        ORDER BY c.nome
+        """
     )
+    return render_template(
+        "celulas/listar_celulas.html",
+        celulas=celulas,
+        metricas=gerar_metricas(),
+        membros_vinculados=sum(int(celula.get("membros") or 0) for celula in celulas),
+        visitantes_vinculados=sum(int(celula.get("visitantes") or 0) for celula in celulas),
+    )
+
+
+@app.route("/celulas/inserir", methods=["GET", "POST"])
+@login_required
+def inserir_celula():
+    if request.method == "POST":
+        nome = request.form.get("nome", "").strip()
+        lider = request.form.get("lider", "").strip()
+        bairro = request.form.get("bairro", "").strip()
+        endereco = request.form.get("endereco", "").strip()
+        dia_reuniao = request.form.get("dia_reuniao", "").strip()
+        horario = request.form.get("horario", "").strip()
+
+        if not nome or not lider or not bairro or not dia_reuniao:
+            flash("Nome, lider, bairro e dia de reuniao sao obrigatorios.", "danger")
+            return redirect(url_for("inserir_celula"))
+
+        if dia_reuniao not in DIAS_REUNIAO:
+            flash("Selecione um dia de reuniao valido.", "danger")
+            return redirect(url_for("inserir_celula"))
+
+        db_write(
+            """
+            INSERT INTO celulas (nome, lider_nome, bairro, endereco, dia_reuniao, horario, ativo)
+            VALUES (%s, %s, %s, %s, %s, %s, 1)
+            """,
+            (nome, lider, bairro, valor_ou_none(endereco), dia_reuniao, valor_ou_none(horario)),
+        )
+        flash("Celula cadastrada com sucesso.", "success")
+        return redirect(url_for("listar_celulas"))
+
+    return render_template("celulas/inserir_celula.html", dias=DIAS_REUNIAO)
 
 
 @app.route("/presencas/listar")
 @login_required
 def listar_presencas():
     data = request.args.get("data", "").strip()
-    membro_busca = request.args.get("membro", "").strip().lower()
-    presencas = PRESENCAS
+    membro_busca = request.args.get("membro", "").strip()
+    sql = """
+        SELECT p.id, p.data_presenca, p.tipo, p.referencia_nome,
+               p.presente, m.nome AS membro_nome
+        FROM presencas p
+        LEFT JOIN membros m ON m.id = p.membro_id
+        WHERE 1=1
+    """
+    params = []
     if data:
-        presencas = [presenca for presenca in presencas if presenca["data"] == data]
+        sql += " AND p.data_presenca = %s"
+        params.append(data)
     if membro_busca:
-        presencas = [
-            presenca
-            for presenca in presencas
-            if membro_busca in obter_nome_membro(presenca["membro_id"]).lower()
-        ]
+        sql += " AND m.nome LIKE %s"
+        params.append(f"%{membro_busca}%")
+    sql += " ORDER BY p.data_presenca DESC, p.id DESC"
+    presencas = db_select(sql, params)
 
     linhas = [
         [
             f"#{presenca['id']}",
-            data_br(presenca["data"]),
+            data_br(presenca["data_presenca"]),
             presenca["tipo"],
-            presenca["referencia"],
-            obter_nome_membro(presenca["membro_id"]),
+            presenca.get("referencia_nome") or "-",
+            presenca.get("membro_nome") or "Visitante/Nao vinculado",
             "Presente" if presenca["presente"] else "Ausente",
         ]
         for presenca in presencas
     ]
     return render_template(
         "modulos/resumo.html",
-        titulo="Controle de presença",
-        subtitulo="Registre e filtre presença por culto, evento, célula, data e membro.",
+        titulo="Controle de presenca",
+        subtitulo="Registre e filtre presenca por culto, evento, celula, data e membro.",
         cards=[
-            {"label": "Presenças", "valor": gerar_metricas()["presencas"]},
-            {"label": "Ausências", "valor": gerar_metricas()["ausencias"]},
-            {"label": "Baixa frequência", "valor": 1},
+            {"label": "Presencas", "valor": gerar_metricas()["presencas"]},
+            {"label": "Ausencias", "valor": gerar_metricas()["ausencias"]},
+            {"label": "Baixa frequencia", "valor": 0},
         ],
         filtros=[
             {"name": "data", "label": "Data", "type": "date", "value": data},
             {"name": "membro", "label": "Membro", "type": "search", "value": membro_busca, "placeholder": "Buscar membro"},
         ],
-        cabecalhos=["ID", "Data", "Tipo", "Referência", "Membro", "Status"],
+        cabecalhos=["ID", "Data", "Tipo", "Referencia", "Membro", "Status"],
         linhas=linhas,
+        acao_url=url_for("inserir_presenca"),
+        acao_label="Registrar presença",
     )
+
+
+@app.route("/presencas/inserir", methods=["GET", "POST"])
+@login_required
+def inserir_presenca():
+    membros = listar_membros_select()
+
+    if request.method == "POST":
+        data_presenca = request.form.get("data_presenca", "").strip()
+        tipo = request.form.get("tipo", "").strip()
+        referencia_nome = request.form.get("referencia_nome", "").strip()
+        membro_id = request.form.get("membro_id", "").strip()
+        presente = 1 if request.form.get("presente") else 0
+
+        if not data_presenca or tipo not in ["Culto", "Evento", "Celula"] or not referencia_nome:
+            flash("Data, tipo e referencia sao obrigatorios.", "danger")
+            return redirect(url_for("inserir_presenca"))
+
+        db_write(
+            """
+            INSERT INTO presencas (membro_id, tipo, referencia_nome, data_presenca, presente)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (int(membro_id) if membro_id else None, tipo, referencia_nome, data_presenca, presente),
+        )
+        flash("Presenca registrada com sucesso.", "success")
+        return redirect(url_for("listar_presencas"))
+
+    return render_template("presencas/inserir_presenca.html", membros=membros)
 
 
 @app.route("/eventos/listar")
 @login_required
 def listar_eventos():
-    linhas = [
-        [
-            f"#{evento['id']}",
-            evento["nome"],
-            data_br(evento["data"]),
-            evento["status"],
-            len(evento["inscritos_membros"]),
-            len(evento["inscritos_visitantes"]),
-            evento["presentes"],
-        ]
-        for evento in EVENTOS
-    ]
-    return render_template(
-        "modulos/resumo.html",
-        titulo="Eventos",
-        subtitulo="Cadastre eventos, inscrições, visitantes, presença e relatórios de participantes.",
-        cards=[
-            {"label": "Eventos ativos", "valor": gerar_metricas()["eventos"]},
-            {"label": "Membros inscritos", "valor": sum(len(evento["inscritos_membros"]) for evento in EVENTOS)},
-            {"label": "Visitantes inscritos", "valor": sum(len(evento["inscritos_visitantes"]) for evento in EVENTOS)},
-        ],
-        cabecalhos=["ID", "Evento", "Data", "Status", "Membros", "Visitantes", "Presentes"],
-        linhas=linhas,
+    eventos = db_select(
+        """
+        SELECT e.id, e.nome, e.data_inicio, e.local, e.status, e.banner_path,
+               SUM(CASE WHEN ei.membro_id IS NOT NULL THEN 1 ELSE 0 END) AS membros,
+               SUM(CASE WHEN ei.visitante_nome IS NOT NULL THEN 1 ELSE 0 END) AS visitantes,
+               SUM(CASE WHEN ei.presente = 1 THEN 1 ELSE 0 END) AS presentes
+        FROM eventos e
+        LEFT JOIN evento_inscricoes ei ON ei.evento_id = e.id
+        GROUP BY e.id
+        ORDER BY e.data_inicio
+        """
     )
+    return render_template(
+        "eventos/listar_eventos.html",
+        eventos=eventos,
+        metricas=gerar_metricas(),
+        membros_inscritos=sum(int(evento.get("membros") or 0) for evento in eventos),
+        visitantes_inscritos=sum(int(evento.get("visitantes") or 0) for evento in eventos),
+    )
+
+
+@app.route("/eventos/inserir", methods=["GET", "POST"])
+@login_required
+def inserir_evento():
+    if request.method == "POST":
+        nome = request.form.get("nome", "").strip()
+        descricao = request.form.get("descricao", "").strip()
+        data_inicio = request.form.get("data_inicio", "").strip()
+        data_fim = request.form.get("data_fim", "").strip()
+        local = request.form.get("local", "").strip()
+        status = request.form.get("status", "Agendado").strip()
+        banner_path = salvar_banner_evento(request.files.get("banner"))
+
+        if not nome or not data_inicio or not local:
+            flash("Nome, data e local sao obrigatorios.", "danger")
+            return redirect(url_for("inserir_evento"))
+
+        if status not in ["Agendado", "Realizado", "Cancelado"]:
+            flash("Selecione um status valido.", "danger")
+            return redirect(url_for("inserir_evento"))
+
+        db_write(
+            """
+            INSERT INTO eventos (nome, descricao, data_inicio, data_fim, local, status, banner_path)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                nome,
+                valor_ou_none(descricao),
+                data_inicio.replace("T", " "),
+                data_fim.replace("T", " ") if data_fim else None,
+                local,
+                status,
+                banner_path,
+            ),
+        )
+        flash("Evento cadastrado com sucesso.", "success")
+        return redirect(url_for("listar_eventos"))
+
+    return render_template("eventos/inserir_evento.html", status_opcoes=["Agendado", "Realizado", "Cancelado"])
 
 
 @app.route("/financeiro/listar")
 @login_required
 def listar_financeiro():
-    linhas = [
-        [
-            f"#{lancamento['id']}",
-            data_br(lancamento["data"]),
-            lancamento["tipo"],
-            lancamento["categoria"],
-            obter_nome_membro(lancamento["membro_id"]) if lancamento["membro_id"] else "-",
-            lancamento["conta"],
-            moeda_br(lancamento["valor"]),
-        ]
-        for lancamento in LANCAMENTOS_FINANCEIROS
-    ]
+    lancamentos = db_select(
+        """
+        SELECT l.id, l.data_lancamento, l.tipo, c.nome AS categoria,
+               m.nome AS membro, f.nome AS fornecedor, cf.nome AS conta, l.valor
+        FROM lancamentos_financeiros l
+        JOIN categorias_financeiras c ON c.id = l.categoria_id
+        JOIN contas_financeiras cf ON cf.id = l.conta_id
+        LEFT JOIN membros m ON m.id = l.membro_id
+        LEFT JOIN fornecedores f ON f.id = l.fornecedor_id
+        ORDER BY l.data_lancamento DESC, l.id DESC
+        """
+    )
     return render_template(
-        "modulos/resumo.html",
-        titulo="Financeiro",
-        subtitulo="Controle entradas, saídas, dízimos, ofertas, contribuições, categorias, contas e exportações.",
-        cards=[
-            {"label": "Entradas", "valor": moeda_br(gerar_metricas()["entradas"])},
-            {"label": "Saídas", "valor": moeda_br(gerar_metricas()["saidas"])},
-            {"label": "Saldo", "valor": moeda_br(gerar_metricas()["saldo"])},
-        ],
-        cabecalhos=["ID", "Data", "Tipo", "Categoria", "Membro", "Conta", "Valor"],
-        linhas=linhas,
+        "financeiro/listar_financeiro.html",
+        lancamentos=lancamentos,
+        metricas=gerar_metricas(),
+    )
+
+
+@app.route("/financeiro/lancamentos/inserir", methods=["GET", "POST"])
+@login_required
+def inserir_lancamento_financeiro():
+    categorias = listar_categorias_financeiras()
+    contas = listar_contas_financeiras()
+    membros = listar_membros_select()
+    fornecedores = listar_fornecedores_select()
+
+    if request.method == "POST":
+        tipo = request.form.get("tipo", "").strip()
+        categoria_id = request.form.get("categoria_id", "").strip()
+        conta_id = request.form.get("conta_id", "").strip()
+        membro_id = request.form.get("membro_id", "").strip()
+        fornecedor_id = request.form.get("fornecedor_id", "").strip()
+        descricao = request.form.get("descricao", "").strip()
+        valor_raw = request.form.get("valor", "").strip().replace(",", ".")
+        data_lancamento = request.form.get("data_lancamento", "").strip()
+
+        if tipo not in ["Entrada", "Saida"] or not categoria_id or not conta_id or not valor_raw or not data_lancamento:
+            flash("Tipo, categoria, conta, valor e data sao obrigatorios.", "danger")
+            return redirect(url_for("inserir_lancamento_financeiro"))
+
+        try:
+            valor = float(valor_raw)
+        except ValueError:
+            flash("Informe um valor valido.", "danger")
+            return redirect(url_for("inserir_lancamento_financeiro"))
+
+        if valor < 0:
+            flash("Valor nao pode ser negativo.", "danger")
+            return redirect(url_for("inserir_lancamento_financeiro"))
+
+        db_write(
+            """
+            INSERT INTO lancamentos_financeiros
+                (tipo, categoria_id, conta_id, membro_id, fornecedor_id, descricao, valor, data_lancamento, criado_por_usuario_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                tipo,
+                int(categoria_id),
+                int(conta_id),
+                int(membro_id) if membro_id else None,
+                int(fornecedor_id) if fornecedor_id else None,
+                valor_ou_none(descricao),
+                valor,
+                data_lancamento,
+                session.get("usuario_id"),
+            ),
+        )
+        flash("Lancamento financeiro cadastrado com sucesso.", "success")
+        return redirect(url_for("listar_financeiro"))
+
+    return render_template(
+        "financeiro/inserir_lancamento.html",
+        categorias=categorias,
+        contas=contas,
+        membros=membros,
+        fornecedores=fornecedores,
+    )
+
+
+@app.route("/fornecedores/listar")
+@login_required
+def listar_fornecedores():
+    busca = request.args.get("q", "").strip()
+    sql = """
+        SELECT id, nome, documento, telefone, email, endereco, ativo
+        FROM fornecedores
+        WHERE excluido_em IS NULL
+    """
+    params = []
+    if busca:
+        termo = f"%{busca}%"
+        sql += " AND (nome LIKE %s OR documento LIKE %s OR telefone LIKE %s OR email LIKE %s)"
+        params.extend([termo, termo, termo, termo])
+    sql += " ORDER BY nome"
+    fornecedores = db_select(sql, params)
+    return render_template(
+        "fornecedores/listar_fornecedores.html",
+        fornecedores=fornecedores,
+        busca=busca,
+        metricas=gerar_metricas(),
+    )
+
+
+@app.route("/fornecedores/inserir", methods=["GET", "POST"])
+@login_required
+def inserir_fornecedor():
+    if request.method == "POST":
+        nome = request.form.get("nome", "").strip()
+        documento = request.form.get("documento", "").strip()
+        telefone = request.form.get("telefone", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        endereco = request.form.get("endereco", "").strip()
+        observacoes = request.form.get("observacoes", "").strip()
+
+        if not nome:
+            flash("Nome do fornecedor e obrigatorio.", "danger")
+            return redirect(url_for("inserir_fornecedor"))
+
+        if telefone and not validar_telefone(telefone):
+            flash("Informe um telefone valido com DDD.", "danger")
+            return redirect(url_for("inserir_fornecedor"))
+
+        if email and not validar_email(email):
+            flash("Informe um e-mail valido.", "danger")
+            return redirect(url_for("inserir_fornecedor"))
+
+        db_write(
+            """
+            INSERT INTO fornecedores (nome, documento, telefone, email, endereco, observacoes, ativo)
+            VALUES (%s, %s, %s, %s, %s, %s, 1)
+            """,
+            (
+                nome,
+                valor_ou_none(documento),
+                valor_ou_none(telefone),
+                valor_ou_none(email),
+                valor_ou_none(endereco),
+                valor_ou_none(observacoes),
+            ),
+        )
+        flash("Fornecedor cadastrado com sucesso.", "success")
+        return redirect(url_for("listar_fornecedores"))
+
+    return render_template("fornecedores/inserir_fornecedor.html")
+
+
+@app.route("/fornecedores/excluir/<int:fornecedor_id>", methods=["POST"])
+@login_required
+def excluir_fornecedor(fornecedor_id):
+    db_write("UPDATE fornecedores SET ativo = 0, excluido_em = NOW() WHERE id = %s", (fornecedor_id,))
+    flash("Fornecedor removido da listagem por exclusao logica.", "success")
+    return redirect(url_for("listar_fornecedores"))
+
+
+@app.route("/doacoes/listar")
+@login_required
+def listar_doacoes():
+    doacoes = db_select(
+        """
+        SELECT d.id, d.doador_nome, d.tipo, d.valor, d.data_doacao,
+               d.forma_recebimento, d.recorrente, d.status,
+               m.nome AS membro, c.nome AS categoria, cf.nome AS conta
+        FROM doacoes d
+        LEFT JOIN membros m ON m.id = d.membro_id
+        LEFT JOIN categorias_financeiras c ON c.id = d.categoria_id
+        JOIN contas_financeiras cf ON cf.id = d.conta_id
+        ORDER BY d.data_doacao DESC, d.id DESC
+        """
+    )
+    return render_template(
+        "doacoes/listar_doacoes.html",
+        doacoes=doacoes,
+        metricas=gerar_metricas(),
+        pendentes=db_scalar("SELECT COUNT(*) AS valor FROM doacoes WHERE status = 'Pendente'"),
+    )
+
+
+@app.route("/doacoes/receber/<int:doacao_id>", methods=["POST"])
+@login_required
+def receber_doacao(doacao_id):
+    doacao = db_one(
+        """
+        SELECT *
+        FROM doacoes
+        WHERE id = %s AND status = 'Pendente'
+        LIMIT 1
+        """,
+        (doacao_id,),
+    )
+    if not doacao:
+        flash("Doacao pendente nao encontrada.", "danger")
+        return redirect(url_for("listar_doacoes"))
+
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        try:
+            cursor.execute(
+                """
+                INSERT INTO lancamentos_financeiros
+                    (tipo, categoria_id, conta_id, membro_id, descricao, valor, data_lancamento, criado_por_usuario_id)
+                VALUES ('Entrada', %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    doacao["categoria_id"],
+                    doacao["conta_id"],
+                    doacao["membro_id"],
+                    f"Doacao - {doacao['tipo']} - {doacao['doador_nome']}",
+                    doacao["valor"],
+                    doacao["data_doacao"],
+                    session.get("usuario_id"),
+                ),
+            )
+            lancamento_id = cursor.lastrowid
+            cursor.execute(
+                """
+                UPDATE doacoes
+                SET status = 'Recebida', lancamento_financeiro_id = %s
+                WHERE id = %s
+                """,
+                (lancamento_id, doacao_id),
+            )
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            cursor.close()
+
+    flash("Doacao baixada e lancada no financeiro.", "success")
+    return redirect(url_for("listar_doacoes"))
+
+
+@app.route("/doacoes/cancelar/<int:doacao_id>", methods=["POST"])
+@login_required
+def cancelar_doacao(doacao_id):
+    db_write("UPDATE doacoes SET status = 'Cancelada' WHERE id = %s AND status = 'Pendente'", (doacao_id,))
+    flash("Doacao pendente cancelada.", "success")
+    return redirect(url_for("listar_doacoes"))
+
+
+@app.route("/doacoes/inserir", methods=["GET", "POST"])
+@login_required
+def inserir_doacao():
+    categorias = listar_categorias_financeiras("Entrada")
+    contas = listar_contas_financeiras()
+    membros = listar_membros_select()
+
+    if request.method == "POST":
+        membro_id = request.form.get("membro_id", "").strip()
+        doador_nome = request.form.get("doador_nome", "").strip()
+        tipo = request.form.get("tipo", "").strip()
+        categoria_id = request.form.get("categoria_id", "").strip()
+        conta_id = request.form.get("conta_id", "").strip()
+        valor_raw = request.form.get("valor", "").strip().replace(",", ".")
+        data_doacao = request.form.get("data_doacao", "").strip()
+        forma_recebimento = request.form.get("forma_recebimento", "").strip()
+        status = request.form.get("status", "Recebida").strip()
+        recorrente = 1 if request.form.get("recorrente") else 0
+        observacoes = request.form.get("observacoes", "").strip()
+
+        if not membro_id and not doador_nome:
+            flash("Informe o membro ou o nome do doador.", "danger")
+            return redirect(url_for("inserir_doacao"))
+
+        if tipo not in TIPOS_DOACAO or forma_recebimento not in FORMAS_RECEBIMENTO or status not in STATUS_DOACAO:
+            flash("Revise tipo, forma de recebimento e status.", "danger")
+            return redirect(url_for("inserir_doacao"))
+
+        if not categoria_id or not conta_id or not valor_raw or not data_doacao:
+            flash("Categoria, conta, valor e data sao obrigatorios.", "danger")
+            return redirect(url_for("inserir_doacao"))
+
+        try:
+            valor = float(valor_raw)
+        except ValueError:
+            flash("Informe um valor valido.", "danger")
+            return redirect(url_for("inserir_doacao"))
+
+        if valor <= 0:
+            flash("O valor da doacao precisa ser maior que zero.", "danger")
+            return redirect(url_for("inserir_doacao"))
+
+        membro_id_db = int(membro_id) if membro_id else None
+        doador_final = valor_ou_none(doador_nome) or obter_nome_membro(membro_id_db)
+        lancamento_id = None
+
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            try:
+                if status == "Recebida":
+                    cursor.execute(
+                        """
+                        INSERT INTO lancamentos_financeiros
+                            (tipo, categoria_id, conta_id, membro_id, descricao, valor, data_lancamento, criado_por_usuario_id)
+                        VALUES ('Entrada', %s, %s, %s, %s, %s, %s, %s)
+                        """,
+                        (
+                            int(categoria_id),
+                            int(conta_id),
+                            membro_id_db,
+                            f"Doacao - {tipo} - {doador_final}",
+                            valor,
+                            data_doacao,
+                            session.get("usuario_id"),
+                        ),
+                    )
+                    lancamento_id = cursor.lastrowid
+
+                cursor.execute(
+                    """
+                    INSERT INTO doacoes (
+                        membro_id, doador_nome, tipo, categoria_id, conta_id,
+                        lancamento_financeiro_id, valor, data_doacao,
+                        forma_recebimento, recorrente, status, observacoes
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        membro_id_db,
+                        doador_final,
+                        tipo,
+                        int(categoria_id),
+                        int(conta_id),
+                        lancamento_id,
+                        valor,
+                        data_doacao,
+                        forma_recebimento,
+                        recorrente,
+                        status,
+                        valor_ou_none(observacoes),
+                    ),
+                )
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
+            finally:
+                cursor.close()
+
+        flash("Doacao cadastrada com sucesso.", "success")
+        return redirect(url_for("listar_doacoes"))
+
+    return render_template(
+        "doacoes/inserir_doacao.html",
+        categorias=categorias,
+        contas=contas,
+        membros=membros,
+        tipos=TIPOS_DOACAO,
+        formas=FORMAS_RECEBIMENTO,
+        status_opcoes=STATUS_DOACAO,
     )
 
 
 @app.route("/comunicacao/listar")
 @login_required
 def listar_comunicacao():
-    linhas = [
-        [
-            f"#{mensagem['id']}",
-            mensagem["canal"],
-            mensagem["destino"],
-            mensagem["assunto"],
-            mensagem["enviada_em"],
-            mensagem["status"],
-        ]
-        for mensagem in MENSAGENS
-    ]
-    return render_template(
-        "modulos/resumo.html",
-        titulo="Comunicação",
-        subtitulo="Envie avisos por WhatsApp, e-mail e notificações internas para listas, ministérios e células.",
-        cards=[
-            {"label": "Mensagens", "valor": len(MENSAGENS)},
-            {"label": "Canais", "valor": 3},
-            {"label": "Listas", "valor": 4},
-        ],
-        cabecalhos=["ID", "Canal", "Destino", "Assunto", "Enviado em", "Status"],
-        linhas=linhas,
+    mensagens = db_select(
+        """
+        SELECT id, canal, destino_tipo, assunto, enviada_em, status
+        FROM mensagens
+        ORDER BY criado_em DESC, id DESC
+        """
     )
+    return render_template(
+        "comunicacao/listar_comunicacao.html",
+        mensagens=mensagens,
+        metricas=gerar_metricas(),
+        canais=db_scalar("SELECT COUNT(DISTINCT canal) AS valor FROM mensagens"),
+        listas=db_scalar("SELECT COUNT(*) AS valor FROM comunicacao_listas WHERE ativo = 1"),
+    )
+
+
+@app.route("/comunicacao/mensagens/inserir", methods=["GET", "POST"])
+@login_required
+def inserir_mensagem():
+    if request.method == "POST":
+        canal = request.form.get("canal", "").strip()
+        destino_tipo = request.form.get("destino_tipo", "").strip()
+        assunto = request.form.get("assunto", "").strip()
+        corpo = request.form.get("corpo", "").strip()
+        status = request.form.get("status", "Rascunho").strip()
+        agendada_para = request.form.get("agendada_para", "").strip()
+
+        canais = ["WhatsApp", "Email", "Interna"]
+        destinos = ["Geral", "Ministerio", "Celula", "Lista", "Aniversariantes", "Individual"]
+        status_opcoes = ["Rascunho", "Agendada", "Enviada"]
+
+        if canal not in canais or destino_tipo not in destinos or status not in status_opcoes:
+            flash("Revise canal, destino e status da mensagem.", "danger")
+            return redirect(url_for("inserir_mensagem"))
+
+        if not assunto or not corpo:
+            flash("Assunto e mensagem sao obrigatorios.", "danger")
+            return redirect(url_for("inserir_mensagem"))
+
+        db_write(
+            """
+            INSERT INTO mensagens
+                (canal, assunto, corpo, destino_tipo, status, agendada_para, enviada_em, criado_por_usuario_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                canal,
+                assunto,
+                corpo,
+                destino_tipo,
+                status,
+                agendada_para.replace("T", " ") if agendada_para else None,
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S") if status == "Enviada" else None,
+                session.get("usuario_id"),
+            ),
+        )
+        flash("Mensagem registrada com sucesso.", "success")
+        return redirect(url_for("listar_comunicacao"))
+
+    return render_template(
+        "comunicacao/inserir_mensagem.html",
+        canais=["WhatsApp", "Email", "Interna"],
+        destinos=["Geral", "Ministerio", "Celula", "Lista", "Aniversariantes", "Individual"],
+        status_opcoes=["Rascunho", "Agendada", "Enviada"],
+    )
+
+
+@app.route("/mural/listar")
+@login_required
+def listar_mural():
+    avisos = db_select(
+        """
+        SELECT id, titulo, categoria, conteudo, imagem_path, status, publicado_em, criado_em
+        FROM mural_avisos
+        ORDER BY COALESCE(publicado_em, criado_em) DESC, id DESC
+        """
+    )
+    return render_template(
+        "mural/listar_mural.html",
+        avisos=avisos,
+        publicados=db_scalar("SELECT COUNT(*) AS valor FROM mural_avisos WHERE status = 'Publicado'"),
+        rascunhos=db_scalar("SELECT COUNT(*) AS valor FROM mural_avisos WHERE status = 'Rascunho'"),
+    )
+
+
+@app.route("/mural/inserir", methods=["GET", "POST"])
+@login_required
+def inserir_mural():
+    if request.method == "POST":
+        titulo = request.form.get("titulo", "").strip()
+        categoria = request.form.get("categoria", "").strip()
+        conteudo = request.form.get("conteudo", "").strip()
+        status = request.form.get("status", "Rascunho").strip()
+        imagem_path = salvar_imagem_mural(request.files.get("imagem"))
+
+        if not titulo or not conteudo:
+            flash("Titulo e conteudo sao obrigatorios.", "danger")
+            return redirect(url_for("inserir_mural"))
+
+        if status not in STATUS_MURAL:
+            flash("Selecione um status valido.", "danger")
+            return redirect(url_for("inserir_mural"))
+
+        db_write(
+            """
+            INSERT INTO mural_avisos
+                (titulo, categoria, conteudo, imagem_path, status, publicado_em, criado_por_usuario_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                titulo,
+                valor_ou_none(categoria),
+                conteudo,
+                imagem_path,
+                status,
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S") if status == "Publicado" else None,
+                session.get("usuario_id"),
+            ),
+        )
+        flash("Aviso cadastrado no mural.", "success")
+        return redirect(url_for("listar_mural"))
+
+    return render_template("mural/inserir_mural.html", status_opcoes=STATUS_MURAL)
+
+
+@app.route("/mural/publicar/<int:aviso_id>", methods=["POST"])
+@login_required
+def publicar_mural(aviso_id):
+    db_write(
+        "UPDATE mural_avisos SET status = 'Publicado', publicado_em = NOW() WHERE id = %s",
+        (aviso_id,),
+    )
+    flash("Aviso publicado no mural.", "success")
+    return redirect(url_for("listar_mural"))
+
+
+@app.route("/mural/arquivar/<int:aviso_id>", methods=["POST"])
+@login_required
+def arquivar_mural(aviso_id):
+    db_write("UPDATE mural_avisos SET status = 'Arquivado' WHERE id = %s", (aviso_id,))
+    flash("Aviso arquivado.", "success")
+    return redirect(url_for("listar_mural"))
+
+
+@app.route("/intercessao/listar")
+@login_required
+def listar_intercessao():
+    pedidos = db_select(
+        """
+        SELECT id, solicitante_nome, contato, categoria, pedido, status, privado, oracoes, criado_em
+        FROM pedidos_oracao
+        ORDER BY criado_em DESC, id DESC
+        """
+    )
+    return render_template(
+        "intercessao/listar_intercessao.html",
+        pedidos=pedidos,
+        abertos=db_scalar("SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status IN ('Pendente', 'Em oracao')"),
+        respondidos=db_scalar("SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status = 'Respondido'"),
+    )
+
+
+@app.route("/intercessao/inserir", methods=["GET", "POST"])
+@login_required
+def inserir_intercessao():
+    if request.method == "POST":
+        solicitante_nome = request.form.get("solicitante_nome", "").strip()
+        contato = request.form.get("contato", "").strip()
+        categoria = request.form.get("categoria", "").strip()
+        pedido = request.form.get("pedido", "").strip()
+        privado = 1 if request.form.get("privado") else 0
+
+        if not solicitante_nome or not pedido:
+            flash("Solicitante e pedido de oracao sao obrigatorios.", "danger")
+            return redirect(url_for("inserir_intercessao"))
+
+        if categoria and categoria not in ORACAO_CATEGORIAS:
+            flash("Selecione uma categoria valida.", "danger")
+            return redirect(url_for("inserir_intercessao"))
+
+        db_write(
+            """
+            INSERT INTO pedidos_oracao (solicitante_nome, contato, categoria, pedido, privado)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (
+                solicitante_nome,
+                valor_ou_none(contato),
+                valor_ou_none(categoria),
+                pedido,
+                privado,
+            ),
+        )
+        flash("Pedido de oracao cadastrado.", "success")
+        return redirect(url_for("listar_intercessao"))
+
+    return render_template("intercessao/inserir_intercessao.html", categorias=ORACAO_CATEGORIAS)
+
+
+@app.route("/intercessao/orar/<int:pedido_id>", methods=["POST"])
+@login_required
+def orar_intercessao(pedido_id):
+    db_write(
+        """
+        UPDATE pedidos_oracao
+        SET oracoes = oracoes + 1,
+            status = CASE WHEN status = 'Pendente' THEN 'Em oracao' ELSE status END
+        WHERE id = %s
+        """,
+        (pedido_id,),
+    )
+    flash("Oracao registrada no pedido.", "success")
+    return redirect(url_for("listar_intercessao"))
+
+
+@app.route("/intercessao/responder/<int:pedido_id>", methods=["POST"])
+@login_required
+def responder_intercessao(pedido_id):
+    db_write("UPDATE pedidos_oracao SET status = 'Respondido' WHERE id = %s", (pedido_id,))
+    flash("Pedido marcado como respondido.", "success")
+    return redirect(url_for("listar_intercessao"))
+
+
+@app.route("/intercessao/arquivar/<int:pedido_id>", methods=["POST"])
+@login_required
+def arquivar_intercessao(pedido_id):
+    db_write("UPDATE pedidos_oracao SET status = 'Arquivado' WHERE id = %s", (pedido_id,))
+    flash("Pedido arquivado.", "success")
+    return redirect(url_for("listar_intercessao"))
 
 
 @app.route("/relatorios/listar")
 @login_required
 def listar_relatorios():
-    linhas = [
-        ["Membros ativos", "Pessoas", gerar_metricas()["membros_ativos"], "Disponível"],
-        ["Membros inativos", "Pessoas", gerar_metricas()["membros_inativos"], "Disponível"],
-        ["Visitantes", "Pessoas", gerar_metricas()["visitantes"], "Disponível"],
-        ["Aniversariantes", "Pessoas", "Por mês", "Planejado"],
-        ["Batizados", "Eclesiástico", "Por período", "Disponível via histórico"],
-        ["Novos membros", "Crescimento", "Por período", "Disponível"],
-        ["Membros por ministério", "Ministérios", gerar_metricas()["ministerios"], "Disponível"],
-        ["Membros por célula", "Células", gerar_metricas()["celulas"], "Disponível"],
-        ["Presença", "Frequência", gerar_metricas()["presencas"], "Disponível"],
-        ["Financeiro", "Financeiro", moeda_br(gerar_metricas()["saldo"]), "Disponível"],
-        ["Crescimento da igreja", "Indicadores", "+8%", "Planejado"],
-    ]
+    linhas = montar_linhas_relatorio()
     return render_template(
-        "modulos/resumo.html",
-        titulo="Relatórios",
-        subtitulo="Consultas operacionais e pastorais para secretaria, liderança e administração.",
-        cards=[
-            {"label": "Relatórios mapeados", "valor": len(linhas)},
-            {"label": "Disponíveis", "valor": sum(1 for linha in linhas if "Disponível" in linha[3])},
-            {"label": "Exportações", "valor": "PDF/Excel"},
-        ],
-        cabecalhos=["Relatório", "Módulo", "Indicador", "Status"],
+        "relatorios/listar_relatorios.html",
         linhas=linhas,
+        metricas=gerar_metricas(),
     )
 
 
-@app.route("/configuracoes/listar")
+@app.route("/relatorios/exportar/excel")
+@login_required
+def exportar_relatorio_excel():
+    linhas = montar_linhas_relatorio()
+    html = ["<table><tr><th>Relatorio</th><th>Modulo</th><th>Indicador</th><th>Status</th></tr>"]
+    html.extend("<tr>" + "".join(f"<td>{valor}</td>" for valor in linha) + "</tr>" for linha in linhas)
+    html.append("</table>")
+    return Response(
+        "\n".join(html),
+        headers={"Content-Disposition": "attachment; filename=relatorios_membresia.xls"},
+        mimetype="application/vnd.ms-excel",
+    )
+
+
+@app.route("/relatorios/exportar/pdf")
+@login_required
+def exportar_relatorio_pdf():
+    conteudo = pdf_simples("Relatorios - Sistema de Membresia", montar_linhas_relatorio())
+    return Response(
+        conteudo,
+        headers={"Content-Disposition": "attachment; filename=relatorios_membresia.pdf"},
+        mimetype="application/pdf",
+    )
+
+
+@app.route("/configuracoes/listar", methods=["GET", "POST"])
 @login_required
 def listar_configuracoes():
-    linhas = [
-        ["Dados da igreja", CONFIGURACOES["nome_igreja"], "Ativo"],
-        ["Logo da igreja", CONFIGURACOES["logo"], "Ativo"],
-        ["Cargos e funções", ", ".join(PERFIS_USUARIO), "Ativo"],
-        ["Tipos de membro", ", ".join(SITUACOES_MEMBRO), "Ativo"],
-        ["Mensagens padrão", CONFIGURACOES["mensagem_aniversario"], "Ativo"],
-        ["Backups", CONFIGURACOES["backup"], "Ativo"],
-        ["Parâmetros gerais", CONFIGURACOES["parametros"], "Ativo"],
-    ]
+    if request.method == "POST":
+        acao = request.form.get("acao", "").strip()
+        if acao == "igreja":
+            nome = request.form.get("nome", "").strip()
+            email = request.form.get("email", "").strip().lower()
+            telefone = request.form.get("telefone", "").strip()
+            endereco = request.form.get("endereco", "").strip()
+
+            if not nome:
+                flash("Nome da igreja e obrigatorio.", "danger")
+                return redirect(url_for("listar_configuracoes"))
+
+            igreja_atual = db_one("SELECT id FROM igrejas ORDER BY id LIMIT 1")
+            if igreja_atual:
+                db_write(
+                    """
+                    UPDATE igrejas
+                    SET nome = %s, email = %s, telefone = %s, endereco = %s
+                    WHERE id = %s
+                    """,
+                    (nome, valor_ou_none(email), valor_ou_none(telefone), valor_ou_none(endereco), igreja_atual["id"]),
+                )
+            else:
+                db_write(
+                    """
+                    INSERT INTO igrejas (nome, email, telefone, endereco)
+                    VALUES (%s, %s, %s, %s)
+                    """,
+                    (nome, valor_ou_none(email), valor_ou_none(telefone), valor_ou_none(endereco)),
+                )
+            salvar_config("igreja.nome", nome, "Nome exibido no sistema")
+            flash("Dados da igreja atualizados.", "success")
+
+        elif acao == "parametros":
+            salvar_config("paginacao.tamanho_padrao", request.form.get("paginacao", "20"), "Quantidade padrao de registros por pagina")
+            salvar_config("frequencia.baixa.percentual", request.form.get("frequencia", "50"), "Percentual minimo de presenca mensal antes de alerta")
+            salvar_config("backup.agendamento", request.form.get("backup", "Diario as 02:00"), "Rotina recomendada de backup do banco MySQL")
+            flash("Parametros atualizados.", "success")
+
+        elif acao == "backup":
+            salvar_config("backup.ultimo", datetime.now().strftime("%d/%m/%Y %H:%M"), "Ultimo backup logico registrado")
+            flash("Backup logico registrado nas configuracoes.", "success")
+
+        return redirect(url_for("listar_configuracoes"))
+
+    configuracoes = db_select(
+        """
+        SELECT chave, valor
+        FROM configuracoes_sistema
+        ORDER BY chave
+        """
+    )
     return render_template(
-        "modulos/resumo.html",
-        titulo="Configurações",
-        subtitulo="Parâmetros administrativos da igreja, permissões, mensagens, backups e regras gerais.",
-        cards=[
-            {"label": "Igreja", "valor": CONFIGURACOES["nome_igreja"]},
-            {"label": "Backup", "valor": "Diário"},
-            {"label": "Perfis", "valor": len(PERFIS_USUARIO)},
-        ],
-        cabecalhos=["Configuração", "Valor", "Status"],
-        linhas=linhas,
+        "configuracoes/listar_configuracoes.html",
+        igreja=obter_igreja(),
+        configuracoes=configuracoes,
+        paginacao=obter_config("paginacao.tamanho_padrao", "20"),
+        frequencia=obter_config("frequencia.baixa.percentual", "50"),
+        backup=obter_config("backup.agendamento", "Diario as 02:00"),
+        ultimo_backup=obter_config("backup.ultimo", "-"),
+        perfis_total=db_scalar("SELECT COUNT(*) AS valor FROM perfis", default=0),
     )
 
 

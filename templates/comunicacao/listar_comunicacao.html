@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block titulo %}Comunicação • Painel{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Gestão</span>
+        <h1 class="h2 mb-1">Comunicação</h1>
+        <p class="text-muted mb-0">Registre comunicados, lembretes e mensagens internas para controle da secretaria.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('inserir_mensagem') }}" class="btn btn-primary">Nova mensagem</a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="metric-card"><span>Mensagens</span><strong>{{ metricas.mensagens }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Canais usados</span><strong>{{ canais }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Listas ativas</span><strong>{{ listas }}</strong></div></div>
+</div>
+
+<div class="card data-card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Canal</th>
+                        <th>Destino</th>
+                        <th>Assunto</th>
+                        <th>Enviado em</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mensagem in mensagens %}
+                    <tr>
+                        <td class="text-muted">#{{ mensagem.id }}</td>
+                        <td>{{ mensagem.canal }}</td>
+                        <td>{{ mensagem.destino_tipo }}</td>
+                        <td class="fw-semibold">{{ mensagem.assunto }}</td>
+                        <td>{{ mensagem.enviada_em or "-" }}</td>
+                        <td><span class="badge rounded-pill text-bg-light">{{ mensagem.status }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Nenhuma mensagem registrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

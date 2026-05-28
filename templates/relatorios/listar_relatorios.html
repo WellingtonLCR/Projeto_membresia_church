@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block titulo %}Relatórios • Painel{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Gestão</span>
+        <h1 class="h2 mb-1">Relatórios</h1>
+        <p class="text-muted mb-0">Consulte indicadores e gere arquivos para conferência da secretaria e liderança.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap no-print">
+        <a href="{{ url_for('exportar_relatorio_excel') }}" class="btn btn-primary">Baixar Excel</a>
+        <a href="{{ url_for('exportar_relatorio_pdf') }}" class="btn btn-outline-primary">Baixar PDF</a>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">Imprimir</button>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="metric-card"><span>Relatórios disponíveis</span><strong>{{ linhas|length }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Membros ativos</span><strong>{{ metricas.membros_ativos }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Saldo financeiro</span><strong>{{ metricas.saldo|moeda_br }}</strong></div></div>
+</div>
+
+<div class="card data-card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Relatório</th>
+                        <th>Módulo</th>
+                        <th>Indicador</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for linha in linhas %}
+                    <tr>
+                        <td class="fw-semibold">{{ linha[0] }}</td>
+                        <td>{{ linha[1] }}</td>
+                        <td>{{ linha[2] }}</td>
+                        <td>{{ linha[3] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

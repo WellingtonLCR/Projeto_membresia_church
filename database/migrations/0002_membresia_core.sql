@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS ministerios (
   lider_membro_id BIGINT UNSIGNED NULL,
   lider_nome VARCHAR(120) NULL,
   dia_reuniao VARCHAR(20) NULL,
+  vagas INT NOT NULL DEFAULT 0,
   ativo TINYINT(1) NOT NULL DEFAULT 1,
   excluido_em DATETIME NULL,
   criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -71,6 +72,32 @@ CREATE TABLE IF NOT EXISTS membros (
   CONSTRAINT fk_membros_celula FOREIGN KEY (celula_id) REFERENCES celulas(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS familias (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(120) NOT NULL,
+  responsavel_membro_id BIGINT UNSIGNED NULL,
+  telefone VARCHAR(30) NULL,
+  endereco TEXT NULL,
+  observacoes TEXT NULL,
+  ativo TINYINT(1) NOT NULL DEFAULT 1,
+  excluido_em DATETIME NULL,
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_familias_nome (nome),
+  INDEX idx_familias_ativo (ativo),
+  CONSTRAINT fk_familias_responsavel FOREIGN KEY (responsavel_membro_id) REFERENCES membros(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS familia_membros (
+  familia_id BIGINT UNSIGNED NOT NULL,
+  membro_id BIGINT UNSIGNED NOT NULL,
+  parentesco VARCHAR(60) NULL,
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (familia_id, membro_id),
+  CONSTRAINT fk_familia_membros_familia FOREIGN KEY (familia_id) REFERENCES familias(id) ON DELETE CASCADE,
+  CONSTRAINT fk_familia_membros_membro FOREIGN KEY (membro_id) REFERENCES membros(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS membro_ministerio (
   membro_id BIGINT UNSIGNED NOT NULL,
   ministerio_id BIGINT UNSIGNED NOT NULL,
@@ -86,7 +113,7 @@ CREATE TABLE IF NOT EXISTS membro_ministerio (
 CREATE TABLE IF NOT EXISTS historico_espiritual (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   membro_id BIGINT UNSIGNED NOT NULL,
-  tipo ENUM('Batismo', 'Conversao', 'Profissao de fe', 'Transferencia', 'Desligamento', 'Discipulado', 'Acompanhamento pastoral', 'Pedido de oracao', 'Testemunho', 'Aconselhamento', 'Observacao') NOT NULL,
+  tipo VARCHAR(80) NOT NULL,
   data_registro DATE NOT NULL,
   descricao TEXT NOT NULL,
   responsavel_usuario_id BIGINT UNSIGNED NULL,
@@ -125,6 +152,7 @@ CREATE TABLE IF NOT EXISTS eventos (
   data_inicio DATETIME NOT NULL,
   data_fim DATETIME NULL,
   local VARCHAR(150) NULL,
+  banner_path VARCHAR(255) NULL,
   status ENUM('Agendado', 'Realizado', 'Cancelado') NOT NULL DEFAULT 'Agendado',
   criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
@@ -160,6 +188,22 @@ CREATE TABLE IF NOT EXISTS presencas (
   CONSTRAINT fk_presencas_membro FOREIGN KEY (membro_id) REFERENCES membros(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS fornecedores (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(120) NOT NULL,
+  documento VARCHAR(30) NULL,
+  telefone VARCHAR(30) NULL,
+  email VARCHAR(120) NULL,
+  endereco TEXT NULL,
+  observacoes TEXT NULL,
+  ativo TINYINT(1) NOT NULL DEFAULT 1,
+  excluido_em DATETIME NULL,
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_fornecedores_nome (nome),
+  INDEX idx_fornecedores_ativo (ativo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS categorias_financeiras (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   nome VARCHAR(100) NOT NULL,
@@ -182,6 +226,7 @@ CREATE TABLE IF NOT EXISTS lancamentos_financeiros (
   categoria_id BIGINT UNSIGNED NOT NULL,
   conta_id BIGINT UNSIGNED NOT NULL,
   membro_id BIGINT UNSIGNED NULL,
+  fornecedor_id BIGINT UNSIGNED NULL,
   descricao VARCHAR(180) NULL,
   valor DECIMAL(12,2) NOT NULL,
   data_lancamento DATE NOT NULL,
@@ -191,10 +236,37 @@ CREATE TABLE IF NOT EXISTS lancamentos_financeiros (
   INDEX idx_lancamentos_data (data_lancamento),
   INDEX idx_lancamentos_tipo (tipo),
   INDEX idx_lancamentos_membro (membro_id),
+  INDEX idx_lancamentos_fornecedor (fornecedor_id),
   CONSTRAINT fk_lancamentos_categoria FOREIGN KEY (categoria_id) REFERENCES categorias_financeiras(id),
   CONSTRAINT fk_lancamentos_conta FOREIGN KEY (conta_id) REFERENCES contas_financeiras(id),
   CONSTRAINT fk_lancamentos_membro FOREIGN KEY (membro_id) REFERENCES membros(id) ON DELETE SET NULL,
+  CONSTRAINT fk_lancamentos_fornecedor FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL,
   CONSTRAINT fk_lancamentos_usuario FOREIGN KEY (criado_por_usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  CHECK (valor >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS doacoes (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  membro_id BIGINT UNSIGNED NULL,
+  doador_nome VARCHAR(120) NULL,
+  tipo VARCHAR(60) NOT NULL,
+  categoria_id BIGINT UNSIGNED NULL,
+  conta_id BIGINT UNSIGNED NOT NULL,
+  lancamento_financeiro_id BIGINT UNSIGNED NULL,
+  valor DECIMAL(12,2) NOT NULL,
+  data_doacao DATE NOT NULL,
+  forma_recebimento VARCHAR(60) NULL,
+  recorrente TINYINT(1) NOT NULL DEFAULT 0,
+  status ENUM('Recebida', 'Pendente', 'Cancelada') NOT NULL DEFAULT 'Recebida',
+  observacoes TEXT NULL,
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_doacoes_data (data_doacao),
+  INDEX idx_doacoes_status (status),
+  INDEX idx_doacoes_membro (membro_id),
+  CONSTRAINT fk_doacoes_membro FOREIGN KEY (membro_id) REFERENCES membros(id) ON DELETE SET NULL,
+  CONSTRAINT fk_doacoes_categoria FOREIGN KEY (categoria_id) REFERENCES categorias_financeiras(id) ON DELETE SET NULL,
+  CONSTRAINT fk_doacoes_conta FOREIGN KEY (conta_id) REFERENCES contas_financeiras(id),
+  CONSTRAINT fk_doacoes_lancamento FOREIGN KEY (lancamento_financeiro_id) REFERENCES lancamentos_financeiros(id) ON DELETE SET NULL,
   CHECK (valor >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -242,6 +314,37 @@ CREATE TABLE IF NOT EXISTS mensagem_destinatarios (
   INDEX idx_msg_destinatarios_membro (membro_id),
   CONSTRAINT fk_msg_destinatarios_mensagem FOREIGN KEY (mensagem_id) REFERENCES mensagens(id) ON DELETE CASCADE,
   CONSTRAINT fk_msg_destinatarios_membro FOREIGN KEY (membro_id) REFERENCES membros(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS mural_avisos (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  titulo VARCHAR(150) NOT NULL,
+  categoria VARCHAR(80) NULL,
+  conteudo TEXT NOT NULL,
+  imagem_path VARCHAR(255) NULL,
+  status ENUM('Rascunho', 'Publicado', 'Arquivado') NOT NULL DEFAULT 'Rascunho',
+  publicado_em DATETIME NULL,
+  criado_por_usuario_id BIGINT UNSIGNED NULL,
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_mural_status (status),
+  INDEX idx_mural_publicado (publicado_em),
+  CONSTRAINT fk_mural_usuario FOREIGN KEY (criado_por_usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS pedidos_oracao (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  solicitante_nome VARCHAR(120) NOT NULL,
+  contato VARCHAR(120) NULL,
+  categoria VARCHAR(80) NULL,
+  pedido TEXT NOT NULL,
+  status ENUM('Pendente', 'Em oracao', 'Respondido', 'Arquivado') NOT NULL DEFAULT 'Pendente',
+  privado TINYINT(1) NOT NULL DEFAULT 0,
+  oracoes INT NOT NULL DEFAULT 0,
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_pedidos_status (status),
+  INDEX idx_pedidos_categoria (categoria)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS configuracoes_sistema (

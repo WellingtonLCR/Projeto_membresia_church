@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block titulo %}Células • Painel{% endblock %}
+
+{% block conteudo %}
+<div class="page-header mb-4">
+    <div>
+        <span class="eyebrow">Organização</span>
+        <h1 class="h2 mb-1">Células e grupos pequenos</h1>
+        <p class="text-muted mb-0">Cadastre células, líderes, bairro e dia de reunião para acompanhar os vínculos da membresia.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('inserir_celula') }}" class="btn btn-primary">Nova célula</a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="metric-card"><span>Células ativas</span><strong>{{ metricas.celulas }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Membros vinculados</span><strong>{{ membros_vinculados }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Visitantes em células</span><strong>{{ visitantes_vinculados }}</strong></div></div>
+</div>
+
+<div class="card data-card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Líder</th>
+                        <th>Bairro</th>
+                        <th>Dia</th>
+                        <th>Membros</th>
+                        <th>Visitantes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for celula in celulas %}
+                    <tr>
+                        <td class="text-muted">#{{ celula.id }}</td>
+                        <td class="fw-semibold">{{ celula.nome }}</td>
+                        <td>{{ celula.lider_nome or "-" }}</td>
+                        <td>{{ celula.bairro or "-" }}</td>
+                        <td>{{ celula.dia_reuniao or "-" }}</td>
+                        <td>{{ celula.membros or 0 }}</td>
+                        <td>{{ celula.visitantes or 0 }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">Nenhuma célula cadastrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

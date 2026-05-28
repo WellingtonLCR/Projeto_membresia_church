@@ -10,6 +10,9 @@ class MembresiaAppTestCase(unittest.TestCase):
     def autenticar(self):
         with self.client.session_transaction() as sess:
             sess["usuario_logado"] = "teste@igreja.org"
+            sess["usuario_nome"] = "Usuario Teste"
+            sess["usuario_perfil"] = "Administrador"
+            sess["usuario_id"] = 1
 
     def test_rotas_publicas_renderizam(self):
         for rota in ["/", "/login", "/cadastro", "/sobre-equipe"]:
@@ -26,7 +29,22 @@ class MembresiaAppTestCase(unittest.TestCase):
     def test_listagens_privadas_renderizam_com_login(self):
         self.autenticar()
 
-        for rota in ["/membros/listar", "/ministerios/listar", "/usuarios/listar"]:
+        for rota in [
+            "/membros/listar",
+            "/ministerios/listar",
+            "/usuarios/listar",
+            "/celulas/listar",
+            "/eventos/listar",
+            "/financeiro/listar",
+            "/comunicacao/listar",
+            "/relatorios/listar",
+            "/configuracoes/listar",
+            "/familias/listar",
+            "/fornecedores/listar",
+            "/doacoes/listar",
+            "/mural/listar",
+            "/intercessao/listar",
+        ]:
             with self.subTest(rota=rota):
                 resposta = self.client.get(rota)
                 self.assertEqual(resposta.status_code, 200)
@@ -71,7 +89,30 @@ class MembresiaAppTestCase(unittest.TestCase):
     def test_exclusao_logica_nao_aceita_get(self):
         self.autenticar()
 
-        for rota in ["/membros/excluir/101", "/membros/inativar/101", "/ministerios/excluir/201", "/usuarios/excluir/1"]:
+        for rota in [
+            "/membros/excluir/101",
+            "/membros/inativar/101",
+            "/ministerios/excluir/201",
+            "/usuarios/excluir/1",
+            "/familias/excluir/1",
+            "/fornecedores/excluir/1",
+        ]:
+            with self.subTest(rota=rota):
+                resposta = self.client.get(rota)
+                self.assertEqual(resposta.status_code, 405)
+
+    def test_acoes_operacionais_nao_aceitam_get(self):
+        self.autenticar()
+
+        for rota in [
+            "/mural/publicar/1",
+            "/mural/arquivar/1",
+            "/intercessao/orar/1",
+            "/intercessao/responder/1",
+            "/intercessao/arquivar/1",
+            "/doacoes/receber/1",
+            "/doacoes/cancelar/1",
+        ]:
             with self.subTest(rota=rota):
                 resposta = self.client.get(rota)
                 self.assertEqual(resposta.status_code, 405)
