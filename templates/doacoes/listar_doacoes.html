@@ -1,74 +1,324 @@
 {% extends "base.html" %}
 
-{% block titulo %}Doações • Painel{% endblock %}
+{% block titulo %}Doações · Domus Control{% endblock %}
 
 {% block conteudo %}
-<div class="page-header mb-4">
+<div class="page-header">
     <div>
-        <span class="eyebrow">Gestão</span>
-        <h1 class="h2 mb-1">Doações</h1>
-        <p class="text-muted mb-0">Registre doações recebidas, pendentes e recorrentes, integrando com o financeiro.</p>
+        <h1>Doações</h1>
+        <p>Registre doações recebidas, pendentes e recorrentes, integrando os valores ao financeiro.</p>
     </div>
-    <div class="d-flex gap-2 flex-wrap">
-        <a href="{{ url_for('inserir_doacao') }}" class="btn btn-primary">Nova doação</a>
+    <div class="toolbar-actions">
+        <button class="icon-button filter-trigger" type="button" data-bs-toggle="modal" data-bs-target="#filtrosDoacoes" aria-label="Abrir filtros">
+            <i data-lucide="list-filter"></i>
+            {% if filtros_ativos %}<span class="notification-dot">{{ filtros_ativos }}</span>{% endif %}
+        </button>
+        <button class="btn btn-primary btn-with-icon" type="button" data-bs-toggle="offcanvas" data-bs-target="#drawerDoacao" aria-controls="drawerDoacao">
+            <i data-lucide="plus"></i>
+            <span>Nova Doação</span>
+        </button>
     </div>
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-4"><div class="metric-card"><span>Total recebido</span><strong>{{ metricas.doacoes_valor|moeda_br }}</strong></div></div>
-    <div class="col-md-4"><div class="metric-card"><span>Doações</span><strong>{{ metricas.doacoes }}</strong></div></div>
-    <div class="col-md-4"><div class="metric-card"><span>Pendentes</span><strong>{{ pendentes }}</strong></div></div>
-</div>
+<section class="metric-grid metric-grid-three" aria-label="Resumo de doações">
+    <div class="metric-card">
+        <span class="metric-title">Total recebido</span>
+        <span class="metric-value-row"><i data-lucide="heart-handshake"></i><strong>{{ metricas.doacoes_valor|moeda_br }}</strong></span>
+        <small>Doações com baixa confirmada.</small>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Doações</span>
+        <span class="metric-value-row"><i data-lucide="gift"></i><strong>{{ metricas.doacoes }}</strong></span>
+        <small>Registros ativos no histórico.</small>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Pendentes</span>
+        <span class="metric-value-row text-warning"><i data-lucide="clock"></i><strong>{{ pendentes }}</strong></span>
+        <small>{{ periodo_label }}</small>
+    </div>
+</section>
 
-<div class="card data-card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Data</th>
-                        <th>Doador</th>
-                        <th>Tipo</th>
-                        <th>Forma</th>
-                        <th>Conta</th>
-                        <th>Status</th>
-                        <th>Valor</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for doacao in doacoes %}
-                    <tr>
-                        <td class="text-muted">#{{ doacao.id }}</td>
-                        <td>{{ doacao.data_doacao|data_br }}</td>
-                        <td class="fw-semibold">{{ doacao.membro or doacao.doador_nome }}</td>
-                        <td>{{ doacao.tipo|rotulo }}</td>
-                        <td>{{ doacao.forma_recebimento|rotulo if doacao.forma_recebimento else "-" }}</td>
-                        <td>{{ doacao.conta }}</td>
-                        <td><span class="badge rounded-pill text-bg-light">{{ doacao.status|rotulo }}</span></td>
-                        <td class="fw-semibold">{{ doacao.valor|moeda_br }}</td>
-                        <td>
-                            {% if doacao.status == 'Pendente' %}
-                            <div class="d-flex gap-2 flex-wrap">
-                                <form method="post" action="{{ url_for('receber_doacao', doacao_id=doacao.id) }}">
-                                    <button class="btn btn-sm btn-outline-success" type="submit">Receber</button>
-                                </form>
-                                <form method="post" action="{{ url_for('cancelar_doacao', doacao_id=doacao.id) }}">
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Cancelar</button>
-                                </form>
-                            </div>
-                            {% else %}
-                            <span class="text-muted small">-</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr><td colspan="9" class="text-center text-muted py-4">Nenhuma doação cadastrada.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<section class="data-card">
+    <div class="list-card-header">
+        <div>
+            <h2>Lista de Doações</h2>
+            <p>{{ doacoes|length }} itens encontrados</p>
         </div>
     </div>
+    <div class="table-shell table-shell-wide">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Tipo do Doador</th>
+                    <th>Nome</th>
+                    <th>Tipo de Doação</th>
+                    <th>Categoria</th>
+                    <th>Destinatário</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th>Pagamento</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doacao in doacoes %}
+                <tr>
+                    <td>{{ doacao.data_doacao|data_br }}</td>
+                    <td>{{ "Membro / Visitante" if doacao.membro else "Sem cadastro" }}</td>
+                    <td><strong>{{ doacao.membro or doacao.doador_nome or "Anônimo" }}</strong></td>
+                    <td>{{ doacao.tipo|rotulo }}</td>
+                    <td>{{ doacao.categoria or "-" }}</td>
+                    <td>Igreja</td>
+                    <td class="table-money">{{ doacao.valor|moeda_br }}</td>
+                    <td>
+                        <span class="status-pill {{ 'status-success' if doacao.status == 'Recebida' else ('status-warning' if doacao.status == 'Pendente' else 'status-danger') }}">
+                            {{ doacao.status|rotulo }}
+                        </span>
+                    </td>
+                    <td>{{ doacao.forma_recebimento|rotulo if doacao.forma_recebimento else "-" }}</td>
+                    <td>
+                        <div class="row-actions">
+                            {% if doacao.status == 'Pendente' %}
+                            <form method="post" action="{{ url_for('receber_doacao', doacao_id=doacao.id) }}">
+                                <button class="icon-button icon-button-sm text-success" type="submit" aria-label="Receber doação">
+                                    <i data-lucide="check"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="{{ url_for('cancelar_doacao', doacao_id=doacao.id) }}">
+                                <button class="icon-button icon-button-sm text-danger btn-excluir" data-confirm-message="Cancelar esta doação pendente?" type="submit" aria-label="Cancelar doação">
+                                    <i data-lucide="x"></i>
+                                </button>
+                            </form>
+                            {% else %}
+                            <button class="icon-button icon-button-sm" type="button" aria-label="Ações da doação">
+                                <i data-lucide="ellipsis"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10">
+                        <div class="empty-state">
+                            <i data-lucide="pie-chart"></i>
+                            <strong>Nenhuma doação registrada</strong>
+                            <span>Quando novas doações forem adicionadas, elas aparecerão nesta lista.</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="table-footer">
+        <span>Página 1 de 1</span>
+        <div class="pagination-actions">
+            <span>Itens por página:</span>
+            <select class="form-select form-select-sm" aria-label="Itens por página">
+                <option>10</option>
+            </select>
+            <button class="btn btn-outline-secondary btn-sm" type="button" disabled>Anterior</button>
+            <button class="btn btn-outline-secondary btn-sm" type="button" disabled>Próxima</button>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="filtrosDoacoes" tabindex="-1" aria-labelledby="filtrosDoacoesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered filter-dialog">
+        <form class="modal-content filter-modal" method="get">
+            <div class="modal-header">
+                <h2 class="modal-title" id="filtrosDoacoesLabel">Filtros</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body filter-grid">
+                <div>
+                    <label class="form-label">Período</label>
+                    <div class="date-range">
+                        <input class="form-control" type="date" name="data_inicio" value="{{ filtros.data_inicio }}">
+                        <input class="form-control" type="date" name="data_fim" value="{{ filtros.data_fim }}">
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label" for="filtroContaDoacao">Conta Bancária</label>
+                    <select class="form-select" id="filtroContaDoacao" name="conta_id">
+                        <option value="">Selecione</option>
+                        {% for conta in contas %}
+                        <option value="{{ conta.id }}" {% if filtros.conta_id|string == conta.id|string %}selected{% endif %}>{{ conta.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="filtroTipoDoacao">Tipo de Doação</label>
+                    <select class="form-select" id="filtroTipoDoacao" name="tipo">
+                        <option value="">Selecione</option>
+                        {% for tipo in tipos %}
+                        <option value="{{ tipo }}" {% if filtros.tipo == tipo %}selected{% endif %}>{{ tipo|rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="filtroCategoriaDoacao">Categoria de Doação</label>
+                    <select class="form-select" id="filtroCategoriaDoacao" name="categoria_id">
+                        <option value="">Selecione</option>
+                        {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" {% if filtros.categoria_id|string == categoria.id|string %}selected{% endif %}>{{ categoria.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="filtroMembroDoacao">Usuário</label>
+                    <select class="form-select" id="filtroMembroDoacao" name="membro_id">
+                        <option value="">Selecionar usuário</option>
+                        {% for membro in membros %}
+                        <option value="{{ membro.id }}" {% if filtros.membro_id|string == membro.id|string %}selected{% endif %}>{{ membro.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="filtroStatusDoacao">Status</label>
+                    <select class="form-select" id="filtroStatusDoacao" name="status">
+                        <option value="">Selecione</option>
+                        <option value="Todos" {% if filtros.status == "Todos" %}selected{% endif %}>Todos</option>
+                        {% for status in status_opcoes %}
+                        <option value="{{ status }}" {% if filtros.status == status %}selected{% endif %}>{{ status|rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-outline-secondary" href="{{ request.path }}">Limpar</a>
+                <button class="btn btn-primary" type="submit">Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-end side-drawer" tabindex="-1" id="drawerDoacao" aria-labelledby="drawerDoacaoLabel">
+    <form class="drawer-form" method="post" action="{{ url_for('inserir_doacao') }}">
+        <div class="offcanvas-header">
+            <h2 class="offcanvas-title" id="drawerDoacaoLabel">Nova Doação</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+        </div>
+        <div class="offcanvas-body">
+            <section class="drawer-section">
+                <h3>Informações do Doador</h3>
+                <div class="radio-grid three-cols">
+                    <label class="radio-card selected">
+                        <input type="radio" name="doador_tipo" value="membro" checked>
+                        <i data-lucide="user-round"></i>
+                        <span>Membro / Visitante</span>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="doador_tipo" value="sem_cadastro">
+                        <i data-lucide="user-round-plus"></i>
+                        <span>Sem cadastro</span>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="doador_tipo" value="anonimo">
+                        <i data-lucide="user-round-x"></i>
+                        <span>Anônimo</span>
+                    </label>
+                </div>
+                <div class="drawer-grid">
+                    <div class="field-member">
+                        <label class="form-label" for="membroDoacao">Doador</label>
+                        <select class="form-select" id="membroDoacao" name="membro_id">
+                            <option value="">Selecionar usuário</option>
+                            {% for membro in membros %}
+                            <option value="{{ membro.id }}">{{ membro.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="field-donor-name">
+                        <label class="form-label" for="doadorNome">Nome do doador</label>
+                        <input class="form-control" id="doadorNome" name="doador_nome" placeholder="Nome do doador">
+                    </div>
+                </div>
+            </section>
+
+            <section class="drawer-section">
+                <h3>Detalhes da Doação</h3>
+                <div class="drawer-grid">
+                    <div>
+                        <label class="form-label" for="categoriaDoacao">Categoria *</label>
+                        <select class="form-select" id="categoriaDoacao" name="categoria_id" required>
+                            <option value="">Selecione...</option>
+                            {% for categoria in categorias %}
+                            <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label" for="tipoDoacao">Tipo de Doação *</label>
+                        <select class="form-select" id="tipoDoacao" name="tipo" required>
+                            <option value="">Selecione...</option>
+                            {% for tipo in tipos %}
+                            <option value="{{ tipo }}">{{ tipo|rotulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label" for="valorDoacao">Valor (R$) *</label>
+                        <input class="form-control money-input" id="valorDoacao" name="valor" placeholder="R$ 0,00" required>
+                    </div>
+                    <div>
+                        <label class="form-label" for="contaDoacao">Conta Bancária *</label>
+                        <select class="form-select" id="contaDoacao" name="conta_id" required>
+                            <option value="">Selecione...</option>
+                            {% for conta in contas %}
+                            <option value="{{ conta.id }}">{{ conta.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <section class="drawer-section">
+                <h3>Pagamento</h3>
+                <div class="radio-grid two-cols">
+                    <label class="radio-card selected success-card">
+                        <input type="radio" name="status" value="Recebida" checked>
+                        <i data-lucide="check"></i>
+                        <span>Já Recebi</span>
+                    </label>
+                    <label class="radio-card danger-card">
+                        <input type="radio" name="status" value="Pendente">
+                        <i data-lucide="x"></i>
+                        <span>Não Recebi</span>
+                    </label>
+                </div>
+                <div class="drawer-grid">
+                    <div>
+                        <label class="form-label" for="dataDoacao">Data de Recebimento *</label>
+                        <input class="form-control" id="dataDoacao" type="date" name="data_doacao" value="{{ filtros.data_inicio }}" required>
+                    </div>
+                    <div>
+                        <label class="form-label" for="formaDoacao">Forma de Recebimento *</label>
+                        <select class="form-select" id="formaDoacao" name="forma_recebimento" required>
+                            <option value="">Selecione...</option>
+                            {% for forma in formas %}
+                            <option value="{{ forma }}">{{ forma|rotulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-switch-row">
+                    <span>Baixa Automática</span>
+                    <input class="form-check-input" type="checkbox" checked disabled aria-label="Baixa automática">
+                </div>
+                <div class="form-switch-row">
+                    <label for="recorrenteDoacao">Doação Recorrente</label>
+                    <input class="form-check-input" id="recorrenteDoacao" name="recorrente" type="checkbox" aria-label="Doação recorrente">
+                </div>
+                <label class="form-label" for="observacoesDoacao">Observações</label>
+                <textarea class="form-control" id="observacoesDoacao" name="observacoes" rows="3" placeholder="Adicione observações sobre esta doação..."></textarea>
+            </section>
+        </div>
+        <div class="drawer-footer">
+            <button class="btn btn-primary" type="submit">Salvar</button>
+        </div>
+    </form>
 </div>
 {% endblock %}

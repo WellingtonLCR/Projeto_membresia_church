@@ -1,65 +1,227 @@
 {% extends "base.html" %}
 
-{% block titulo %}Eventos • Painel{% endblock %}
+{% block titulo %}Cultos · Domus Control{% endblock %}
 
 {% block conteudo %}
-<div class="page-header mb-4">
+<div class="page-header">
     <div>
-        <span class="eyebrow">Organização</span>
-        <h1 class="h2 mb-1">Eventos</h1>
-        <p class="text-muted mb-0">Cadastre eventos, acompanhe inscrições e use o banner para facilitar a gestão visual da agenda.</p>
+        <h1>Cultos</h1>
+        <p>Cadastre cultos, acompanhe reuniões e use o check-in para organizar participantes.</p>
     </div>
-    <div class="d-flex gap-2 flex-wrap">
-        <a href="{{ url_for('inserir_evento') }}" class="btn btn-primary">Novo evento</a>
+    <div class="toolbar-actions">
+        <button class="icon-button filter-trigger" type="button" data-bs-toggle="modal" data-bs-target="#filtrosCultos" aria-label="Abrir filtros">
+            <i data-lucide="list-filter"></i>
+            {% if filtros_ativos %}<span class="notification-dot">{{ filtros_ativos }}</span>{% endif %}
+        </button>
+        <button class="btn btn-primary btn-with-icon" type="button" data-bs-toggle="offcanvas" data-bs-target="#drawerCulto" aria-controls="drawerCulto">
+            <i data-lucide="plus"></i>
+            <span>Novo culto</span>
+        </button>
     </div>
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-4"><div class="metric-card"><span>Eventos ativos</span><strong>{{ metricas.eventos }}</strong></div></div>
-    <div class="col-md-4"><div class="metric-card"><span>Membros inscritos</span><strong>{{ membros_inscritos }}</strong></div></div>
-    <div class="col-md-4"><div class="metric-card"><span>Visitantes inscritos</span><strong>{{ visitantes_inscritos }}</strong></div></div>
-</div>
+<section class="metric-grid metric-grid-three" aria-label="Resumo de cultos">
+    <div class="metric-card">
+        <span class="metric-title">Cultos ativos</span>
+        <span class="metric-value-row"><i data-lucide="calendar-check"></i><strong>{{ metricas.eventos }}</strong></span>
+        <small>Eventos não cancelados.</small>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Membros inscritos</span>
+        <span class="metric-value-row"><i data-lucide="users-round"></i><strong>{{ membros_inscritos }}</strong></span>
+        <small>Participantes vinculados.</small>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Visitantes inscritos</span>
+        <span class="metric-value-row"><i data-lucide="user-plus"></i><strong>{{ visitantes_inscritos }}</strong></span>
+        <small>Visitantes em acompanhamento.</small>
+    </div>
+</section>
 
-<div class="card data-card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Banner</th>
-                        <th>Evento</th>
-                        <th>Data</th>
-                        <th>Local</th>
-                        <th>Status</th>
-                        <th>Membros</th>
-                        <th>Visitantes</th>
-                        <th>Presentes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for evento in eventos %}
-                    <tr>
-                        <td>
-                            {% if evento.banner_path %}
-                            <img src="{{ url_for('static', filename=evento.banner_path) }}" alt="Banner {{ evento.nome }}" class="table-thumb">
-                            {% else %}
-                            <span class="text-muted small">Sem banner</span>
-                            {% endif %}
-                        </td>
-                        <td class="fw-semibold">{{ evento.nome }}</td>
-                        <td>{{ evento.data_inicio|data_br }}</td>
-                        <td>{{ evento.local or "-" }}</td>
-                        <td><span class="badge rounded-pill text-bg-light">{{ evento.status }}</span></td>
-                        <td>{{ evento.membros or 0 }}</td>
-                        <td>{{ evento.visitantes or 0 }}</td>
-                        <td>{{ evento.presentes or 0 }}</td>
-                    </tr>
-                    {% else %}
-                    <tr><td colspan="8" class="text-center text-muted py-4">Nenhum evento cadastrado.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<section class="data-card">
+    <div class="list-card-header">
+        <div>
+            <h2>Cultos cadastrados</h2>
+            <p>{{ eventos|length }} culto(s) encontrado(s)</p>
         </div>
     </div>
+    <div class="table-shell">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>Quando</th>
+                    <th>Duração</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for evento in eventos %}
+                <tr>
+                    <td>
+                        <strong>{{ evento.nome }}</strong>
+                        <small>{{ evento.local or "Local não informado" }}</small>
+                    </td>
+                    <td>Culto</td>
+                    <td>{{ evento.data_inicio|data_br }}</td>
+                    <td>{{ evento.data_fim|data_br if evento.data_fim else "90 min" }}</td>
+                    <td>
+                        <span class="status-pill {{ 'status-success' if evento.status == 'Realizado' else ('status-danger' if evento.status == 'Cancelado' else 'status-primary') }}">
+                            {{ evento.status or "Agendado" }}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="icon-button icon-button-sm" type="button" aria-label="Ações do culto">
+                            <i data-lucide="ellipsis"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <i data-lucide="calendar-check"></i>
+                            <strong>Nenhum culto encontrado</strong>
+                            <span>Cadastre um culto para começar a gerenciar reuniões e participantes.</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="table-footer">
+        <span>Página 1 de 1</span>
+        <div class="pagination-actions">
+            <span>Itens por página:</span>
+            <select class="form-select form-select-sm" aria-label="Itens por página">
+                <option>10</option>
+            </select>
+            <button class="btn btn-outline-secondary btn-sm" type="button" disabled>Anterior</button>
+            <button class="btn btn-outline-secondary btn-sm" type="button" disabled>Próxima</button>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="filtrosCultos" tabindex="-1" aria-labelledby="filtrosCultosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered filter-dialog">
+        <form class="modal-content filter-modal" method="get">
+            <div class="modal-header">
+                <h2 class="modal-title" id="filtrosCultosLabel">Filtros</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body filter-grid">
+                <div>
+                    <label class="form-label" for="filtroNomeCulto">Nome</label>
+                    <input class="form-control" id="filtroNomeCulto" name="nome" value="{{ filtros.nome }}" placeholder="Buscar por nome...">
+                </div>
+                <div>
+                    <label class="form-label" for="filtroRecorrenciaCulto">Recorrência</label>
+                    <select class="form-select" id="filtroRecorrenciaCulto" name="recorrencia">
+                        <option value="">Todos</option>
+                        <option value="recorrente" {% if filtros.recorrencia == "recorrente" %}selected{% endif %}>Recorrente</option>
+                        <option value="unico" {% if filtros.recorrencia == "unico" %}selected{% endif %}>Único</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="filtroDiaCulto">Dia da semana</label>
+                    <select class="form-select" id="filtroDiaCulto" name="dia_semana">
+                        <option value="">Selecione</option>
+                        {% for dia in dias_reuniao %}
+                        <option value="{{ dia }}" {% if filtros.dia_semana == dia %}selected{% endif %}>{{ dia }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="filtroStatusCulto">Status</label>
+                    <select class="form-select" id="filtroStatusCulto" name="status">
+                        <option value="">Selecione</option>
+                        <option value="Agendado" {% if filtros.status == "Agendado" %}selected{% endif %}>Programada</option>
+                        <option value="Realizado" {% if filtros.status == "Realizado" %}selected{% endif %}>Realizada</option>
+                        <option value="Cancelado" {% if filtros.status == "Cancelado" %}selected{% endif %}>Cancelada</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-outline-secondary" href="{{ request.path }}">Limpar</a>
+                <button class="btn btn-primary" type="submit">Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-end side-drawer" tabindex="-1" id="drawerCulto" aria-labelledby="drawerCultoLabel">
+    <form class="drawer-form" method="post" action="{{ url_for('inserir_evento') }}" enctype="multipart/form-data">
+        <div class="offcanvas-header">
+            <h2 class="offcanvas-title" id="drawerCultoLabel">Novo culto</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+        </div>
+        <div class="offcanvas-body">
+            <section class="drawer-section">
+                <h3>Informações básicas</h3>
+                <div class="drawer-grid">
+                    <div>
+                        <label class="form-label" for="nomeCulto">Nome *</label>
+                        <input class="form-control" id="nomeCulto" name="nome" placeholder="Ex.: Culto da Família" required>
+                    </div>
+                    <div>
+                        <label class="form-label" for="duracaoCulto">Duração (minutos)</label>
+                        <input class="form-control" id="duracaoCulto" name="duracao" type="number" min="1" value="90">
+                    </div>
+                </div>
+                <label class="form-label" for="descricaoCulto">Descrição</label>
+                <textarea class="form-control" id="descricaoCulto" name="descricao" rows="3" placeholder="Informações adicionais sobre o culto..."></textarea>
+                <label class="form-label" for="temaCulto">Tema</label>
+                <input class="form-control" id="temaCulto" name="tema" placeholder="Tema do culto">
+            </section>
+
+            <section class="drawer-section">
+                <h3>Agenda e check-in</h3>
+                <div class="form-switch-row">
+                    <label for="cultoRecorrente">Culto recorrente</label>
+                    <input class="form-check-input" id="cultoRecorrente" type="checkbox" checked aria-label="Culto recorrente">
+                </div>
+                <div class="drawer-grid">
+                    <div>
+                        <label class="form-label" for="dataInicioCulto">Data e horário de início *</label>
+                        <input class="form-control" id="dataInicioCulto" name="data_inicio" type="datetime-local" required>
+                    </div>
+                    <div>
+                        <label class="form-label" for="dataFimCulto">Data e horário de fim</label>
+                        <input class="form-control" id="dataFimCulto" name="data_fim" type="datetime-local">
+                    </div>
+                    <div>
+                        <label class="form-label" for="localCulto">Local *</label>
+                        <input class="form-control" id="localCulto" name="local" placeholder="Templo principal" required>
+                    </div>
+                    <div>
+                        <label class="form-label" for="statusCulto">Status</label>
+                        <select class="form-select" id="statusCulto" name="status">
+                            <option value="Agendado">Programada</option>
+                            <option value="Realizado">Realizada</option>
+                            <option value="Cancelado">Cancelada</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label" for="abreCheckin">Abrir check-in (minutos antes)</label>
+                        <input class="form-control" id="abreCheckin" name="abrir_checkin" type="number" min="0" value="30">
+                    </div>
+                    <div>
+                        <label class="form-label" for="fechaCheckin">Fechar check-in (minutos após)</label>
+                        <input class="form-control" id="fechaCheckin" name="fechar_checkin" type="number" min="0" value="30">
+                    </div>
+                </div>
+                <div class="form-switch-row">
+                    <span>Check-in apenas com geolocalização</span>
+                    <input class="form-check-input" type="checkbox" aria-label="Check-in apenas com geolocalização">
+                </div>
+            </section>
+        </div>
+        <div class="drawer-footer">
+            <button class="btn btn-primary" type="submit">Criar culto</button>
+        </div>
+    </form>
 </div>
 {% endblock %}

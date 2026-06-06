@@ -1,4 +1,5 @@
 import os
+import re
 from io import BytesIO
 from datetime import date, datetime
 from functools import wraps
@@ -31,8 +32,32 @@ STATUS_USUARIO = ["Ativo", "Bloqueado", "Inativo"]
 SITUACOES_MEMBRO = ["Ativo", "Inativo", "Visitante", "Afastado"]
 STATUS_MINISTERIO = ["Ativo", "Inativo"]
 STATUS_DOACAO = ["Recebida", "Pendente", "Cancelada"]
-TIPOS_DOACAO = ["Dizimo", "Oferta", "Contribuicao", "Campanha", "Missao"]
-FORMAS_RECEBIMENTO = ["Dinheiro", "PIX", "Cartao", "Transferencia", "Boleto"]
+TIPOS_DOACAO = ["Dizimo", "Oferta", "Contribuicao", "Campanha", "Missao", "Outros"]
+FORMAS_RECEBIMENTO = [
+    "Dinheiro",
+    "Especie",
+    "PIX",
+    "Cartao",
+    "CartaoCredito",
+    "CartaoDebito",
+    "Transferencia",
+    "Deposito",
+    "Boleto",
+    "Cheque",
+    "Outros",
+]
+FORMAS_PAGAMENTO = [
+    "Dinheiro",
+    "Especie",
+    "PIX",
+    "CartaoCredito",
+    "CartaoDebito",
+    "Transferencia",
+    "Deposito",
+    "Boleto",
+    "Cheque",
+    "Outros",
+]
 STATUS_MURAL = ["Rascunho", "Publicado", "Arquivado"]
 STATUS_PEDIDO_ORACAO = ["Pendente", "Em oracao", "Respondido", "Arquivado"]
 ORACAO_CATEGORIAS = ["Saude", "Familia", "Trabalho", "Vida espiritual", "Outro"]
@@ -67,6 +92,10 @@ ROTULOS_TELA = {
     "Contribuicao": "Contribuição",
     "Missao": "Missão",
     "Cartao": "Cartão",
+    "CartaoCredito": "Cartão de crédito",
+    "CartaoDebito": "Cartão de débito",
+    "Especie": "Espécie",
+    "Deposito": "Depósito",
     "Transferencia": "Transferência",
     "Saida": "Saída",
     "Em oracao": "Em oração",
@@ -81,97 +110,133 @@ ROTULOS_TELA = {
 MENU_LATERAL = [
     {
         "itens": [
-            {"label": "Dashboard", "rota": "dashboard", "ativos": ["dashboard"]},
+            {"label": "Dashboard", "rota": "dashboard", "ativos": ["dashboard"], "icone": "layout-dashboard"},
         ],
     },
     {
         "titulo": "Financeiro",
+        "icone": "pie-chart",
         "itens": [
-            {"label": "Painel", "rota": "painel_financeiro", "ativos": ["painel_financeiro"]},
-            {"label": "Receitas", "rota": "listar_receitas", "ativos": ["listar_receitas"]},
-            {"label": "Despesas", "rota": "listar_despesas", "ativos": ["listar_despesas"]},
-            {"label": "Doações", "rota": "listar_doacoes", "ativos": ["listar_doacoes", "inserir_doacao"]},
+            {"label": "Visão de Competências", "rota": "listar_financeiro", "ativos": ["listar_financeiro"], "icone": "bar-chart-3"},
+            {"label": "Receitas", "rota": "listar_receitas", "ativos": ["listar_receitas"], "icone": "circle-arrow-down"},
+            {"label": "Despesas", "rota": "listar_despesas", "ativos": ["listar_despesas"], "icone": "circle-arrow-up"},
             {
                 "label": "Movimentações",
                 "rota": "listar_financeiro",
                 "ativos": ["listar_financeiro", "inserir_lancamento_financeiro"],
+                "icone": "arrow-left-right",
             },
-            {"label": "Cadastros", "rota": "cadastros_financeiros", "ativos": ["cadastros_financeiros"]},
-            {"label": "Fornecedores", "rota": "listar_fornecedores", "ativos": ["listar_fornecedores", "inserir_fornecedor"]},
+            {"label": "Configurações", "rota": "cadastros_financeiros", "ativos": ["cadastros_financeiros", "listar_categorias_financeiro", "listar_centros_custo", "listar_contas_bancarias", "listar_formas_recebimento", "listar_formas_pagamento", "listar_fornecedores", "inserir_fornecedor"], "icone": "settings"},
+        ],
+    },
+    {
+        "titulo": "Doações",
+        "icone": "gift",
+        "itens": [
+            {"label": "Resumo", "rota": "painel_doacoes", "ativos": ["painel_doacoes"], "icone": "bar-chart-3"},
+            {"label": "Doações", "rota": "listar_doacoes", "ativos": ["listar_doacoes", "inserir_doacao"], "icone": "gift"},
+            {"label": "Parcelas", "rota": "listar_parcelas_doacoes", "ativos": ["listar_parcelas_doacoes"], "icone": "coins"},
+            {"label": "Doações Recorrentes", "rota": "listar_doacoes_recorrentes", "ativos": ["listar_doacoes_recorrentes"], "icone": "calendar-sync"},
+            {"label": "Relatórios", "rota": "relatorios_doacoes", "ativos": ["relatorios_doacoes"], "icone": "file-text"},
+            {"label": "Configurações", "rota": "configuracoes_doacoes", "ativos": ["configuracoes_doacoes", "listar_tipos_doacao", "listar_categorias_doacao", "listar_chaves_pix"], "icone": "settings"},
+        ],
+    },
+    {
+        "titulo": "Cultos",
+        "icone": "calendar-check",
+        "itens": [
+            {"label": "Cultos", "rota": "listar_eventos", "ativos": ["listar_eventos", "inserir_evento"], "icone": "calendar-days"},
+            {"label": "Reuniões", "rota": "listar_reunioes_cultos", "ativos": ["listar_reunioes_cultos"], "icone": "calendar-check"},
         ],
     },
     {
         "titulo": "Pessoas",
+        "icone": "users",
         "itens": [
-            {"label": "Painel", "rota": "painel_pessoas", "ativos": ["painel_pessoas"]},
+            {"label": "Painel", "rota": "painel_pessoas", "ativos": ["painel_pessoas"], "icone": "layout-dashboard"},
             {
                 "label": "Membros",
                 "rota": "listar_membros",
                 "ativos": ["listar_membros", "inserir_membro", "editar_membro", "historico_membro"],
+                "icone": "user-round",
             },
-            {"label": "Visitantes", "rota": "listar_visitantes", "ativos": ["listar_visitantes"]},
-            {"label": "Aniversários", "rota": "listar_aniversarios", "ativos": ["listar_aniversarios"]},
-            {"label": "Famílias", "rota": "listar_familias", "ativos": ["listar_familias", "inserir_familia"]},
+            {"label": "Visitantes", "rota": "listar_visitantes", "ativos": ["listar_visitantes"], "icone": "user-plus"},
+            {"label": "Aniversários", "rota": "listar_aniversarios", "ativos": ["listar_aniversarios"], "icone": "cake"},
+            {"label": "Famílias", "rota": "listar_familias", "ativos": ["listar_familias", "inserir_familia"], "icone": "heart-handshake"},
         ],
     },
     {
         "titulo": "Ministérios",
+        "icone": "crown",
         "itens": [
-            {"label": "Painel", "rota": "painel_ministerios", "ativos": ["painel_ministerios"]},
+            {"label": "Painel", "rota": "painel_ministerios", "ativos": ["painel_ministerios"], "icone": "layout-dashboard"},
             {
                 "label": "Gerenciamento",
                 "rota": "listar_ministerios",
                 "ativos": ["listar_ministerios", "inserir_ministerio", "editar_ministerio"],
+                "icone": "crown",
             },
         ],
     },
     {
         "titulo": "Células",
+        "icone": "table-cells-split",
         "itens": [
-            {"label": "Painel", "rota": "painel_celulas", "ativos": ["painel_celulas"]},
-            {"label": "Gerenciamento", "rota": "listar_celulas", "ativos": ["listar_celulas", "inserir_celula"]},
-            {"label": "Presença", "rota": "listar_presencas", "ativos": ["listar_presencas", "inserir_presenca"]},
+            {"label": "Painel", "rota": "painel_celulas", "ativos": ["painel_celulas"], "icone": "layout-dashboard"},
+            {"label": "Gerenciamento", "rota": "listar_celulas", "ativos": ["listar_celulas", "inserir_celula"], "icone": "table-cells-split"},
+            {"label": "Presença", "rota": "listar_presencas", "ativos": ["listar_presencas", "inserir_presenca"], "icone": "clipboard-check"},
+        ],
+    },
+    {
+        "titulo": "Conteúdo",
+        "icone": "list",
+        "itens": [
+            {"label": "Feed", "rota": "listar_mural", "ativos": ["listar_mural", "inserir_mural"], "icone": "newspaper"},
+            {"label": "Devocional", "rota": "listar_mural", "ativos": ["listar_mural", "inserir_mural"], "icone": "book-open"},
         ],
     },
     {
         "titulo": "Comunicação",
+        "icone": "message-circle",
         "itens": [
-            {"label": "Painel", "rota": "painel_comunicacao", "ativos": ["painel_comunicacao"]},
-            {"label": "Feed", "rota": "listar_mural", "ativos": ["listar_mural", "inserir_mural"]},
-            {"label": "Comunicados", "rota": "listar_comunicacao", "ativos": ["listar_comunicacao", "inserir_mensagem"]},
-            {"label": "Devocional", "rota": "listar_mural", "ativos": ["listar_mural", "inserir_mural"]},
+            {"label": "Painel", "rota": "painel_comunicacao", "ativos": ["painel_comunicacao"], "icone": "layout-dashboard"},
+            {"label": "Comunicados", "rota": "listar_comunicacao", "ativos": ["listar_comunicacao", "inserir_mensagem"], "icone": "send"},
         ],
     },
     {
         "titulo": "Intercessão",
+        "icone": "message-circle-heart",
         "itens": [
-            {"label": "Painel", "rota": "painel_intercessao", "ativos": ["painel_intercessao"]},
+            {"label": "Painel", "rota": "painel_intercessao", "ativos": ["painel_intercessao"], "icone": "layout-dashboard"},
             {
                 "label": "Pedidos de oração",
                 "rota": "listar_intercessao",
                 "ativos": ["listar_intercessao", "inserir_intercessao"],
+                "icone": "message-circle-heart",
             },
-            {"label": "Testemunhos", "rota": "listar_testemunhos", "ativos": ["listar_testemunhos"]},
+            {"label": "Testemunhos", "rota": "listar_testemunhos", "ativos": ["listar_testemunhos"], "icone": "sparkles"},
         ],
     },
     {
         "titulo": "Relatórios",
+        "icone": "file-bar-chart",
         "itens": [
-            {"label": "Indicadores", "rota": "listar_relatorios", "ativos": ["listar_relatorios"]},
+            {"label": "Indicadores", "rota": "listar_relatorios", "ativos": ["listar_relatorios"], "icone": "file-bar-chart"},
         ],
     },
     {
         "titulo": "Configurações",
+        "icone": "settings",
         "itens": [
-            {"label": "Painel", "rota": "listar_configuracoes", "ativos": ["listar_configuracoes"]},
-            {"label": "Igreja", "rota": "configuracoes_igreja", "ativos": ["configuracoes_igreja"]},
-            {"label": "História", "rota": "configuracoes_historia", "ativos": ["configuracoes_historia"]},
-            {"label": "Informações", "rota": "configuracoes_informacoes", "ativos": ["configuracoes_informacoes"]},
-            {"label": "Permissões", "rota": "configuracoes_permissoes", "ativos": ["configuracoes_permissoes"]},
-            {"label": "Programação", "rota": "configuracoes_programacao", "ativos": ["configuracoes_programacao"]},
-            {"label": "App", "rota": "configuracoes_app", "ativos": ["configuracoes_app"]},
-            {"label": "Módulos", "rota": "configuracoes_modulos", "ativos": ["configuracoes_modulos"]},
-            {"label": "Equipe", "rota": "equipe", "ativos": ["equipe"]},
+            {"label": "Painel", "rota": "listar_configuracoes", "ativos": ["listar_configuracoes"], "icone": "layout-dashboard"},
+            {"label": "Igreja", "rota": "configuracoes_igreja", "ativos": ["configuracoes_igreja"], "icone": "church"},
+            {"label": "História", "rota": "configuracoes_historia", "ativos": ["configuracoes_historia"], "icone": "scroll-text"},
+            {"label": "Informações", "rota": "configuracoes_informacoes", "ativos": ["configuracoes_informacoes"], "icone": "info"},
+            {"label": "Permissões", "rota": "configuracoes_permissoes", "ativos": ["configuracoes_permissoes"], "icone": "shield-check"},
+            {"label": "Programação", "rota": "configuracoes_programacao", "ativos": ["configuracoes_programacao"], "icone": "calendar-cog"},
+            {"label": "App", "rota": "configuracoes_app", "ativos": ["configuracoes_app"], "icone": "smartphone"},
+            {"label": "Módulos", "rota": "configuracoes_modulos", "ativos": ["configuracoes_modulos"], "icone": "blocks"},
+            {"label": "Equipe", "rota": "equipe", "ativos": ["equipe"], "icone": "badge-info"},
         ],
     },
 ]
@@ -288,6 +353,71 @@ def obter_usuario_por_email(email):
         (email.lower(),),
     )
     return usuario_from_row(row)
+
+
+def normalizar_digitos(valor):
+    return re.sub(r"\D", "", valor or "")
+
+
+def obter_usuario_por_identificador(tipo, identificador):
+    tipo = (tipo or "email").strip().lower()
+    identificador = (identificador or "").strip()
+    if not identificador:
+        return None
+
+    if tipo == "email" or "@" in identificador:
+        email = identificador.lower()
+        return obter_usuario_por_email(email) if validar_email(email) else None
+
+    if tipo in {"username", "usuario"}:
+        row = db_one(
+            """
+            SELECT u.*, p.nome AS perfil_db
+            FROM usuarios u
+            LEFT JOIN usuario_perfil up ON up.usuario_id = u.id
+            LEFT JOIN perfis p ON p.id = up.perfil_id
+            WHERE u.excluido_em IS NULL
+              AND (u.nome = %s OR SUBSTRING_INDEX(u.email, '@', 1) = %s)
+            LIMIT 1
+            """,
+            (identificador, identificador),
+        )
+        return usuario_from_row(row)
+
+    if tipo == "cpf":
+        cpf = normalizar_digitos(identificador)
+        row = db_one(
+            """
+            SELECT email
+            FROM membros
+            WHERE excluido_em IS NULL
+              AND email IS NOT NULL
+              AND REPLACE(REPLACE(COALESCE(cpf, ''), '.', ''), '-', '') = %s
+            LIMIT 1
+            """,
+            (cpf,),
+        )
+        return obter_usuario_por_email(row["email"]) if row and row.get("email") else None
+
+    if tipo in {"celular", "telefone"}:
+        telefone = normalizar_digitos(identificador)
+        row = db_one(
+            """
+            SELECT email
+            FROM membros
+            WHERE excluido_em IS NULL
+              AND email IS NOT NULL
+              AND (
+                  REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(telefone, ''), '(', ''), ')', ''), '-', ''), ' ', '') = %s
+                  OR REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(whatsapp, ''), '(', ''), ')', ''), '-', ''), ' ', '') = %s
+              )
+            LIMIT 1
+            """,
+            (telefone, telefone),
+        )
+        return obter_usuario_por_email(row["email"]) if row and row.get("email") else None
+
+    return None
 
 
 def email_em_uso(email, usuario_id=None):
@@ -697,12 +827,32 @@ def listar_categorias_financeiras(tipo=None):
     return db_select(sql, params)
 
 
+def listar_categorias_financeiras_todas(tipo=None):
+    sql = "SELECT id, nome, tipo, ativo FROM categorias_financeiras WHERE 1=1"
+    params = []
+    if tipo:
+        sql += " AND tipo = %s"
+        params.append(tipo)
+    sql += " ORDER BY tipo, nome"
+    return db_select(sql, params)
+
+
 def listar_contas_financeiras():
     return db_select(
         """
-        SELECT id, nome
+        SELECT id, nome, banco, saldo_inicial, ativo
         FROM contas_financeiras
         WHERE ativo = 1
+        ORDER BY nome
+        """
+    )
+
+
+def listar_contas_financeiras_todas():
+    return db_select(
+        """
+        SELECT id, nome, banco, saldo_inicial, ativo
+        FROM contas_financeiras
         ORDER BY nome
         """
     )
@@ -717,6 +867,111 @@ def listar_fornecedores_select():
         ORDER BY nome
         """
     )
+
+
+def listar_fornecedores_todos(busca=""):
+    sql = """
+        SELECT id, nome, documento, telefone, email, endereco, ativo
+        FROM fornecedores
+        WHERE excluido_em IS NULL
+    """
+    params = []
+    if busca:
+        termo = f"%{busca}%"
+        sql += " AND (nome LIKE %s OR documento LIKE %s OR telefone LIKE %s OR email LIKE %s)"
+        params.extend([termo, termo, termo, termo])
+    sql += " ORDER BY nome"
+    return db_select(sql, params)
+
+
+def listar_usuarios_select():
+    return db_select(
+        """
+        SELECT u.id, u.nome, COALESCE(p.nome, 'MEMBRO') AS perfil
+        FROM usuarios u
+        LEFT JOIN usuario_perfil up ON up.usuario_id = u.id
+        LEFT JOIN perfis p ON p.id = up.perfil_id
+        WHERE u.excluido_em IS NULL
+        ORDER BY u.nome
+        """
+    )
+
+
+def periodo_padrao():
+    hoje = date.today()
+    inicio = hoje.replace(day=1)
+    return inicio.isoformat(), hoje.isoformat()
+
+
+def obter_periodo_request():
+    inicio_padrao, fim_padrao = periodo_padrao()
+    data_inicio = request.args.get("data_inicio", inicio_padrao).strip() or inicio_padrao
+    data_fim = request.args.get("data_fim", fim_padrao).strip() or fim_padrao
+    try:
+        datetime.strptime(data_inicio, "%Y-%m-%d")
+        datetime.strptime(data_fim, "%Y-%m-%d")
+    except ValueError:
+        data_inicio, data_fim = inicio_padrao, fim_padrao
+    return data_inicio, data_fim
+
+
+def formatar_periodo(data_inicio, data_fim):
+    return f"{data_br(data_inicio)} - {data_br(data_fim)}"
+
+
+def filtros_financeiros_ativos(filtros, ignorar=()):
+    ignorar = set(ignorar)
+    contador = 0
+    inicio_padrao, fim_padrao = periodo_padrao()
+    for chave, valor in filtros.items():
+        if chave in ignorar:
+            continue
+        if chave == "data_inicio" and valor == inicio_padrao:
+            continue
+        if chave == "data_fim" and valor == fim_padrao:
+            continue
+        if valor:
+            contador += 1
+    return contador
+
+
+def montar_breadcrumbs(endpoint):
+    if not endpoint:
+        return [{"label": "Dashboard", "url": url_for("dashboard")}]
+    if endpoint == "dashboard":
+        return [{"label": "Dashboard"}]
+
+    for grupo in MENU_LATERAL:
+        for item in grupo.get("itens", []):
+            if endpoint in item.get("ativos", []):
+                trilha = [{"label": "Dashboard", "url": url_for("dashboard")}]
+                if grupo.get("titulo"):
+                    trilha.append({"label": grupo["titulo"]})
+                trilha.append({"label": item["label"]})
+                return trilha
+
+    return [{"label": "Dashboard", "url": url_for("dashboard")}, {"label": "Painel"}]
+
+
+def redirect_destino(default_endpoint):
+    destino = request.form.get("return_to") or request.args.get("next")
+    if destino and destino.startswith("/") and not destino.startswith("//"):
+        return redirect(destino)
+    return redirect(url_for(default_endpoint))
+
+
+def parse_valor_monetario(valor):
+    valor = (valor or "").strip().replace("R$", "").replace(" ", "")
+    if "," in valor:
+        valor = valor.replace(".", "").replace(",", ".")
+    return float(valor)
+
+
+def tipo_conta_tela(conta):
+    banco = (conta.get("banco") or "").strip()
+    if banco:
+        return banco
+    return "Espécie" if (conta.get("nome") or "").lower() in {"dinheiro", "caixa"} else "Caixa"
 
 
 def salvar_upload_imagem(arquivo, subpasta):
@@ -1117,33 +1372,91 @@ def linhas_lancamentos(lancamentos):
     ]
 
 
-def listar_lancamentos_financeiros(tipo=""):
+def montar_filtros_financeiros(tipo_fixo=""):
+    data_inicio, data_fim = obter_periodo_request()
+    return {
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "tipo": tipo_fixo or request.args.get("tipo", "").strip(),
+        "conta_id": request.args.get("conta_id", "").strip(),
+        "categoria_id": request.args.get("categoria_id", "").strip(),
+        "status_baixa": request.args.get("status_baixa", "").strip(),
+        "usuario_id": request.args.get("usuario_id", "").strip(),
+    }
+
+
+def listar_lancamentos_financeiros(tipo="", filtros=None):
     sql = """
-        SELECT l.id, l.data_lancamento, l.tipo, c.nome AS categoria,
-               m.nome AS membro, f.nome AS fornecedor, cf.nome AS conta, l.valor
+        SELECT l.id, l.data_lancamento, l.tipo, l.descricao, c.nome AS categoria,
+               m.nome AS membro, f.nome AS fornecedor, cf.nome AS conta, l.valor,
+               u.nome AS usuario
         FROM lancamentos_financeiros l
         JOIN categorias_financeiras c ON c.id = l.categoria_id
         JOIN contas_financeiras cf ON cf.id = l.conta_id
         LEFT JOIN membros m ON m.id = l.membro_id
         LEFT JOIN fornecedores f ON f.id = l.fornecedor_id
+        LEFT JOIN usuarios u ON u.id = l.criado_por_usuario_id
         WHERE 1=1
     """
     params = []
-    if tipo:
+    filtros = filtros or {}
+    tipo_consulta = tipo or filtros.get("tipo")
+    if tipo_consulta:
         sql += " AND l.tipo = %s"
-        params.append(tipo)
+        params.append(tipo_consulta)
+    if filtros.get("data_inicio"):
+        sql += " AND l.data_lancamento >= %s"
+        params.append(filtros["data_inicio"])
+    if filtros.get("data_fim"):
+        sql += " AND l.data_lancamento <= %s"
+        params.append(filtros["data_fim"])
+    if filtros.get("conta_id"):
+        sql += " AND l.conta_id = %s"
+        params.append(filtros["conta_id"])
+    if filtros.get("categoria_id"):
+        sql += " AND l.categoria_id = %s"
+        params.append(filtros["categoria_id"])
+    if filtros.get("usuario_id"):
+        sql += " AND l.criado_por_usuario_id = %s"
+        params.append(filtros["usuario_id"])
+    if filtros.get("status_baixa") == "Baixado":
+        sql += " AND l.data_lancamento <= CURDATE()"
+    elif filtros.get("status_baixa") == "NaoBaixado":
+        sql += " AND l.data_lancamento > CURDATE()"
     sql += " ORDER BY l.data_lancamento DESC, l.id DESC"
-    return db_select(sql, params)
+    lancamentos = db_select(sql, params)
+    hoje = date.today()
+    for lancamento in lancamentos:
+        data_lancamento = lancamento.get("data_lancamento")
+        if isinstance(data_lancamento, datetime):
+            data_lancamento = data_lancamento.date()
+        lancamento["situacao_baixa"] = "Baixado" if data_lancamento and data_lancamento <= hoje else "Não baixado"
+        lancamento["pessoa"] = lancamento.get("membro") or lancamento.get("fornecedor") or "-"
+    return lancamentos
 
 
 def renderizar_lancamentos_financeiros(tipo, titulo_lista, descricao_lista):
+    filtros = montar_filtros_financeiros(tipo)
+    categorias_tipo = tipo or None
     return render_template(
         "financeiro/listar_financeiro.html",
-        lancamentos=listar_lancamentos_financeiros(tipo),
+        lancamentos=listar_lancamentos_financeiros(tipo, filtros),
         metricas=gerar_metricas(),
         titulo_lista=titulo_lista,
         descricao_lista=descricao_lista,
         tipo_atual=tipo,
+        filtros=filtros,
+        periodo_label=formatar_periodo(filtros["data_inicio"], filtros["data_fim"]),
+        filtros_ativos=filtros_financeiros_ativos(filtros, ignorar=("tipo",) if tipo else ()),
+        categorias=listar_categorias_financeiras(categorias_tipo),
+        categorias_todas=listar_categorias_financeiras(),
+        contas=listar_contas_financeiras(),
+        membros=listar_membros_select(),
+        fornecedores=listar_fornecedores_select(),
+        usuarios=listar_usuarios_select(),
+        formas_recebimento=FORMAS_RECEBIMENTO,
+        formas_pagamento=FORMAS_PAGAMENTO,
+        status_baixa_opcoes=["Baixado", "Não baixado"],
     )
 
 
@@ -1377,6 +1690,7 @@ def inject_layout_context():
         "usuario_perfil": session.get("usuario_perfil"),
         "metricas_layout": gerar_metricas(),
         "menu_lateral": MENU_LATERAL,
+        "breadcrumbs": montar_breadcrumbs(request.endpoint),
     }
 
 
@@ -1797,18 +2111,21 @@ def painel_financeiro():
     )
 
 
+@app.route("/painel/financeiro/receitas")
 @app.route("/financeiro/receitas")
 @login_required
 def listar_receitas():
     return renderizar_lancamentos_financeiros("Entrada", "Receitas", "Entradas financeiras registradas por categoria, conta e data.")
 
 
+@app.route("/painel/financeiro/despesas")
 @app.route("/financeiro/despesas")
 @login_required
 def listar_despesas():
     return renderizar_lancamentos_financeiros("Saida", "Despesas", "Saídas financeiras vinculadas a categorias, contas e fornecedores.")
 
 
+@app.route("/painel/financeiro/configuracoes")
 @app.route("/financeiro/cadastros")
 @login_required
 def cadastros_financeiros():
@@ -1845,6 +2162,7 @@ def cadastros_financeiros():
     )
 
 
+@app.route("/painel/financeiro/cadastros/categorias-lancamento")
 @app.route("/financeiro/categorias")
 @login_required
 def listar_categorias_financeiro():
@@ -1867,6 +2185,7 @@ def listar_categorias_financeiro():
     )
 
 
+@app.route("/painel/financeiro/cadastros/centro-de-custos")
 @app.route("/financeiro/centros-custo")
 @login_required
 def listar_centros_custo():
@@ -1899,6 +2218,7 @@ def listar_centros_custo():
     )
 
 
+@app.route("/painel/financeiro/cadastros/contas")
 @app.route("/financeiro/contas")
 @login_required
 def listar_contas_bancarias():
@@ -1930,6 +2250,7 @@ def listar_contas_bancarias():
     )
 
 
+@app.route("/painel/financeiro/cadastros/formas-de-recebimento")
 @app.route("/financeiro/formas-recebimento")
 @login_required
 def listar_formas_recebimento():
@@ -1954,6 +2275,7 @@ def listar_formas_recebimento():
     )
 
 
+@app.route("/painel/financeiro/cadastros/formas-de-pagamento")
 @app.route("/financeiro/formas-pagamento")
 @login_required
 def listar_formas_pagamento():
@@ -2154,24 +2476,35 @@ def listar_testemunhos():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
+        identificador_tipo = request.form.get("identificador_tipo", "email").strip().lower()
+        identificador = request.form.get("identificador", "").strip()
+        email_legado = request.form.get("email", "").strip().lower()
         senha = request.form.get("senha", "").strip()
 
-        if not email or not senha:
-            flash("Por favor, preencha o e-mail e a senha.", "danger")
+        if email_legado and not identificador:
+            identificador_tipo = "email"
+            identificador = email_legado
+
+        if identificador_tipo == "telefone":
+            identificador_tipo = "celular"
+        elif identificador_tipo == "usuario":
+            identificador_tipo = "username"
+
+        if not identificador or not senha:
+            flash("Por favor, preencha o identificador e a senha.", "danger")
             return redirect(url_for("login"))
 
-        if not validar_email(email):
-            flash("Informe um e-mail válido para acessar o sistema.", "danger")
+        if identificador_tipo == "email" and not validar_email(identificador):
+            flash("Informe um e-mail valido para acessar o sistema.", "danger")
             return redirect(url_for("login"))
 
-        usuario = obter_usuario_por_email(email)
+        usuario = obter_usuario_por_identificador(identificador_tipo, identificador)
         if not usuario or not check_password_hash(usuario["senha_hash"], senha):
-            flash("Credenciais inválidas.", "danger")
+            flash("Credenciais invalidas.", "danger")
             return redirect(url_for("login"))
 
         if usuario["status"] != "Ativo":
-            flash("Usuário bloqueado ou inativo. Procure um administrador.", "danger")
+            flash("Usuario bloqueado ou inativo. Procure um administrador.", "danger")
             return redirect(url_for("login"))
 
         db_write("UPDATE usuarios SET ultimo_login_em = NOW() WHERE id = %s", (usuario["id"],))
@@ -2915,30 +3248,92 @@ def inserir_presenca():
     return render_template("presencas/inserir_presenca.html", membros=membros)
 
 
+@app.route("/painel/cultos")
 @app.route("/eventos/listar")
 @login_required
 def listar_eventos():
-    eventos = db_select(
-        """
+    filtros = {
+        "nome": request.args.get("nome", "").strip(),
+        "status": request.args.get("status", "").strip(),
+        "recorrencia": request.args.get("recorrencia", "").strip(),
+        "dia_semana": request.args.get("dia_semana", "").strip(),
+    }
+    sql = """
         SELECT e.id, e.nome, e.data_inicio, e.local, e.status, e.banner_path,
+               e.data_fim,
                SUM(CASE WHEN ei.membro_id IS NOT NULL THEN 1 ELSE 0 END) AS membros,
                SUM(CASE WHEN ei.visitante_nome IS NOT NULL THEN 1 ELSE 0 END) AS visitantes,
                SUM(CASE WHEN ei.presente = 1 THEN 1 ELSE 0 END) AS presentes
         FROM eventos e
         LEFT JOIN evento_inscricoes ei ON ei.evento_id = e.id
-        GROUP BY e.id
-        ORDER BY e.data_inicio
-        """
-    )
+        WHERE 1=1
+    """
+    params = []
+    if filtros["nome"]:
+        sql += " AND e.nome LIKE %s"
+        params.append(f"%{filtros['nome']}%")
+    if filtros["status"]:
+        sql += " AND e.status = %s"
+        params.append(filtros["status"])
+    sql += " GROUP BY e.id ORDER BY e.data_inicio"
+    eventos = db_select(sql, params)
     return render_template(
         "eventos/listar_eventos.html",
         eventos=eventos,
         metricas=gerar_metricas(),
         membros_inscritos=sum(int(evento.get("membros") or 0) for evento in eventos),
         visitantes_inscritos=sum(int(evento.get("visitantes") or 0) for evento in eventos),
+        filtros=filtros,
+        filtros_ativos=sum(1 for valor in filtros.values() if valor),
+        dias_reuniao=DIAS_REUNIAO,
     )
 
 
+@app.route("/painel/cultos/reunioes")
+@login_required
+def listar_reunioes_cultos():
+    eventos = db_select(
+        """
+        SELECT e.nome, e.data_inicio, e.data_fim, e.status,
+               COUNT(ei.id) AS participantes,
+               SUM(CASE WHEN ei.presente = 1 THEN 1 ELSE 0 END) AS presentes
+        FROM eventos e
+        LEFT JOIN evento_inscricoes ei ON ei.evento_id = e.id
+        GROUP BY e.id
+        ORDER BY e.data_inicio DESC
+        """
+    )
+    linhas = [
+        [
+            data_br(evento.get("data_inicio")),
+            str(evento.get("data_inicio") or "")[11:16] or "-",
+            evento.get("status") or "Programada",
+            evento.get("nome") or "-",
+            "-",
+            data_br(evento.get("data_fim")) if evento.get("data_fim") else "-",
+            evento.get("participantes") or 0,
+            moeda_br(0),
+        ]
+        for evento in eventos
+    ]
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Reunioes de Culto",
+        subtitulo="Acompanhe programacao, realizacao, participantes e arrecadacao dos cultos.",
+        cards=[
+            card("Reunioes", len(eventos)),
+            card("Participantes", sum(int(e.get("participantes") or 0) for e in eventos)),
+            card("Realizadas", sum(1 for e in eventos if e.get("status") == "Realizado")),
+        ],
+        filtros=[],
+        cabecalhos=["Data", "Hora", "Status", "Culto", "Tema", "Duracao", "Participantes", "Arrecadacao"],
+        linhas=linhas,
+        acao_url=url_for("listar_eventos"),
+        acao_label="Ver cultos",
+    )
+
+
+@app.route("/painel/cultos/novo", methods=["GET", "POST"])
 @app.route("/eventos/inserir", methods=["GET", "POST"])
 @login_required
 def inserir_evento():
@@ -2980,12 +3375,15 @@ def inserir_evento():
     return render_template("eventos/inserir_evento.html", status_opcoes=["Agendado", "Realizado", "Cancelado"])
 
 
+@app.route("/painel/financeiro/resumo")
+@app.route("/painel/financeiro/movimentacoes")
 @app.route("/financeiro/listar")
 @login_required
 def listar_financeiro():
     return renderizar_lancamentos_financeiros("", "Movimentações", "Histórico geral de entradas e saídas financeiras.")
 
 
+@app.route("/painel/financeiro/movimentacoes/nova", methods=["GET", "POST"])
 @app.route("/financeiro/lancamentos/inserir", methods=["GET", "POST"])
 @login_required
 def inserir_lancamento_financeiro():
@@ -3001,7 +3399,7 @@ def inserir_lancamento_financeiro():
         membro_id = request.form.get("membro_id", "").strip()
         fornecedor_id = request.form.get("fornecedor_id", "").strip()
         descricao = request.form.get("descricao", "").strip()
-        valor_raw = request.form.get("valor", "").strip().replace(",", ".")
+        valor_raw = request.form.get("valor", "").strip()
         data_lancamento = request.form.get("data_lancamento", "").strip()
 
         if tipo not in ["Entrada", "Saida"] or not categoria_id or not conta_id or not valor_raw or not data_lancamento:
@@ -3009,7 +3407,7 @@ def inserir_lancamento_financeiro():
             return redirect(url_for("inserir_lancamento_financeiro"))
 
         try:
-            valor = float(valor_raw)
+            valor = parse_valor_monetario(valor_raw)
         except ValueError:
             flash("Informe um valor válido.", "danger")
             return redirect(url_for("inserir_lancamento_financeiro"))
@@ -3048,6 +3446,7 @@ def inserir_lancamento_financeiro():
     )
 
 
+@app.route("/painel/financeiro/cadastros/fornecedores")
 @app.route("/fornecedores/listar")
 @login_required
 def listar_fornecedores():
@@ -3123,11 +3522,226 @@ def excluir_fornecedor(fornecedor_id):
     return redirect(url_for("listar_fornecedores"))
 
 
+@app.route("/painel/doacoes/resumo")
+@login_required
+def painel_doacoes():
+    metricas = gerar_metricas()
+    pendentes = db_scalar("SELECT COUNT(*) AS valor FROM doacoes WHERE status = 'Pendente'")
+    recorrentes = db_scalar("SELECT COUNT(*) AS valor FROM doacoes WHERE recorrente = 1")
+    recentes = db_select(
+        """
+        SELECT doador_nome, tipo, valor, data_doacao, status
+        FROM doacoes
+        ORDER BY data_doacao DESC, id DESC
+        LIMIT 6
+        """
+    )
+    return render_template(
+        "modulos/painel.html",
+        eyebrow="Doacoes",
+        titulo="Resumo de Doacoes",
+        subtitulo="Visao geral do desempenho financeiro e operacional das doacoes.",
+        cards=[
+            card("Total de Doacoes", metricas["doacoes"]),
+            card("Valor Arrecadado", moeda_br(metricas["doacoes_valor"])),
+            card("Doacoes Pendentes", pendentes),
+            card("Recorrencias Ativas", recorrentes),
+        ],
+        atalhos=[
+            atalho("Doacoes", "Registro completo de doacoes recebidas e pendentes.", "listar_doacoes", metricas["doacoes"]),
+            atalho("Parcelas", "Acompanhamento das parcelas de doacoes.", "listar_parcelas_doacoes", "Abrir"),
+            atalho("Recorrentes", "Fluxos recorrentes configurados para doadores.", "listar_doacoes_recorrentes", recorrentes),
+            atalho("Configuracoes", "Tipos, categorias, contas e chaves PIX.", "configuracoes_doacoes", "Abrir"),
+        ],
+        blocos=[
+            bloco_lista(
+                "Ultimas doacoes",
+                ["Doador", "Tipo", "Valor", "Data", "Status"],
+                [[d.get("doador_nome") or "-", rotulo_tela(d.get("tipo")), moeda_br(d.get("valor")), data_br(d.get("data_doacao")), d.get("status")] for d in recentes],
+            ),
+            bloco_lista(
+                "Alertas de parcelas",
+                ["Alerta", "Quantidade", "Valor"],
+                [["Vencidas", 0, moeda_br(0)], ["A vencer (7 dias)", 0, moeda_br(0)], ["Total pendente", pendentes, moeda_br(0)]],
+            ),
+        ],
+    )
+
+
+@app.route("/painel/doacoes/parcelas")
+@login_required
+def listar_parcelas_doacoes():
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Parcelas de Doacoes",
+        subtitulo="Acompanhe vencimento, status e baixa das parcelas de doacoes.",
+        cards=[card("Parcelas", 0), card("Pendentes", 0), card("Pagas", 0)],
+        filtros=[],
+        cabecalhos=["Vencimento", "Doador", "Categoria", "Parcela", "Valor", "Status", "Pagamento"],
+        linhas=[],
+        acao_url=url_for("listar_doacoes"),
+        acao_label="Ver doacoes",
+    )
+
+
+@app.route("/painel/doacoes/recorrentes")
+@login_required
+def listar_doacoes_recorrentes():
+    doacoes = db_select(
+        """
+        SELECT d.doador_nome, d.tipo, d.valor, d.data_doacao, d.status,
+               m.nome AS membro, c.nome AS categoria, cf.nome AS conta
+        FROM doacoes d
+        LEFT JOIN membros m ON m.id = d.membro_id
+        LEFT JOIN categorias_financeiras c ON c.id = d.categoria_id
+        JOIN contas_financeiras cf ON cf.id = d.conta_id
+        WHERE d.recorrente = 1
+        ORDER BY d.data_doacao DESC, d.id DESC
+        """
+    )
+    linhas = [
+        [
+            data_br(doacao["data_doacao"]),
+            doacao.get("doador_nome") or doacao.get("membro") or "-",
+            rotulo_tela(doacao.get("tipo")),
+            doacao.get("categoria") or "-",
+            moeda_br(doacao.get("valor")),
+            doacao.get("status"),
+            doacao.get("conta") or "-",
+        ]
+        for doacao in doacoes
+    ]
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Doacoes Recorrentes",
+        subtitulo="Fluxos recorrentes de contribuicao configurados para doadores.",
+        cards=[
+            card("Recorrentes", len(doacoes)),
+            card("Valor", moeda_br(sum(float(d.get("valor") or 0) for d in doacoes))),
+            card("Pendentes", sum(1 for d in doacoes if d.get("status") == "Pendente")),
+        ],
+        filtros=[],
+        cabecalhos=["Data", "Doador", "Tipo", "Categoria", "Valor", "Status", "Conta"],
+        linhas=linhas,
+        acao_url=url_for("inserir_doacao"),
+        acao_label="Nova doacao",
+    )
+
+
+@app.route("/painel/doacoes/relatorios")
+@login_required
+def relatorios_doacoes():
+    metricas = gerar_metricas()
+    return render_template(
+        "modulos/painel.html",
+        eyebrow="Doacoes",
+        titulo="Relatorios de Doacoes",
+        subtitulo="Area reservada para relatorios financeiros, recibos e exportacoes.",
+        cards=[
+            card("Doacoes", metricas["doacoes"]),
+            card("Valor recebido", moeda_br(metricas["doacoes_valor"])),
+            card("Pendentes", db_scalar("SELECT COUNT(*) AS valor FROM doacoes WHERE status = 'Pendente'")),
+        ],
+        atalhos=[
+            atalho("Resumo", "Indicadores gerais das doacoes.", "painel_doacoes", "Abrir"),
+            atalho("Doacoes", "Listagem operacional com filtros.", "listar_doacoes", "Abrir"),
+            atalho("Parcelas", "Controle de parcelas pendentes e pagas.", "listar_parcelas_doacoes", "Abrir"),
+        ],
+        blocos=[],
+    )
+
+
+@app.route("/painel/doacoes/configuracoes")
+@login_required
+def configuracoes_doacoes():
+    return render_template(
+        "modulos/painel.html",
+        eyebrow="Doacoes",
+        titulo="Configuracoes de Doacoes",
+        subtitulo="Cadastros auxiliares usados no registro de doacoes e recebimentos.",
+        cards=[
+            card("Tipos", len(TIPOS_DOACAO)),
+            card("Categorias", db_scalar("SELECT COUNT(*) AS valor FROM categorias_financeiras WHERE tipo = 'Entrada'")),
+            card("Chaves PIX", 0),
+        ],
+        atalhos=[
+            atalho("Contas Bancarias", "Contas usadas como destino de doacoes.", "listar_contas_bancarias", len(listar_contas_financeiras())),
+            atalho("Formas de Recebimento", "PIX, dinheiro, cartao e outras formas.", "listar_formas_recebimento", len(FORMAS_RECEBIMENTO)),
+            atalho("Tipos de Doacao", "Dizimo, oferta, campanha e missoes.", "listar_tipos_doacao", len(TIPOS_DOACAO)),
+            atalho("Categorias de Doacao", "Campanhas e categorias vinculadas a contas.", "listar_categorias_doacao", "Abrir"),
+            atalho("Chaves PIX", "Cadastro de chaves PIX para contribuicao.", "listar_chaves_pix", "Abrir"),
+        ],
+        blocos=[],
+    )
+
+
+@app.route("/painel/doacoes/cadastros/tipos")
+@login_required
+def listar_tipos_doacao():
+    linhas = [[rotulo_tela(tipo), "Ativo"] for tipo in TIPOS_DOACAO]
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Tipos de Doacao",
+        subtitulo="Tipos usados para classificar entradas de doacoes.",
+        cards=[card("Tipos", len(linhas)), card("Ativos", len(linhas)), card("Inativos", 0)],
+        filtros=[],
+        cabecalhos=["Nome", "Status"],
+        linhas=linhas,
+        acao_url=url_for("configuracoes_doacoes"),
+        acao_label="Configuracoes",
+    )
+
+
+@app.route("/painel/doacoes/cadastros/categorias")
+@login_required
+def listar_categorias_doacao():
+    categorias = listar_categorias_financeiras("Entrada")
+    linhas = [[c["nome"], "Igreja", moeda_br(0), "Sim", "Ativa"] for c in categorias]
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Categorias de Doacao",
+        subtitulo="Campanhas, motivos e categorias usadas nas contribuicoes.",
+        cards=[card("Categorias", len(linhas)), card("Ativas", len(linhas)), card("Recorrentes", 0)],
+        filtros=[],
+        cabecalhos=["Nome", "Destinatario", "Valor sugerido", "Permite qualquer valor", "Status"],
+        linhas=linhas,
+        acao_url=url_for("configuracoes_doacoes"),
+        acao_label="Configuracoes",
+    )
+
+
+@app.route("/painel/doacoes/cadastros/pix")
+@app.route("/painel/doacoes/cadastros/chaves-pix")
+@login_required
+def listar_chaves_pix():
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Chaves PIX",
+        subtitulo="Chaves PIX destinadas ao recebimento de doacoes.",
+        cards=[card("Chaves", 0), card("Ativas", 0), card("Inativas", 0)],
+        filtros=[],
+        cabecalhos=["Nome", "Tipo", "Chave", "Status"],
+        linhas=[],
+        acao_url=url_for("configuracoes_doacoes"),
+        acao_label="Configuracoes",
+    )
+
+
+@app.route("/painel/doacoes")
 @app.route("/doacoes/listar")
 @login_required
 def listar_doacoes():
-    doacoes = db_select(
-        """
+    data_inicio, data_fim = obter_periodo_request()
+    filtros = {
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "tipo": request.args.get("tipo", "").strip(),
+        "categoria_id": request.args.get("categoria_id", "").strip(),
+        "conta_id": request.args.get("conta_id", "").strip(),
+        "membro_id": request.args.get("membro_id", "").strip(),
+        "status": request.args.get("status", "").strip(),
+    }
+    sql = """
         SELECT d.id, d.doador_nome, d.tipo, d.valor, d.data_doacao,
                d.forma_recebimento, d.recorrente, d.status,
                m.nome AS membro, c.nome AS categoria, cf.nome AS conta
@@ -3135,14 +3749,44 @@ def listar_doacoes():
         LEFT JOIN membros m ON m.id = d.membro_id
         LEFT JOIN categorias_financeiras c ON c.id = d.categoria_id
         JOIN contas_financeiras cf ON cf.id = d.conta_id
-        ORDER BY d.data_doacao DESC, d.id DESC
-        """
+        WHERE d.data_doacao >= %s
+          AND d.data_doacao <= %s
+    """
+    params = [data_inicio, data_fim]
+    if filtros["tipo"]:
+        sql += " AND d.tipo = %s"
+        params.append(filtros["tipo"])
+    if filtros["categoria_id"]:
+        sql += " AND d.categoria_id = %s"
+        params.append(filtros["categoria_id"])
+    if filtros["conta_id"]:
+        sql += " AND d.conta_id = %s"
+        params.append(filtros["conta_id"])
+    if filtros["membro_id"]:
+        sql += " AND d.membro_id = %s"
+        params.append(filtros["membro_id"])
+    if filtros["status"] and filtros["status"] != "Todos":
+        sql += " AND d.status = %s"
+        params.append(filtros["status"])
+    sql += " ORDER BY d.data_doacao DESC, d.id DESC"
+    doacoes = db_select(
+        sql,
+        params,
     )
     return render_template(
         "doacoes/listar_doacoes.html",
         doacoes=doacoes,
         metricas=gerar_metricas(),
         pendentes=db_scalar("SELECT COUNT(*) AS valor FROM doacoes WHERE status = 'Pendente'"),
+        periodo_label=formatar_periodo(data_inicio, data_fim),
+        filtros=filtros,
+        filtros_ativos=filtros_financeiros_ativos(filtros),
+        categorias=listar_categorias_financeiras("Entrada"),
+        contas=listar_contas_financeiras(),
+        membros=listar_membros_select(),
+        tipos=TIPOS_DOACAO,
+        formas=FORMAS_RECEBIMENTO,
+        status_opcoes=STATUS_DOACAO,
     )
 
 
@@ -3209,6 +3853,7 @@ def cancelar_doacao(doacao_id):
     return redirect(url_for("listar_doacoes"))
 
 
+@app.route("/painel/doacoes/nova", methods=["GET", "POST"])
 @app.route("/doacoes/inserir", methods=["GET", "POST"])
 @login_required
 def inserir_doacao():
@@ -3222,7 +3867,7 @@ def inserir_doacao():
         tipo = request.form.get("tipo", "").strip()
         categoria_id = request.form.get("categoria_id", "").strip()
         conta_id = request.form.get("conta_id", "").strip()
-        valor_raw = request.form.get("valor", "").strip().replace(",", ".")
+        valor_raw = request.form.get("valor", "").strip()
         data_doacao = request.form.get("data_doacao", "").strip()
         forma_recebimento = request.form.get("forma_recebimento", "").strip()
         status = request.form.get("status", "Recebida").strip()
@@ -3242,7 +3887,7 @@ def inserir_doacao():
             return redirect(url_for("inserir_doacao"))
 
         try:
-            valor = float(valor_raw)
+            valor = parse_valor_monetario(valor_raw)
         except ValueError:
             flash("Informe um valor válido.", "danger")
             return redirect(url_for("inserir_doacao"))

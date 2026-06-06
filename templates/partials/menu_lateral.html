@@ -9,17 +9,27 @@
     {% if grupo.titulo %}
     <details class="sidebar-group" {% if ns.ativo %}open{% endif %}>
         <summary class="sidebar-section">
-            <span>{{ grupo.titulo }}</span>
+            <span class="sidebar-section-title">
+                <i data-lucide="{{ grupo.icone or 'circle' }}"></i>
+                <span>{{ grupo.titulo }}</span>
+            </span>
+            <i data-lucide="chevron-right" class="sidebar-chevron"></i>
         </summary>
         <div class="sidebar-group-items">
             {% for item in grupo.itens %}
-            <a class="sidebar-link {% if request.endpoint in item.ativos %}active{% endif %}" href="{{ url_for(item.rota) }}">{{ item.label }}</a>
+            <a class="sidebar-link {% if request.endpoint in item.ativos %}active{% endif %}" href="{{ url_for(item.rota) }}">
+                <i data-lucide="{{ item.icone or 'circle' }}"></i>
+                <span>{{ item.label }}</span>
+            </a>
             {% endfor %}
         </div>
     </details>
     {% else %}
         {% for item in grupo.itens %}
-        <a class="sidebar-link sidebar-link-root {% if request.endpoint in item.ativos %}active{% endif %}" href="{{ url_for(item.rota) }}">{{ item.label }}</a>
+        <a class="sidebar-link sidebar-link-root {% if request.endpoint in item.ativos %}active{% endif %}" href="{{ url_for(item.rota) }}">
+            <i data-lucide="{{ item.icone or 'circle' }}"></i>
+            <span>{{ item.label }}</span>
+        </a>
         {% endfor %}
     {% endif %}
 {% endfor %}
