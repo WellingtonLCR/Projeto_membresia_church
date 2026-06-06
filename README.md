@@ -306,6 +306,8 @@ Os testes verificam comportamentos importantes, como renderização de rotas pú
 
 Também há testes para validar que o cadastro público grava a pessoa como visitante e que a home do app exibe dados alimentados pelas rotas administrativas, como eventos, feed e devocional.
 
+O código-fonte do Sistema de Membresia Church foi versionado e disponibilizado no GitHub, no repositório `WellingtonLCR/Projeto_membresia_church`. O perfil do desenvolvedor também fica disponível em `github.com/WellingtonLCR`, permitindo consultar o projeto, acompanhar sua evolução e acessar os arquivos usados na entrega acadêmica.
+
 Também foram usados scripts SQL de migração e seed para organizar a criação do banco. Essa prática facilita reproduzir o ambiente em outro computador, pois a estrutura do banco não fica dependente apenas de configurações manuais.
 
 Além do seed principal de perfis, permissões, usuário administrador e usuário visitante, o projeto possui seeds demonstrativos com membros, visitantes, ministérios, células, eventos, mural, devocional, pedidos de oração, doações e movimentações financeiras. Também foi criado um seed histórico com datas distribuídas entre 2024 e 2026, permitindo testar consultas, filtros, dashboards, relatórios e a integração entre painel administrativo e app do usuário com dados mais realistas.
@@ -767,6 +769,8 @@ Senha: visitante123
 
 A página inicial apresenta o sistema e permite que o usuário acesse login, cadastro de visitante, equipe e o app web do usuário.
 
+A página de equipe apresenta os dados do desenvolvedor Wellington Luís Costa Ribeiro, incluindo contato, atuação no projeto, perfil GitHub disponível em `https://github.com/WellingtonLCR` e repositório do projeto disponível em `https://github.com/WellingtonLCR/Projeto_membresia_church`.
+
 ### 5.4 App do usuário
 
 O app do usuário pode ser acessado pela rota `/app`. Ele foi criado como uma frente pública diferente do painel administrativo, com visual mais simples e adequado para membros, visitantes e pessoas interessadas na programação da igreja.
@@ -896,6 +900,10 @@ PYTHON SOFTWARE FOUNDATION. unittest - Unit testing framework. Disponível em: h
 MOZILLA DEVELOPER NETWORK. HTTP request methods. Disponível em: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods.
 
 GOOGLE CLOUD. What is vibe coding? Disponível em: https://cloud.google.com/discover/what-is-vibe-coding.
+
+WELLINGTONLCR. Projeto_membresia_church. Disponível em: https://github.com/WellingtonLCR/Projeto_membresia_church. Acesso em: 6 jun. 2026.
+
+WELLINGTONLCR. Perfil GitHub. Disponível em: https://github.com/WellingtonLCR. Acesso em: 6 jun. 2026.
 
 EKLESIA. Soluções para Igrejas. Disponível em: https://eklesia.com.br/.
 
