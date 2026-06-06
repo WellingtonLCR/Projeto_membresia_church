@@ -48,6 +48,38 @@
             <span class="app-user-kicker">{{ item.categoria|rotulo if item.categoria else "Respondido" }} • {{ item.criado_em|data_br }}</span>
             <h3>{{ item.solicitante_nome }}</h3>
             <p>{{ item.pedido|truncate(180) }}</p>
+            <div class="prayer-social-summary">
+                <span>{{ item.reacoes_total or 0 }} reações</span>
+                <span>{{ item.comentarios_total or 0 }} comentários</span>
+                <span>{{ item.oracoes or 0 }} orações</span>
+            </div>
+            <div class="prayer-reactions">
+                {% for tipo, label in reacoes.items() %}
+                <form method="post" action="{{ url_for('app_usuario_reagir_oracao', pedido_id=item.id) }}">
+                    <input type="hidden" name="tipo" value="{{ tipo }}">
+                    <button class="btn btn-sm btn-outline-primary" type="submit">{{ label }}</button>
+                </form>
+                {% endfor %}
+            </div>
+            <div class="prayer-comments">
+                {% for comentario in comentarios_por_pedido.get(item.id, []) %}
+                <div class="prayer-comment">
+                    <strong>{{ comentario.autor_nome }}</strong>
+                    <span>{{ comentario.comentario }}</span>
+                </div>
+                {% endfor %}
+                <form method="post" action="{{ url_for('app_usuario_comentar_oracao', pedido_id=item.id) }}" class="prayer-comment-form">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <input class="form-control form-control-sm" name="autor_nome" placeholder="Seu nome" value="{{ usuario_nome if usuario_perfil == 'Visitante' else '' }}">
+                        </div>
+                        <div class="col-md-8">
+                            <input class="form-control form-control-sm" name="comentario" placeholder="Escreva um comentário de apoio" required>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-primary" type="submit">Comentar</button>
+                </form>
+            </div>
         </article>
         {% else %}
         <div class="app-user-empty">Testemunhos públicos aparecerão aqui quando forem marcados como respondidos.</div>

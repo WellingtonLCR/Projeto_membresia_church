@@ -7,7 +7,7 @@
     <div>
         <span class="eyebrow">Gestão</span>
         <h1 class="h2 mb-1">Relatórios</h1>
-        <p class="text-muted mb-0">Consulte indicadores e gere arquivos para conferência da secretaria e liderança.</p>
+        <p class="text-muted mb-0">Indicadores organizados por categoria para conferência da secretaria e liderança.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap no-print">
         <a href="{{ url_for('exportar_relatorio_excel') }}" class="btn btn-primary">Baixar Excel</a>
@@ -22,30 +22,40 @@
     <div class="col-md-4"><div class="metric-card"><span>Saldo financeiro</span><strong>{{ metricas.saldo|moeda_br }}</strong></div></div>
 </div>
 
-<div class="card data-card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Relatório</th>
-                        <th>Módulo</th>
-                        <th>Indicador</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for linha in linhas %}
-                    <tr>
-                        <td class="fw-semibold">{{ linha[0] }}</td>
-                        <td>{{ linha[1] }}</td>
-                        <td>{{ linha[2] }}</td>
-                        <td>{{ linha[3] }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<div class="report-grid">
+    {% for grupo in grupos %}
+    <section class="card data-card report-card">
+        <div class="card-body">
+            <div class="report-card-header">
+                <div>
+                    <span class="eyebrow">{{ grupo.modulo }}</span>
+                    <h2 class="h4 mb-1">{{ grupo.modulo }}</h2>
+                    <p class="text-muted mb-0">{{ grupo.descricao }}</p>
+                </div>
+                <span class="report-count">{{ grupo.linhas|length }}</span>
+            </div>
+            <div class="table-responsive mt-3">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Relatório</th>
+                            <th>Indicador</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for linha in grupo.linhas %}
+                        <tr>
+                            <td class="fw-semibold">{{ linha[0] }}</td>
+                            <td>{{ linha[1] }}</td>
+                            <td><span class="badge rounded-pill text-bg-light">{{ linha[2] }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    </section>
+    {% endfor %}
 </div>
 {% endblock %}

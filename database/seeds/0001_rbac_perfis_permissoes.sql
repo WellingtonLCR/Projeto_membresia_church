@@ -6,7 +6,8 @@ VALUES
   ('PASTOR', 'Acompanhamento pastoral, espiritual e eclesiástico'),
   ('SECRETARIA', 'Gestão de cadastros, presença, eventos e relatórios administrativos'),
   ('LIDER', 'Consulta e acompanhamento de ministérios e células vinculadas'),
-  ('FINANCEIRO', 'Gestão de entradas, saídas, dízimos, ofertas e relatórios financeiros');
+  ('FINANCEIRO', 'Gestão de entradas, saídas, dízimos, ofertas e relatórios financeiros'),
+  ('VISITANTE', 'Acesso ao app do usuário sem permissões administrativas');
 
 INSERT IGNORE INTO permissoes (modulo, acao, codigo, descricao)
 VALUES
@@ -114,6 +115,21 @@ SELECT u.id, p.id
 FROM usuarios u
 JOIN perfis p ON p.nome = 'ADMINISTRADOR'
 WHERE u.email = 'admin@igreja.org';
+
+INSERT IGNORE INTO usuarios (nome, email, senha_hash, ativo, bloqueado)
+VALUES (
+  'Visitante Demo',
+  'visitante@igreja.org',
+  'scrypt:32768:8:1$lWT7IFpCMNWmpmSt$5b8e8876501a2d72ccbf53dfbc357a232e8e291bda2a017c9ee3ca1a6c894f3d62e3b2204a8683e34af18b7ad2a6365f63fa9841ce8125312e84158c21ec4d81',
+  1,
+  0
+);
+
+INSERT IGNORE INTO usuario_perfil (usuario_id, perfil_id)
+SELECT u.id, p.id
+FROM usuarios u
+JOIN perfis p ON p.nome = 'VISITANTE'
+WHERE u.email = 'visitante@igreja.org';
 
 INSERT IGNORE INTO igrejas (nome, email, telefone, endereco, logo_path)
 VALUES ('Igreja Viva', NULL, NULL, NULL, 'static/imgs/logo_church.png');

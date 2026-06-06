@@ -3,51 +3,139 @@
 {% block titulo %}Dashboard • Igreja Viva{% endblock %}
 
 {% block conteudo %}
-<div class="page-header mb-4">
+<div class="dashboard-hero mb-4">
     <div>
         <span class="eyebrow">Visão geral</span>
-        <h1 class="h2 mb-1">Dashboard</h1>
-        <p class="text-muted mb-0">Resumo operacional da membresia, ministérios, células, presença e gestão administrativa.</p>
+        <h1 class="h2 mb-1">Painel administrativo</h1>
+        <p class="text-muted mb-0">Acompanhe pessoas, agenda, finanças, comunicação e app do usuário em uma visão única.</p>
     </div>
-    <a href="{{ url_for('inserir_membro') }}" class="btn btn-primary">Cadastrar pessoa</a>
-</div>
-
-<div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <div class="metric-card"><span>Membros ativos</span><strong>{{ metricas.membros_ativos }}</strong></div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="metric-card"><span>Visitantes</span><strong>{{ metricas.visitantes }}</strong></div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="metric-card"><span>Células</span><strong>{{ metricas.celulas }}</strong></div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="metric-card"><span>Saldo financeiro</span><strong>{{ metricas.saldo|moeda_br }}</strong></div>
+    <div class="dashboard-hero-actions">
+        <a href="{{ url_for('inserir_membro') }}" class="btn btn-primary">Cadastrar pessoa</a>
+        <a href="{{ url_for('app_usuario_inicio') }}" class="btn btn-outline-primary">Ver app do usuário</a>
     </div>
 </div>
 
-<section class="module-grid mb-4">
-    {% for modulo in modulos %}
-    <a class="module-card" href="{{ url_for(modulo.rota) }}">
-        <span>{{ modulo.titulo }}</span>
-        <strong>{{ modulo.valor }}</strong>
-        <small>{{ modulo.descricao }}</small>
+<section class="dashboard-kpi-grid mb-4" aria-label="Indicadores principais">
+    <a class="metric-card dashboard-kpi" href="{{ url_for('painel_pessoas') }}">
+        <span>Total de pessoas</span>
+        <strong>{{ metricas.total_pessoas }}</strong>
+        <small>{{ metricas.visitantes }} visitantes em acompanhamento</small>
     </a>
-    {% endfor %}
+    <a class="metric-card dashboard-kpi" href="{{ url_for('listar_aniversarios') }}">
+        <span>Aniversariantes</span>
+        <strong>{{ metricas.aniversariantes_mes }}</strong>
+        <small>No mês atual</small>
+    </a>
+    <a class="metric-card dashboard-kpi" href="{{ url_for('painel_celulas') }}">
+        <span>Células</span>
+        <strong>{{ metricas.celulas }}</strong>
+        <small>{{ metricas.presencas }} presenças registradas</small>
+    </a>
+    <a class="metric-card dashboard-kpi" href="{{ url_for('painel_ministerios') }}">
+        <span>Ministérios</span>
+        <strong>{{ metricas.ministerios }}</strong>
+        <small>{{ metricas.vagas }} vagas cadastradas</small>
+    </a>
+    <a class="metric-card dashboard-kpi" href="{{ url_for('painel_financeiro') }}">
+        <span>Saldo financeiro</span>
+        <strong class="metric-text">{{ metricas.saldo|moeda_br }}</strong>
+        <small>{{ metricas.doacoes_valor|moeda_br }} em doações recebidas</small>
+    </a>
+    <a class="metric-card dashboard-kpi" href="{{ url_for('painel_comunicacao') }}">
+        <span>Conteúdos publicados</span>
+        <strong>{{ metricas.mural }}</strong>
+        <small>{{ metricas.devocionais }} devocionais no app</small>
+    </a>
 </section>
+
+<div class="dashboard-workspace mb-4">
+    <section class="dashboard-panel dashboard-panel--wide" aria-labelledby="modulosTitulo">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Módulos</span>
+                <h2 class="h5 mb-0" id="modulosTitulo">Áreas de gestão</h2>
+            </div>
+        </div>
+        <div class="module-grid module-grid--dashboard">
+            {% for modulo in modulos %}
+            <a class="module-card module-card--compact" href="{{ url_for(modulo.rota) }}">
+                <span class="module-card-icon" aria-hidden="true">{{ modulo.icone }}</span>
+                <span>{{ modulo.titulo }}</span>
+                <strong>{{ modulo.valor }}</strong>
+                <small>{{ modulo.descricao }}</small>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="dashboard-panel" aria-labelledby="pessoasTitulo">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Pessoas</span>
+                <h2 class="h5 mb-0" id="pessoasTitulo">Distribuição por tipo</h2>
+            </div>
+            <a href="{{ url_for('listar_membros') }}" class="btn btn-sm btn-outline-primary">Abrir</a>
+        </div>
+        <div class="status-chart">
+            {% for tipo in pessoas_por_status %}
+            <div class="status-chart-row">
+                <div class="d-flex justify-content-between gap-3">
+                    <span>{{ tipo.label }}</span>
+                    <strong>{{ tipo.valor }}</strong>
+                </div>
+                <div class="status-track" aria-hidden="true">
+                    <span style="width: {{ tipo.percentual }}%;"></span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="dashboard-panel" aria-labelledby="appTitulo">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">App do usuário</span>
+                <h2 class="h5 mb-0" id="appTitulo">Engajamento</h2>
+            </div>
+            <a href="{{ url_for('app_usuario_inicio') }}" class="btn btn-sm btn-outline-primary">Ver app</a>
+        </div>
+        <div class="engagement-list">
+            {% for item in engajamento_app %}
+            <div class="engagement-item">
+                <div class="d-flex justify-content-between gap-3">
+                    <span>{{ item.periodo }}</span>
+                    <strong>{{ item.valor }} interações</strong>
+                </div>
+                <div class="status-track status-track--gold" aria-hidden="true">
+                    <span style="width: {{ item.percentual }}%;"></span>
+                </div>
+                <small class="text-muted">{{ item.percentual }}% em relação às pessoas cadastradas</small>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="dashboard-note mt-3">
+            <strong>{{ metricas.testemunhos }}</strong>
+            <span>testemunhos públicos disponíveis para interação no app.</span>
+        </div>
+    </section>
+</div>
 
 <div class="row g-4">
     <div class="col-lg-6">
         <div class="card data-card h-100">
             <div class="card-body">
-                <h2 class="h5 mb-3">Cadastros recentes</h2>
+                <div class="section-heading mb-3">
+                    <h2 class="h5 mb-0">Cadastros recentes</h2>
+                    <a href="{{ url_for('listar_membros') }}" class="btn btn-sm btn-outline-primary">Ver todos</a>
+                </div>
                 <div class="list-group list-group-flush">
                     {% for membro in membros_recentes %}
                     <a class="list-group-item list-group-item-action px-0" href="{{ url_for('editar_membro', membro_id=membro.id) }}">
                         <span class="fw-semibold d-block">{{ membro.nome }}</span>
-                        <span class="text-muted small">{{ membro.situacao }} • {{ membro.telefone }}</span>
+                        <span class="text-muted small">{{ membro.situacao }} • {{ membro.telefone or "Sem telefone" }}</span>
                     </a>
+                    {% else %}
+                    <div class="text-muted small">Nenhuma pessoa cadastrada recentemente.</div>
                     {% endfor %}
                 </div>
             </div>
@@ -56,13 +144,18 @@
     <div class="col-lg-6">
         <div class="card data-card h-100">
             <div class="card-body">
-                <h2 class="h5 mb-3">Próximos eventos</h2>
+                <div class="section-heading mb-3">
+                    <h2 class="h5 mb-0">Próximos eventos</h2>
+                    <a href="{{ url_for('listar_eventos') }}" class="btn btn-sm btn-outline-primary">Ver agenda</a>
+                </div>
                 <div class="list-group list-group-flush">
                     {% for evento in eventos %}
                     <a class="list-group-item list-group-item-action px-0" href="{{ url_for('listar_eventos') }}">
                         <span class="fw-semibold d-block">{{ evento.nome }}</span>
                         <span class="text-muted small">{{ evento.data|data_br }} • {{ evento.status }}</span>
                     </a>
+                    {% else %}
+                    <div class="text-muted small">Nenhum evento futuro cadastrado.</div>
                     {% endfor %}
                 </div>
             </div>

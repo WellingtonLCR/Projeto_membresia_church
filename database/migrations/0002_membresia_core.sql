@@ -347,6 +347,31 @@ CREATE TABLE IF NOT EXISTS pedidos_oracao (
   INDEX idx_pedidos_categoria (categoria)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS pedido_oracao_reacoes (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  pedido_id BIGINT UNSIGNED NOT NULL,
+  autor_nome VARCHAR(120) NOT NULL,
+  contato VARCHAR(120) NULL,
+  tipo ENUM('orando', 'amem', 'forca') NOT NULL DEFAULT 'orando',
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_reacoes_pedido (pedido_id),
+  INDEX idx_reacoes_tipo (tipo),
+  CONSTRAINT fk_reacoes_pedido_oracao FOREIGN KEY (pedido_id) REFERENCES pedidos_oracao(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS pedido_oracao_comentarios (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  pedido_id BIGINT UNSIGNED NOT NULL,
+  autor_nome VARCHAR(120) NOT NULL,
+  contato VARCHAR(120) NULL,
+  comentario TEXT NOT NULL,
+  aprovado TINYINT(1) NOT NULL DEFAULT 1,
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_comentarios_pedido (pedido_id),
+  INDEX idx_comentarios_aprovado (aprovado),
+  CONSTRAINT fk_comentarios_pedido_oracao FOREIGN KEY (pedido_id) REFERENCES pedidos_oracao(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS configuracoes_sistema (
   chave VARCHAR(120) PRIMARY KEY,
   valor TEXT NULL,

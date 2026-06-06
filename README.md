@@ -81,7 +81,7 @@ Figura 15. Página da equipe.
 3.2 O QUE SERÁ ELABORADO
 3.3 PARA QUEM SERÁ ELABORADO
 3.4 COMO SERÁ ELABORADO
-3.5 QUANTO CUSTARA
+3.5 QUANTO CUSTARÁ
 4. DOCUMENTAÇÃO
 4.1 DECLARAÇÃO DE ABRANGÊNCIA DO PROJETO
 4.2 Requisitos funcionais
@@ -140,7 +140,7 @@ As funcionalidades foram implementadas por módulos, seguindo o fluxo:
 - persistência no MySQL com SQL parametrizado;
 - teste de renderização e comportamento.
 
-Também foram analisados projetos de referência em Laravel e Next.js para identificar funcionalidades que poderiam ser trazidas ao sistema sem fugir do escopo acadêmico e sem alterar a arquitetura Flask do projeto.
+Também foram analisados materiais técnicos internos e protótipos de referência para identificar funcionalidades que poderiam ser trazidas ao sistema sem fugir do escopo acadêmico e sem alterar a arquitetura Flask do projeto.
 
 ### 1.5 ESTRUTURA DO TRABALHO
 
@@ -157,9 +157,9 @@ Este README foi organizado seguindo a estrutura do documento de referência:
 
 ### 2.1 SISTEMAS WEB PARA GESTÃO ADMINISTRATIVA
 
-Sistemas web permitem que informações sejam acessadas por meio de navegador, sem necessidade de instalacao local em cada computador. Em contextos administrativos, esse modelo facilita o registro, consulta e atualização de dados, além de favorecer a padronizacao dos processos.
+Sistemas web permitem que informações sejam acessadas por meio de navegador, sem necessidade de instalação local em cada computador. Em contextos administrativos, esse modelo facilita o registro, consulta e atualização de dados, além de favorecer a padronização dos processos.
 
-No caso de uma igreja, um sistema web pode apoiar a secretaria e a liderança no acompanhamento de membros, visitantes, ministérios, células, eventos e presenças. A centralizacao dessas informações reduz retrabalho e melhora a confiabilidade dos dados.
+No caso de uma igreja, um sistema web pode apoiar a secretaria e a liderança no acompanhamento de membros, visitantes, ministérios, células, eventos e presenças. A centralização dessas informações reduz retrabalho e melhora a confiabilidade dos dados.
 
 ### 2.2 ARQUITETURA E INFRAESTRUTURA DA APLICAÇÃO
 
@@ -172,13 +172,13 @@ Administracao no navegador              Usuario final no navegador
         |                                      |
         | GET/POST em rotas privadas           | GET/POST em rotas publicas do app
         v                                      v
-Painel administrativo Flask              App web do usuario Flask
+Painel administrativo Flask              App web do usuário Flask
         |                                      |
         | templates/base.html                  | templates/app_usuario/base.html
         |                                      |
         +--------------- app.py ---------------+
                         |
-                        | consultas e gravacoes SQL parametrizadas
+                        | consultas e gravações SQL parametrizadas
                         v
              Camada db.py com mysql-connector-python
                         |
@@ -245,7 +245,8 @@ Na prática, o funcionamento é o seguinte:
 - após cadastros, edições ou exclusões, o sistema redireciona o usuário para a tela correspondente;
 - mensagens de sucesso ou erro são exibidas com `flash`;
 - os relatórios podem retornar respostas de download, como arquivos em formato Excel ou PDF simples.
-- a frente `/app` usa rotas públicas renderizadas pelo Flask, mas sem expor uma API JSON externa.
+- a frente `/app` usa rotas públicas renderizadas pelo Flask, mas sem expor uma API JSON externa;
+- as rotas `/app/oracao/<id>/reagir` e `/app/oracao/<id>/comentar` recebem interações públicas em pedidos de oração respondidos.
 
 Exemplo do fluxo de cadastro:
 
@@ -267,7 +268,7 @@ Sistema redireciona para a tela adequada e mostra mensagem de retorno
 
 Dessa forma, a aplicação possui endpoints internos, mas não oferece uma API pública para consumo por aplicativo mobile nativo, sistema externo ou front-end independente. O app do usuário implementado neste projeto é uma frente web servida pelo próprio Flask, usando as mesmas tabelas e templates Jinja2. Caso o projeto evolua futuramente, seria possível criar uma API REST com respostas JSON para integrar notificações, aplicativos móveis, serviços de e-mail, WhatsApp ou gateways de pagamento.
 
-No cadastro público, a pessoa não recebe acesso administrativo. O formulário grava o registro na tabela `membros` com status `Visitante`, permitindo que a secretaria acompanhe esse contato pelo painel de Pessoas/Visitantes.
+No cadastro público, a pessoa não recebe acesso administrativo. O formulário grava o registro na tabela `membros` com status `Visitante` e cria um usuário com perfil `VISITANTE`. Ao fazer login, esse perfil é direcionado para o app da igreja, enquanto perfis administrativos são direcionados para o painel. Caso um visitante tente acessar uma rota administrativa, o sistema redireciona para `/app`, preservando a separação entre as duas frentes.
 
 ### 2.6 PERSISTÊNCIA DE DADOS COM MYSQL
 
@@ -295,7 +296,7 @@ As senhas não são armazenadas em texto puro. O sistema grava o hash da senha n
 
 Outra medida aplicada foi o uso de consultas parametrizadas. Em vez de concatenar valores digitados pelo usuário diretamente dentro do SQL, as rotas enviam os parâmetros separadamente para o `mysql-connector-python`. Isso ajuda a reduzir riscos de injeção de SQL.
 
-O projeto também utiliza exclusão lógica em vários módulos. Nessa abordagem, o registro não e removido fisicamente do banco; ele recebe uma marcação, como `excluido_em`, ou tem seu status alterado para inativo. Essa escolha preserva histórico, evita perda acidental de dados e facilita auditoria futura.
+O projeto também utiliza exclusão lógica em vários módulos. Nessa abordagem, o registro não é removido fisicamente do banco; ele recebe uma marcação, como `excluido_em`, ou tem seu status alterado para inativo. Essa escolha preserva histórico, evita perda acidental de dados e facilita auditoria futura.
 
 ### 2.8 TESTES E FERRAMENTAS DE DESENVOLVIMENTO
 
@@ -307,7 +308,7 @@ Também há testes para validar que o cadastro público grava a pessoa como visi
 
 Também foram usados scripts SQL de migração e seed para organizar a criação do banco. Essa prática facilita reproduzir o ambiente em outro computador, pois a estrutura do banco não fica dependente apenas de configurações manuais.
 
-Além do seed principal de perfis, permissões e usuário administrador, o projeto possui um seed demonstrativo com membros, visitantes, ministérios, células, eventos, mural, devocional, pedidos de oração, doações e movimentações financeiras. Esses dados permitem apresentar o sistema com números no dashboard e conteúdo visível no app do usuário.
+Além do seed principal de perfis, permissões, usuário administrador e usuário visitante, o projeto possui seeds demonstrativos com membros, visitantes, ministérios, células, eventos, mural, devocional, pedidos de oração, doações e movimentações financeiras. Também foi criado um seed histórico com datas distribuídas entre 2024 e 2026, permitindo testar consultas, filtros, dashboards, relatórios e a integração entre painel administrativo e app do usuário com dados mais realistas.
 
 ### 2.9 USABILIDADE E ORGANIZAÇÃO DA INFORMAÇÃO
 
@@ -321,7 +322,7 @@ No dashboard e nas listagens, a informação foi organizada para favorecer leitu
 
 O projeto também foi desenvolvido com apoio de Vibe Coding, prática recente em que o desenvolvedor descreve objetivos em linguagem natural e utiliza inteligência artificial para gerar, revisar, adaptar ou explicar trechos de código. Nesse modelo, o foco deixa de ser apenas escrever cada linha manualmente e passa a envolver orientação, revisão, testes e refinamento da solução gerada.
 
-No Sistema de Membresia Church, o Vibe Coding foi utilizado como apoio para acelerar a criação de telas, rotas, validações, organização de módulos, melhorias de interface, escrita de documentação e revisão de comportamento. A decisão final sobre estrutura, escopo e adequação ao projeto permaneceu humana, com verificação no código, execução de testes e alinhamento com os requisitos acadêmicos.
+No Sistema de Membresia Church, o Vibe Coding foi utilizado como apoio para acelerar a criação de telas, rotas, validações, organização de módulos, melhorias de interface, escrita de documentação e revisão de comportamento. As consultas e interações com ferramentas como ChatGPT e Claude Code auxiliaram no levantamento de alternativas, revisão textual, análise de padrões de código e implementação incremental. A decisão final sobre estrutura, escopo e adequação ao projeto permaneceu humana, com verificação no código, execução de testes e alinhamento com os requisitos acadêmicos.
 
 As principais vantagens observadas foram:
 
@@ -354,14 +355,14 @@ O modelo Canvas foi usado como forma de organizar a proposta do sistema.
 - Atividades principais: cadastro, consulta, atualização, exclusão lógica, relatórios e controle de processos internos.
 - Recursos principais: computador, servidor Flask, banco MySQL, templates Jinja2, Bootstrap e código-fonte do projeto.
 - Parcerias principais: Fatec Jahu, disciplina de Programação para Internet e equipe de desenvolvimento.
-- Estrutura de custos: desenvolvimento acadêmico, infraestrutura local, computador, MySQL e manutencao futura.
+- Estrutura de custos: desenvolvimento acadêmico, infraestrutura local, computador, MySQL e manutenção futura.
 - Fontes de receita: não se aplica inicialmente, pois o projeto tem finalidade acadêmica.
 
-### 3.2 O QUE SERA ELABORADO
+### 3.2 O QUE SERÁ ELABORADO
 
 Será elaborada uma aplicação web de gestão de membresia para igrejas, com área pública, área administrativa protegida por login, módulos de cadastro, controles operacionais e relatórios.
 
-### 3.3 PARA QUEM SERA ELABORADO
+### 3.3 PARA QUEM SERÁ ELABORADO
 
 O sistema foi pensado para igrejas que precisam organizar informações de membros, visitantes, famílias, ministérios, células, eventos, financeiro, comunicação e acompanhamento pastoral.
 
@@ -370,10 +371,11 @@ Os principais usuários são:
 - Administrador;
 - Pastor;
 - Secretaria;
-- Lider;
-- Financeiro.
+- Líder;
+- Financeiro;
+- Visitante, com acesso ao app do usuário.
 
-### 3.4 COMO SERA ELABORADO
+### 3.4 COMO SERÁ ELABORADO
 
 O sistema foi elaborado com Python e Flask no back-end, Jinja2 para renderização de templates, Bootstrap e CSS próprio na interface, MySQL para persistência de dados e unittest para testes automatizados.
 
@@ -396,17 +398,17 @@ A estrutura segue o padrão:
 |-- tests
 ```
 
-### 3.5 QUANTO CUSTARA
+### 3.5 QUANTO CUSTARÁ
 
-Por ser um projeto acadêmico, não ha custo comercial inicial. O desenvolvimento foi realizado com ferramentas gratuitas e de código aberto. Em um ambiente real, poderiam existir custos com hospedagem, dominio, manutencao, backups e suporte tecnico.
+Por ser um projeto acadêmico, não há custo comercial inicial. O desenvolvimento foi realizado com ferramentas gratuitas e de código aberto. Em um ambiente real, poderiam existir custos com hospedagem, domínio, manutenção, backups e suporte técnico.
 
 ## 4. DOCUMENTAÇÃO
 
-### 4.1 DECLARACAO DE ABRANGENCIA DO PROJETO
+### 4.1 DECLARAÇÃO DE ABRANGÊNCIA DO PROJETO
 
 O projeto abrange o desenvolvimento de um sistema web para administração de membresia de igreja, contemplando área pública institucional, app web do usuário, login, painel administrativo e módulos de gestão.
 
-Estao dentro do escopo:
+Estão dentro do escopo:
 
 - app web do usuário com agenda, cultos, feed, devocional, pedidos de oração e informações de doação;
 - cadastro e controle de usuários;
@@ -464,6 +466,8 @@ R30. O app do usuário deve permitir envio público de pedido de oração para a
 R31. O painel administrativo deve permitir configurar programação fixa e dados de contribuição exibidos no app do usuário.
 R32. O painel administrativo deve permitir pré-visualizar a frente pública do app.
 R33. O cadastro feito pelo app do usuário deve registrar a pessoa como visitante no módulo de Pessoas.
+R34. O sistema deve direcionar usuários administrativos para o painel e visitantes para o app após o login.
+R35. O app do usuário deve permitir reações e comentários em pedidos de oração respondidos e públicos.
 
 ### 4.3 Requisitos não funcionais
 
@@ -474,10 +478,12 @@ RNF4. O sistema deve organizar templates com herança Jinja2.
 RNF5. O sistema deve usar rotas protegidas para área administrativa.
 RNF6. O sistema deve exibir mensagens de retorno para ações do usuário.
 RNF7. O sistema deve manter arquivos estáticos em `static` e templates em `templates`.
-RNF8. O sistema deve possuir `.gitignore` para evitar versionamento de cache, ambiente virtual e uploads dinamicos.
+RNF8. O sistema deve possuir `.gitignore` para evitar versionamento de cache, ambiente virtual e uploads dinâmicos.
 RNF9. O sistema deve ter testes automatizados básicos.
 RNF10. O sistema deve ser simples de executar em ambiente local.
 RNF11. O app do usuário deve reutilizar a mesma infraestrutura Flask, Jinja2 e MySQL, evitando dependência de framework mobile nativo no escopo atual.
+RNF12. A navegação administrativa deve ser agrupada por categorias recolhíveis, reduzindo repetição de menus nas páginas internas.
+RNF13. Relatórios devem ser organizados por categoria, evitando mistura de indicadores de áreas diferentes no mesmo bloco visual.
 
 ### 4.4 Casos de uso
 
@@ -489,9 +495,10 @@ Visitante público
 - consultar cultos e programação fixa;
 - visualizar feed, comunicados e devocionais publicados;
 - enviar pedido de oração para a intercessão;
+- reagir e comentar em testemunhos públicos;
 - consultar informações de doações;
-- acessar login;
-- acessar cadastro;
+- criar acesso de visitante;
+- acessar login e ser direcionado para o app;
 - acessar recuperação de senha;
 - visualizar página da equipe.
 
@@ -525,7 +532,7 @@ Financeiro
 - baixar doação pendente;
 - consultar saldo e movimentações.
 
-Lider
+Líder
 
 - consultar membros;
 - acompanhar células;
@@ -546,35 +553,43 @@ O modelo conceitual do sistema contempla as seguintes entidades principais:
 - Células;
 - Presenças;
 - Eventos;
-- Inscricoes de eventos;
+- Inscrições de eventos;
 - Categorias financeiras;
 - Contas financeiras;
-- Lancamentos financeiros;
+- Lançamentos financeiros;
 - Fornecedores;
 - Doações;
 - Mensagens;
 - Mural de avisos;
 - Pedidos de oração;
+- Reações em pedidos de oração;
+- Comentários em pedidos de oração;
 - Configurações do sistema.
-- App web do usuário, como camada de apresentacao pública baseada nessas entidades.
+- App web do usuário, como camada de apresentação pública baseada nessas entidades.
 
-Principais relacionamentos:
+Principais relacionamentos e cardinalidades:
 
-- Um usuário possui perfil.
-- Um membro pode estar vinculado a uma célula.
-- Um membro pode participar de vários ministérios.
-- Uma família pode possuir vários membros.
-- Um evento pode possuir inscricoes.
-- Um lancamento financeiro pode estar vinculado a membro, conta, categoria e fornecedor.
-- Uma doação pode gerar lancamento financeiro.
-- Uma mensagem pode ser enviada por usuário administrativo.
-- Um aviso de mural pode ser criado por usuário administrativo.
-- Um evento, aviso, devocional, configuração de programação ou configuração de doação cadastrado no admin pode ser exibido no app do usuário.
-- Um pedido de oração enviado pelo app do usuário pode ser acompanhado no módulo administrativo de intercessão.
+- Usuário e perfil: relação N:N por meio de `usuario_perfil`, pois um usuário pode ter perfil e um perfil pode estar associado a vários usuários.
+- Perfil e permissão: relação N:N por meio de `perfil_permissao`, permitindo agrupar permissões por função.
+- Membro e célula: relação N:1, pois vários membros podem estar ligados a uma mesma célula.
+- Família e membros: relação N:N por meio de `familia_membros`, permitindo que uma família tenha vários membros e que o vínculo registre parentesco.
+- Membro e ministério: relação N:N por meio de `membro_ministerio`, registrando função, entrada e saída.
+- Evento e inscrições: relação 1:N, pois um evento pode possuir várias inscrições.
+- Célula e reuniões: relação 1:N, pois uma célula pode possuir várias reuniões.
+- Reunião de célula e presenças: relação N:N por meio de `celula_presencas`.
+- Lançamento financeiro e categoria/conta: relação N:1, pois vários lançamentos pertencem a uma categoria e a uma conta.
+- Lançamento financeiro e membro/fornecedor: relação N:1 opcional, pois uma entrada pode estar ligada a membro e uma saída pode estar ligada a fornecedor.
+- Doação e lançamento financeiro: relação 1:1 opcional, pois uma doação recebida pode gerar um lançamento financeiro.
+- Mensagem e usuário administrativo: relação N:1, pois várias mensagens podem ser criadas por um usuário.
+- Mural e usuário administrativo: relação N:1, pois vários avisos podem ser publicados por um usuário.
+- Pedido de oração e reações/comentários: relação 1:N, pois um pedido público pode receber várias reações e comentários.
+- App do usuário e dados administrativos: relação de apresentação, pois eventos, mural, devocionais, pedidos de oração e configurações cadastradas no painel são exibidos na frente `/app`.
 
 ### 4.6 Benchmarking e melhorias identificadas
 
-Durante o desenvolvimento também foi realizado um estudo visual de sistemas de gestão eclesiástica, reunido em um quadro de benchmarking no tldraw. O material analisado continha telas de referência inspiradas em plataformas como Ekklesia, InPeace e InChurch, observando recursos voltados a membresia, área pastoral, gestão de intercessão, igreja, pequenos grupos, ministérios, eventos, ensinos, comunicação e app para membros.
+Durante o desenvolvimento também foi realizado um estudo visual de sistemas de gestão eclesiástica, reunido em um quadro de benchmarking no tldraw. O material analisado continha telas de referência inspiradas em plataformas como Eklesia, InPeace e inChurch, observando recursos voltados a membresia, área pastoral, gestão de intercessão, igreja, pequenos grupos, ministérios, eventos, ensinos, comunicação e app para membros.
+
+Além dos sites oficiais das plataformas, foram consultadas imagens, protótipos e materiais internos de apoio ao TCC. Essa análise mostrou padrões recorrentes, como menu lateral por grandes áreas, formulários divididos em seções, app do usuário separado do painel administrativo, mural/devocional, doações, células, intercessão e recursos de interação social em conteúdos públicos.
 
 Esse estudo ajudou a perceber que sistemas administrativos para igrejas costumam organizar as funções por grandes áreas de trabalho, cada uma com painel próprio, telas de gerenciamento, cadastros auxiliares e relatórios. A partir dessa observação, a documentação do projeto passou a considerar não apenas as telas já implementadas, mas também melhorias futuras coerentes com a evolução natural do sistema.
 
@@ -651,6 +666,7 @@ Com base nessa análise, foram identificadas as seguintes melhorias para o Siste
 | Área | Melhoria identificada | Situação no projeto |
 | --- | --- | --- |
 | Navegação | Agrupar o menu por áreas, seguindo o padrão do benchmarking. | Aplicado no menu lateral desktop e mobile. |
+| Navegação | Permitir recolher e expandir categorias do menu para reduzir excesso visual. | Aplicado com grupos recolhíveis no menu lateral. |
 | Dashboard | Criar painéis por módulo, além do dashboard geral. | Aplicado com painéis de Pessoas, Financeiro, Ministérios, Células, Comunicação e Intercessão. |
 | Financeiro | Separar receitas, despesas, doações, movimentações, cadastros, fornecedores e relatórios. | Aplicado com rotas específicas para painel, receitas, despesas, movimentações e cadastros. |
 | Financeiro | Exibir categorias, centro de custos, contas bancárias, formas de recebimento e formas de pagamento. | Aplicado com páginas auxiliares protegidas, reaproveitando categorias, contas, doações e lançamentos existentes. |
@@ -659,9 +675,12 @@ Com base nessa análise, foram identificadas as seguintes melhorias para o Siste
 | Células | Ter painel do módulo, gerenciamento, presenças e relatórios. | Aplicado com painel de células e atalhos para gerenciamento e presenças. |
 | Comunicação | Separar feed, comunicados, devocional e relatórios. | Aplicado usando comunicação e mural como base para feed, comunicados e devocional. |
 | Intercessão | Separar pedidos de oração, testemunhos e relatórios. | Aplicado com painel de intercessão e rota de testemunhos baseada em pedidos respondidos. |
+| Intercessão | Permitir reações e comentários em pedidos públicos, inspirado em interações de app. | Aplicado no app do usuário para testemunhos públicos. |
 | Configurações | Organizar igreja, história, informações, programação, permissões, app e módulos. | Aplicado com rotas e telas específicas para cada grupo de configuração. |
 | App do usuário | Criar uma frente pública diferente do painel administrativo. | Aplicado com rotas `/app`, agenda, cultos, feed, devocional, oração e doações. |
+| App do usuário | Direcionar visitantes autenticados para o app e impedir acesso ao painel. | Aplicado com perfil `Visitante`, login direcionado e proteção de rotas administrativas. |
 | Integração admin/app | Fazer o painel administrativo alimentar o que o usuário visualiza. | Aplicado usando eventos, mural, pedidos de oração e configurações salvas no MySQL. |
+| Relatórios | Separar indicadores por categoria e melhorar identidade do arquivo gerado. | Aplicado com agrupamento por módulo na tela, Excel e PDF. |
 
 As melhorias aplicadas respeitam o escopo acadêmico e a arquitetura Flask do projeto. Algumas funcionalidades do benchmarking, como centro de custos completo, CRUD de formas de pagamento, aplicativo mobile nativo, notificações em tempo real e permissão detalhada por tela, continuam registradas como evoluções futuras porque exigiriam novas tabelas, regras, telas específicas ou integrações externas.
 
@@ -691,7 +710,7 @@ Assim, o benchmarking foi usado como apoio para melhorar a organização funcion
 
 ## 5. MANUAL DO USUÁRIO
 
-### 5.1 Preparacao do ambiente
+### 5.1 Preparação do ambiente
 
 Crie o ambiente virtual:
 
@@ -736,6 +755,13 @@ E-mail: admin@igreja.org
 Senha: admin123
 ```
 
+Usuário visitante para demonstrar o app:
+
+```text
+E-mail: visitante@igreja.org
+Senha: visitante123
+```
+
 ### 5.3 Página inicial
 
 A página inicial apresenta o sistema e permite que o usuário acesse login, cadastro de visitante, equipe e o app web do usuário.
@@ -752,14 +778,15 @@ No app, o usuário pode:
 - abrir detalhes de eventos e cultos;
 - acompanhar feed, comunicados e devocionais publicados no mural;
 - enviar pedido de oração para a equipe de intercessão;
-- cadastrar-se como visitante, gerando registro no painel administrativo;
+- cadastrar-se como visitante, gerando registro no painel administrativo e acesso próprio ao app;
+- reagir e comentar em testemunhos públicos;
 - consultar informações de doação, como PIX, dados bancários e mensagem configurada pelo admin.
 
 O administrador pode pré-visualizar essa frente pelo dashboard, pelo menu lateral ou pela tela de configurações. As informações de programação fixa, doações, eventos, feed e devocionais são alimentadas pelo painel administrativo.
 
 ### 5.5 Login
 
-Na página de login, o usuário informa e-mail e senha. Após autenticação, o sistema redireciona para o painel administrativo.
+Na página de login, o usuário informa e-mail e senha. Após autenticação, perfis administrativos são redirecionados para o dashboard do painel. O perfil Visitante é redirecionado para o app do usuário e não possui acesso às rotas administrativas.
 
 ### 5.6 Dashboard
 
@@ -771,7 +798,7 @@ Cada painel de módulo apresenta cards de indicadores, atalhos para as principai
 
 O módulo de usuários permite cadastrar novos acessos administrativos, definir perfil, informar senha provisória, listar usuários e aplicar exclusão lógica.
 
-Esse módulo é separado do cadastro público. Pessoas que se cadastram pelo app entram como visitantes no módulo de Pessoas, sem permissão de acesso ao painel administrativo.
+Esse módulo é separado do cadastro público. Pessoas que se cadastram pelo app entram como visitantes no módulo de Pessoas e recebem perfil Visitante, com acesso apenas à frente do usuário.
 
 ### 5.8 Membros e visitantes
 
@@ -819,11 +846,11 @@ O usuário pode cadastrar avisos, enviar imagem, publicar ou arquivar comunicado
 
 ### 5.19 Intercessão
 
-O usuário administrativo pode acessar o painel de intercessão, registrar pedidos de oração, marcar que orou, indicar que o pedido foi respondido, arquivar e consultar testemunhos a partir dos pedidos respondidos. Pedidos enviados pelo app do usuário entram neste mesmo módulo.
+O usuário administrativo pode acessar o painel de intercessão, registrar pedidos de oração, marcar que orou, indicar que o pedido foi respondido, arquivar e consultar testemunhos a partir dos pedidos respondidos. Pedidos enviados pelo app do usuário entram neste mesmo módulo. Testemunhos públicos podem receber reações e comentários pelo app, e o painel mostra os totais de interações.
 
 ### 5.20 Relatórios
 
-O usuário pode visualizar indicadores operacionais e exportar os dados em Excel ou PDF, além de imprimir pelo navegador.
+O usuário pode visualizar indicadores operacionais separados por categoria, como Pessoas, Eclesiástico, Financeiro, Comunicação e Intercessão. Também pode exportar os dados em Excel ou PDF com identidade visual básica e imprimir pelo navegador.
 
 ### 5.21 Configurações
 
@@ -843,7 +870,7 @@ O Sistema de Membresia Church atende ao objetivo de centralizar os principais pr
 
 A utilização de Flask, Jinja2, Bootstrap e MySQL permitiu aplicar os conteúdos trabalhados na disciplina de Programação para Internet de forma prática. O projeto também respeita a estrutura padrão ensinada nas aulas, com separação entre rotas, templates, arquivos estáticos, scripts de banco e testes.
 
-O estudo de sistemas similares, registrado no benchmarking visual, também contribuiu para orientar a evolução da aplicação. A partir dele, foram identificadas melhorias como painéis por módulo, reorganização do menu por áreas, relatórios específicos, aniversários, testemunhos, devocional, centro de custos, formas de pagamento, formas de recebimento, configurações mais detalhadas da igreja e a separação entre painel administrativo e app do usuário.
+O estudo de sistemas similares, registrado no benchmarking visual, também contribuiu para orientar a evolução da aplicação. A partir dele, foram identificadas melhorias como painéis por módulo, reorganização do menu por áreas recolhíveis, relatórios específicos, aniversários, testemunhos, devocional, centro de custos, formas de pagamento, formas de recebimento, configurações mais detalhadas da igreja, separação entre painel administrativo e app do usuário, login direcionado por perfil e interações públicas em pedidos de oração respondidos.
 
 Como evoluções futuras, podem ser adicionadas permissões mais detalhadas por perfil, envio real de mensagens, integração com e-mail, dashboards gráficos, controle de backups automatizados, deploy em ambiente de produção, notificações para o app do usuário e as melhorias planejadas a partir do benchmarking.
 
@@ -869,4 +896,14 @@ MOZILLA DEVELOPER NETWORK. HTTP request methods. Disponível em: https://develop
 
 GOOGLE CLOUD. What is vibe coding? Disponível em: https://cloud.google.com/discover/what-is-vibe-coding.
 
-TLDRAW. Domus Control - Benchmarking Sistemas. Quadro colaborativo de estudo visual. Disponível em: https://www.tldraw.com/f/fuyUxwevcohnMqp_YVxJU.
+EKLESIA. Soluções para Igrejas. Disponível em: https://eklesia.com.br/.
+
+INPEACE. Sistema de Gestão e App para Igrejas. Disponível em: https://inpeaceapp.com/.
+
+INCHURCH. Líder em Tecnologia para Igrejas. Disponível em: https://www.inchurch.com.br/.
+
+OPENAI. ChatGPT. Disponível em: https://chatgpt.com/.
+
+ANTHROPIC. Claude Code Docs. Disponível em: https://code.claude.com/docs/en/overview.
+
+TLDRAW. Quadro visual de benchmarking do projeto. Disponível em: https://www.tldraw.com/f/8Wn2xu8r8dMCgDB8Y2Bb6?d=v25280.-12746.6944.4095.page.

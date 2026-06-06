@@ -14,13 +14,16 @@ from db import execute_one, execute_query, get_connection
 app = Flask(__name__, static_folder="static")
 app.secret_key = os.environ.get("SECRET_KEY", "chave-dev-membresia-igreja-viva")
 
-PERFIS_USUARIO = ["Administrador", "Pastor", "Secretaria", "Líder", "Financeiro"]
+PERFIS_ADMINISTRATIVOS = ["Administrador", "Pastor", "Secretaria", "Líder", "Financeiro"]
+PERFIL_VISITANTE = "Visitante"
+PERFIS_USUARIO = PERFIS_ADMINISTRATIVOS + [PERFIL_VISITANTE]
 PERFIL_DB = {
     "Administrador": "ADMINISTRADOR",
     "Pastor": "PASTOR",
     "Secretaria": "SECRETARIA",
     "Líder": "LIDER",
     "Financeiro": "FINANCEIRO",
+    PERFIL_VISITANTE: "VISITANTE",
 }
 PERFIL_TELA = {valor: chave for chave, valor in PERFIL_DB.items()}
 
@@ -33,6 +36,11 @@ FORMAS_RECEBIMENTO = ["Dinheiro", "PIX", "Cartao", "Transferencia", "Boleto"]
 STATUS_MURAL = ["Rascunho", "Publicado", "Arquivado"]
 STATUS_PEDIDO_ORACAO = ["Pendente", "Em oracao", "Respondido", "Arquivado"]
 ORACAO_CATEGORIAS = ["Saude", "Familia", "Trabalho", "Vida espiritual", "Outro"]
+ORACAO_REACOES = {
+    "orando": "Estou orando",
+    "amem": "Amém",
+    "forca": "Força",
+}
 ESTADOS_CIVIS = ["Solteiro(a)", "Casado(a)", "Divorciado(a)", "Viúvo(a)", "União estável"]
 DIAS_REUNIAO = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
 TIPOS_HISTORICO = [
@@ -192,6 +200,10 @@ def perfil_para_tela(perfil_db):
 
 def perfil_para_db(perfil):
     return PERFIL_DB.get(perfil, (perfil or "").upper())
+
+
+def perfil_eh_visitante(perfil):
+    return perfil_para_db(perfil) == "VISITANTE"
 
 
 def status_usuario(row):
@@ -760,34 +772,88 @@ def obter_igreja():
     }
 
 
-def montar_linhas_relatorio():
+def montar_grupos_relatorio():
     metricas = gerar_metricas()
     return [
-        ["Membros ativos", "Pessoas", metricas["membros_ativos"], "Disponível"],
-        ["Membros inativos", "Pessoas", metricas["membros_inativos"], "Disponível"],
-        ["Visitantes", "Pessoas", metricas["visitantes"], "Disponível"],
-        ["Famílias", "Pessoas", metricas["familias"], "Disponível"],
-        ["Aniversariantes do mês", "Pessoas", db_scalar("SELECT COUNT(*) AS valor FROM membros WHERE data_nascimento IS NOT NULL AND excluido_em IS NULL AND MONTH(data_nascimento) = MONTH(CURDATE())"), "Disponível"],
-        ["Batizados", "Eclesiástico", db_scalar("SELECT COUNT(*) AS valor FROM historico_espiritual WHERE tipo = 'Batismo'"), "Disponível"],
-        ["Novos membros", "Crescimento", db_scalar("SELECT COUNT(*) AS valor FROM membros WHERE excluido_em IS NULL"), "Disponível"],
-        ["Membros por ministério", "Ministérios", metricas["ministerios"], "Disponível"],
-        ["Membros por célula", "Células", metricas["celulas"], "Disponível"],
-        ["Presença", "Frequência", metricas["presencas"], "Disponível"],
-        ["Receitas", "Financeiro", moeda_br(metricas["entradas"]), "Disponível"],
-        ["Despesas", "Financeiro", moeda_br(metricas["saidas"]), "Disponível"],
-        ["Saldo financeiro", "Financeiro", moeda_br(metricas["saldo"]), "Disponível"],
-        ["Fornecedores", "Financeiro", metricas["fornecedores"], "Disponível"],
-        ["Doações", "Financeiro", moeda_br(metricas["doacoes_valor"]), "Disponível"],
-        ["Mural", "Comunicação", metricas["mural"], "Disponível"],
-        ["Pedidos de oração", "Cuidado", metricas["pedidos_oracao"], "Disponível"],
-        ["Testemunhos", "Cuidado", db_scalar("SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status = 'Respondido'"), "Disponível"],
+        {
+            "modulo": "Pessoas",
+            "descricao": "Indicadores de membresia, visitantes, famílias e aniversários.",
+            "linhas": [
+                ["Membros ativos", metricas["membros_ativos"], "Disponível"],
+                ["Membros inativos", metricas["membros_inativos"], "Disponível"],
+                ["Visitantes", metricas["visitantes"], "Disponível"],
+                ["Famílias", metricas["familias"], "Disponível"],
+                [
+                    "Aniversariantes do mês",
+                    db_scalar(
+                        "SELECT COUNT(*) AS valor FROM membros WHERE data_nascimento IS NOT NULL AND excluido_em IS NULL AND MONTH(data_nascimento) = MONTH(CURDATE())"
+                    ),
+                    "Disponível",
+                ],
+            ],
+        },
+        {
+            "modulo": "Eclesiástico",
+            "descricao": "Acompanhamento espiritual, crescimento e vínculos ministeriais.",
+            "linhas": [
+                ["Batizados", db_scalar("SELECT COUNT(*) AS valor FROM historico_espiritual WHERE tipo = 'Batismo'"), "Disponível"],
+                ["Novos membros", db_scalar("SELECT COUNT(*) AS valor FROM membros WHERE excluido_em IS NULL"), "Disponível"],
+                ["Membros por ministério", metricas["ministerios"], "Disponível"],
+                ["Membros por célula", metricas["celulas"], "Disponível"],
+                ["Presença", metricas["presencas"], "Disponível"],
+            ],
+        },
+        {
+            "modulo": "Financeiro",
+            "descricao": "Entradas, saídas, fornecedores, doações e saldo consolidado.",
+            "linhas": [
+                ["Receitas", moeda_br(metricas["entradas"]), "Disponível"],
+                ["Despesas", moeda_br(metricas["saidas"]), "Disponível"],
+                ["Saldo financeiro", moeda_br(metricas["saldo"]), "Disponível"],
+                ["Fornecedores", metricas["fornecedores"], "Disponível"],
+                ["Doações", moeda_br(metricas["doacoes_valor"]), "Disponível"],
+            ],
+        },
+        {
+            "modulo": "Comunicação",
+            "descricao": "Publicações, comunicados, mural e conteúdos exibidos no app.",
+            "linhas": [
+                ["Mural", metricas["mural"], "Disponível"],
+                ["Mensagens", metricas["mensagens"], "Disponível"],
+                ["Devocionais", gerar_metricas_app()["devocionais"], "Disponível"],
+            ],
+        },
+        {
+            "modulo": "Intercessão",
+            "descricao": "Pedidos de oração, respostas e testemunhos públicos.",
+            "linhas": [
+                ["Pedidos de oração", metricas["pedidos_oracao"], "Disponível"],
+                ["Testemunhos", db_scalar("SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status = 'Respondido'"), "Disponível"],
+            ],
+        },
     ]
 
 
-def pdf_simples(titulo, linhas):
-    conteudo = [titulo, "", "Relatório | Módulo | Indicador | Status"]
-    conteudo.extend(" | ".join(str(valor) for valor in linha) for linha in linhas)
-    comandos = ["BT /F1 11 Tf 50 790 Td 14 TL"]
+def montar_linhas_relatorio():
+    linhas = []
+    for grupo in montar_grupos_relatorio():
+        linhas.extend([[linha[0], grupo["modulo"], linha[1], linha[2]] for linha in grupo["linhas"]])
+    return linhas
+
+
+def pdf_simples(titulo, grupos):
+    conteudo = [
+        "Igreja Viva - Sistema de Membresia",
+        titulo,
+        f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+        "",
+    ]
+    for grupo in grupos:
+        conteudo.append(grupo["modulo"].upper())
+        conteudo.append("Relatório | Indicador | Status")
+        conteudo.extend(" | ".join(str(valor) for valor in linha) for linha in grupo["linhas"])
+        conteudo.append("")
+    comandos = ["BT /F1 10 Tf 50 790 Td 13 TL"]
     for linha in conteudo:
         texto = linha[:95].replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
         comandos.append(f"({texto}) Tj T*")
@@ -878,7 +944,11 @@ def gerar_metricas():
     saidas = db_scalar(
         "SELECT COALESCE(SUM(valor), 0) AS valor FROM lancamentos_financeiros WHERE tipo = 'Saida'"
     )
+    total_pessoas = db_scalar(
+        "SELECT COUNT(*) AS valor FROM membros WHERE excluido_em IS NULL"
+    )
     return {
+        "total_pessoas": total_pessoas,
         "usuarios_ativos": db_scalar(
             "SELECT COUNT(*) AS valor FROM usuarios WHERE ativo = 1 AND bloqueado = 0 AND excluido_em IS NULL"
         ),
@@ -893,6 +963,15 @@ def gerar_metricas():
         ),
         "familias": db_scalar(
             "SELECT COUNT(*) AS valor FROM familias WHERE ativo = 1 AND excluido_em IS NULL"
+        ),
+        "aniversariantes_mes": db_scalar(
+            """
+            SELECT COUNT(*) AS valor
+            FROM membros
+            WHERE data_nascimento IS NOT NULL
+              AND excluido_em IS NULL
+              AND MONTH(data_nascimento) = MONTH(CURDATE())
+            """
         ),
         "afastados": db_scalar(
             "SELECT COUNT(*) AS valor FROM membros WHERE status = 'Afastado' AND excluido_em IS NULL"
@@ -919,7 +998,13 @@ def gerar_metricas():
             "SELECT COUNT(*) AS valor FROM fornecedores WHERE ativo = 1 AND excluido_em IS NULL"
         ),
         "mural": db_scalar("SELECT COUNT(*) AS valor FROM mural_avisos WHERE status <> 'Arquivado'"),
+        "devocionais": db_scalar(
+            "SELECT COUNT(*) AS valor FROM mural_avisos WHERE categoria = 'Devocional' AND status = 'Publicado'"
+        ),
         "pedidos_oracao": db_scalar("SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status <> 'Arquivado'"),
+        "testemunhos": db_scalar(
+            "SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status = 'Respondido' AND privado = 0"
+        ),
         "doacoes": db_scalar("SELECT COUNT(*) AS valor FROM doacoes WHERE status <> 'Cancelada'"),
         "doacoes_valor": db_scalar(
             "SELECT COALESCE(SUM(valor), 0) AS valor FROM doacoes WHERE status = 'Recebida'"
@@ -927,21 +1012,82 @@ def gerar_metricas():
     }
 
 
-def montar_modulos_dashboard():
-    metricas = gerar_metricas()
+def montar_pessoas_por_status():
+    linhas = db_select(
+        """
+        SELECT status, COUNT(*) AS total
+        FROM membros
+        WHERE excluido_em IS NULL
+        GROUP BY status
+        """
+    )
+    totais = {linha["status"]: int(linha["total"] or 0) for linha in linhas}
+    total = sum(totais.values())
+    ordem = ["Ativo", "Visitante", "Afastado", "Inativo"]
     return [
-        {"titulo": "Pessoas", "descricao": "Painel de membros, visitantes, famílias e aniversários.", "rota": "painel_pessoas", "valor": metricas["membros_ativos"]},
-        {"titulo": "Financeiro", "descricao": "Painel de receitas, despesas, doações e movimentações.", "rota": "painel_financeiro", "valor": f"R$ {metricas['saldo']:.2f}"},
-        {"titulo": "Ministérios", "descricao": "Painel de líderes, participantes e relatórios.", "rota": "painel_ministerios", "valor": metricas["ministerios"]},
-        {"titulo": "Células", "descricao": "Painel de grupos pequenos, presenças e crescimento.", "rota": "painel_celulas", "valor": metricas["celulas"]},
-        {"titulo": "Presença", "descricao": "Frequência por culto, evento, célula e membro.", "rota": "listar_presencas", "valor": metricas["presencas"]},
-        {"titulo": "Eventos", "descricao": "Inscrições, participantes e listas de presença.", "rota": "listar_eventos", "valor": metricas["eventos"]},
-        {"titulo": "Comunicação", "descricao": "Painel de feed, comunicados, mural e devocional.", "rota": "painel_comunicacao", "valor": metricas["mensagens"]},
-        {"titulo": "Intercessão", "descricao": "Painel de pedidos de oração e testemunhos.", "rota": "painel_intercessao", "valor": metricas["pedidos_oracao"]},
-        {"titulo": "App do usuário", "descricao": "Pré-visualização pública alimentada pelos dados do painel administrativo.", "rota": "app_usuario_inicio", "valor": "Ver"},
-        {"titulo": "Relatórios", "descricao": "Indicadores pastorais, financeiros e de crescimento.", "rota": "listar_relatorios", "valor": "10+"},
-        {"titulo": "Usuários", "descricao": "Perfis, permissões, bloqueio e auditoria.", "rota": "listar_usuarios", "valor": metricas["usuarios_ativos"]},
-        {"titulo": "Configurações", "descricao": "Dados da igreja, logo, cargos, backups e parâmetros.", "rota": "listar_configuracoes", "valor": "OK"},
+        {
+            "label": status,
+            "valor": totais.get(status, 0),
+            "percentual": round((totais.get(status, 0) / total) * 100) if total else 0,
+        }
+        for status in ordem
+    ]
+
+
+def contar_interacoes_app(dias):
+    return db_scalar(
+        """
+        SELECT
+            (
+                SELECT COUNT(*)
+                FROM pedidos_oracao
+                WHERE criado_em >= DATE_SUB(NOW(), INTERVAL %s DAY)
+            )
+            +
+            (
+                SELECT COUNT(*)
+                FROM pedido_oracao_reacoes
+                WHERE criado_em >= DATE_SUB(NOW(), INTERVAL %s DAY)
+            )
+            +
+            (
+                SELECT COUNT(*)
+                FROM pedido_oracao_comentarios
+                WHERE criado_em >= DATE_SUB(NOW(), INTERVAL %s DAY)
+            ) AS valor
+        """,
+        (dias, dias, dias),
+    )
+
+
+def montar_engajamento_app(total_pessoas):
+    referencia = max(int(total_pessoas or 0), 1)
+    linhas = []
+    for dias in [7, 30]:
+        valor = int(contar_interacoes_app(dias) or 0)
+        linhas.append(
+            {
+                "periodo": f"{dias} dias",
+                "valor": valor,
+                "percentual": min(round((valor / referencia) * 100), 100),
+            }
+        )
+    return linhas
+
+
+def montar_modulos_dashboard(metricas=None):
+    metricas = metricas or gerar_metricas()
+    return [
+        {"titulo": "Pessoas", "descricao": "Membros, visitantes, famílias e aniversários.", "rota": "painel_pessoas", "valor": metricas["total_pessoas"], "icone": "PE"},
+        {"titulo": "Financeiro", "descricao": "Receitas, despesas, doações e movimentações.", "rota": "painel_financeiro", "valor": moeda_br(metricas["saldo"]), "icone": "R$"},
+        {"titulo": "Ministérios", "descricao": "Líderes, participantes e relatórios.", "rota": "painel_ministerios", "valor": metricas["ministerios"], "icone": "MI"},
+        {"titulo": "Células", "descricao": "Grupos pequenos, presenças e crescimento.", "rota": "painel_celulas", "valor": metricas["celulas"], "icone": "CE"},
+        {"titulo": "Eventos", "descricao": "Agenda, inscrições e listas de presença.", "rota": "listar_eventos", "valor": metricas["eventos"], "icone": "AG"},
+        {"titulo": "Comunicação", "descricao": "Feed, comunicados, mural e devocional.", "rota": "painel_comunicacao", "valor": metricas["mural"], "icone": "CO"},
+        {"titulo": "Intercessão", "descricao": "Pedidos de oração, respostas e testemunhos.", "rota": "painel_intercessao", "valor": metricas["pedidos_oracao"], "icone": "OR"},
+        {"titulo": "App do usuário", "descricao": "Frente pública alimentada pelo painel administrativo.", "rota": "app_usuario_inicio", "valor": metricas["testemunhos"], "icone": "AP"},
+        {"titulo": "Relatórios", "descricao": "Indicadores pastorais, financeiros e operacionais.", "rota": "listar_relatorios", "valor": "PDF", "icone": "RE"},
+        {"titulo": "Configurações", "descricao": "Igreja, programação, app e permissões.", "rota": "listar_configuracoes", "valor": "OK", "icone": "CF"},
     ]
 
 
@@ -1067,6 +1213,39 @@ def gerar_metricas_app():
     }
 
 
+def pedido_oracao_publico_existe(pedido_id):
+    return bool(
+        db_one(
+            """
+            SELECT id
+            FROM pedidos_oracao
+            WHERE id = %s AND status = 'Respondido' AND privado = 0
+            LIMIT 1
+            """,
+            (pedido_id,),
+        )
+    )
+
+
+def listar_comentarios_oracao(pedido_ids):
+    if not pedido_ids:
+        return {}
+    placeholders = ", ".join(["%s"] * len(pedido_ids))
+    comentarios = db_select(
+        f"""
+        SELECT pedido_id, autor_nome, comentario, criado_em
+        FROM pedido_oracao_comentarios
+        WHERE aprovado = 1 AND pedido_id IN ({placeholders})
+        ORDER BY criado_em ASC, id ASC
+        """,
+        pedido_ids,
+    )
+    por_pedido = {pedido_id: [] for pedido_id in pedido_ids}
+    for comentario in comentarios:
+        por_pedido.setdefault(comentario["pedido_id"], []).append(comentario)
+    return por_pedido
+
+
 def email_membro_em_uso(email):
     if not email:
         return False
@@ -1083,28 +1262,60 @@ def email_membro_em_uso(email):
     )
 
 
-def cadastrar_visitante_app(nome, email, telefone, whatsapp, interesse, mensagem):
+def cadastrar_visitante_app(nome, email, telefone, whatsapp, interesse, mensagem, senha):
     observacoes = ["Cadastro realizado pelo app do usuário."]
     if interesse:
         observacoes.append(f"Interesse informado: {interesse}.")
     if mensagem:
         observacoes.append(f"Mensagem: {mensagem}")
 
-    db_write(
-        """
-        INSERT INTO membros
-            (nome, telefone, whatsapp, email, status, data_entrada, observacoes)
-        VALUES (%s, %s, %s, %s, 'Visitante', %s, %s)
-        """,
-        (
-            nome,
-            valor_ou_none(telefone),
-            valor_ou_none(whatsapp),
-            valor_ou_none(email),
-            date.today(),
-            "\n".join(observacoes),
-        ),
-    )
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        try:
+            cursor.execute(
+                """
+                INSERT INTO membros
+                    (nome, telefone, whatsapp, email, status, data_entrada, observacoes)
+                VALUES (%s, %s, %s, %s, 'Visitante', %s, %s)
+                """,
+                (
+                    nome,
+                    valor_ou_none(telefone),
+                    valor_ou_none(whatsapp),
+                    email.lower(),
+                    date.today(),
+                    "\n".join(observacoes),
+                ),
+            )
+            membro_id = cursor.lastrowid
+            cursor.execute(
+                """
+                INSERT IGNORE INTO perfis (nome, descricao)
+                VALUES ('VISITANTE', 'Acesso ao app do usuário sem permissões administrativas')
+                """
+            )
+            cursor.execute(
+                """
+                INSERT INTO usuarios (nome, email, senha_hash, ativo, bloqueado)
+                VALUES (%s, %s, %s, 1, 0)
+                """,
+                (nome, email.lower(), generate_password_hash(senha)),
+            )
+            usuario_id = cursor.lastrowid
+            cursor.execute(
+                """
+                INSERT INTO usuario_perfil (usuario_id, perfil_id)
+                SELECT %s, id FROM perfis WHERE nome = 'VISITANTE'
+                """,
+                (usuario_id,),
+            )
+            connection.commit()
+            return {"membro_id": membro_id, "usuario_id": usuario_id}
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            cursor.close()
 
 
 def resumo_texto(valor, tamanho=130):
@@ -1120,6 +1331,9 @@ def login_required(function):
         if not session.get("usuario_logado"):
             flash("Por favor, realize o login para continuar.", "warning")
             return redirect(url_for("login"))
+        if perfil_eh_visitante(session.get("usuario_perfil")):
+            flash("Seu acesso é do app da igreja. A área administrativa é restrita à equipe autorizada.", "warning")
+            return redirect(url_for("app_usuario_inicio"))
         return function(*args, **kwargs)
 
     return wrapper
@@ -1320,19 +1534,80 @@ def app_usuario_oracao():
 
     testemunhos = db_select(
         """
-        SELECT solicitante_nome, categoria, pedido, oracoes, criado_em
-        FROM pedidos_oracao
-        WHERE status = 'Respondido' AND privado = 0
+        SELECT p.id, p.solicitante_nome, p.categoria, p.pedido, p.oracoes, p.criado_em,
+               (SELECT COUNT(*) FROM pedido_oracao_reacoes r WHERE r.pedido_id = p.id) AS reacoes_total,
+               (SELECT COUNT(*) FROM pedido_oracao_comentarios c WHERE c.pedido_id = p.id AND c.aprovado = 1) AS comentarios_total
+        FROM pedidos_oracao p
+        WHERE p.status = 'Respondido' AND p.privado = 0
         ORDER BY criado_em DESC, id DESC
         LIMIT 4
         """
     )
+    comentarios_por_pedido = listar_comentarios_oracao([pedido["id"] for pedido in testemunhos])
     return render_template(
         "app_usuario/oracao.html",
         igreja=obter_igreja(),
         categorias=ORACAO_CATEGORIAS,
         testemunhos=testemunhos,
+        comentarios_por_pedido=comentarios_por_pedido,
+        reacoes=ORACAO_REACOES,
     )
+
+
+@app.route("/app/oracao/<int:pedido_id>/reagir", methods=["POST"])
+def app_usuario_reagir_oracao(pedido_id):
+    if not pedido_oracao_publico_existe(pedido_id):
+        flash("Pedido indisponível para interação pública.", "warning")
+        return redirect(url_for("app_usuario_oracao"))
+
+    autor_nome = request.form.get("autor_nome", "").strip() or session.get("usuario_nome") or "Visitante"
+    contato = request.form.get("contato", "").strip()
+    tipo = request.form.get("tipo", "orando").strip()
+    if tipo not in ORACAO_REACOES:
+        tipo = "orando"
+
+    try:
+        db_write(
+            """
+            INSERT INTO pedido_oracao_reacoes (pedido_id, autor_nome, contato, tipo)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (pedido_id, autor_nome, valor_ou_none(contato), tipo),
+        )
+        db_write("UPDATE pedidos_oracao SET oracoes = oracoes + 1 WHERE id = %s", (pedido_id,))
+        flash("Reação registrada. Obrigado por participar em oração.", "success")
+    except Exception as erro:
+        app.logger.error("Erro ao registrar reação no pedido de oração: %s", erro)
+        flash("Não foi possível registrar sua reação agora.", "danger")
+    return redirect(url_for("app_usuario_oracao"))
+
+
+@app.route("/app/oracao/<int:pedido_id>/comentar", methods=["POST"])
+def app_usuario_comentar_oracao(pedido_id):
+    if not pedido_oracao_publico_existe(pedido_id):
+        flash("Pedido indisponível para comentário público.", "warning")
+        return redirect(url_for("app_usuario_oracao"))
+
+    autor_nome = request.form.get("autor_nome", "").strip() or session.get("usuario_nome") or "Visitante"
+    contato = request.form.get("contato", "").strip()
+    comentario = request.form.get("comentario", "").strip()
+    if not comentario:
+        flash("Escreva um comentário antes de enviar.", "danger")
+        return redirect(url_for("app_usuario_oracao"))
+
+    try:
+        db_write(
+            """
+            INSERT INTO pedido_oracao_comentarios (pedido_id, autor_nome, contato, comentario, aprovado)
+            VALUES (%s, %s, %s, %s, 1)
+            """,
+            (pedido_id, autor_nome, valor_ou_none(contato), comentario),
+        )
+        flash("Comentário publicado no testemunho.", "success")
+    except Exception as erro:
+        app.logger.error("Erro ao comentar pedido de oração: %s", erro)
+        flash("Não foi possível publicar o comentário agora.", "danger")
+    return redirect(url_for("app_usuario_oracao"))
 
 
 @app.route("/app/doacoes")
@@ -1353,27 +1628,32 @@ def app_usuario_doacoes():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    metricas = gerar_metricas()
     membros_recentes = db_select(
         """
         SELECT id, nome, status AS situacao, telefone
         FROM membros
         WHERE excluido_em IS NULL
         ORDER BY criado_em DESC, id DESC
-        LIMIT 3
+        LIMIT 5
         """
     )
     eventos = db_select(
         """
         SELECT id, nome, data_inicio AS data, status
         FROM eventos
+        WHERE status <> 'Cancelado'
+          AND data_inicio >= NOW()
         ORDER BY data_inicio
-        LIMIT 3
+        LIMIT 5
         """
     )
     return render_template(
         "dashboard.html",
-        metricas=gerar_metricas(),
-        modulos=montar_modulos_dashboard(),
+        metricas=metricas,
+        modulos=montar_modulos_dashboard(metricas),
+        pessoas_por_status=montar_pessoas_por_status(),
+        engajamento_app=montar_engajamento_app(metricas["total_pessoas"]),
         membros_recentes=membros_recentes,
         eventos=eventos,
     )
@@ -1899,8 +2179,11 @@ def login():
         session["usuario_logado"] = usuario["email"]
         session["usuario_nome"] = usuario["nome"]
         session["usuario_perfil"] = usuario["perfil"]
+        session["usuario_modo"] = "app" if perfil_eh_visitante(usuario["perfil"]) else "admin"
         flash("Login realizado com sucesso!", "success")
-        return redirect(url_for("listar_usuarios"))
+        if perfil_eh_visitante(usuario["perfil"]):
+            return redirect(url_for("app_usuario_inicio"))
+        return redirect(url_for("dashboard"))
 
     return render_template("login.html")
 
@@ -1927,13 +2210,23 @@ def processar_cadastro_visitante(modo_app=False):
         whatsapp = request.form.get("whatsapp", "").strip()
         interesse = request.form.get("interesse", "").strip()
         mensagem = request.form.get("mensagem", "").strip()
+        senha = request.form.get("senha", "").strip()
+        confirmar_senha = request.form.get("confirmar_senha", "").strip()
 
-        if not nome or not (email or telefone or whatsapp):
-            flash("Informe seu nome e pelo menos um contato.", "danger")
+        if not nome or not email or not senha:
+            flash("Informe seu nome, e-mail e senha para acessar o app.", "danger")
             return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
 
-        if email and not validar_email(email):
+        if not validar_email(email):
             flash("Informe um e-mail válido.", "danger")
+            return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
+
+        if len(senha) < 8:
+            flash("A senha deve ter pelo menos 8 caracteres.", "danger")
+            return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
+
+        if senha != confirmar_senha:
+            flash("A confirmação de senha não confere.", "danger")
             return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
 
         if telefone and not validar_telefone(telefone):
@@ -1948,15 +2241,19 @@ def processar_cadastro_visitante(modo_app=False):
             flash("Já existe um visitante ou membro com este e-mail.", "danger")
             return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
 
+        if email_em_uso(email):
+            flash("Já existe um acesso com este e-mail. Use o login para entrar no app.", "danger")
+            return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
+
         try:
-            cadastrar_visitante_app(nome, email, telefone, whatsapp, interesse, mensagem)
+            cadastrar_visitante_app(nome, email, telefone, whatsapp, interesse, mensagem, senha)
         except Exception as erro:
             app.logger.error("Erro ao cadastrar visitante pelo app: %s", erro)
             flash("Não foi possível registrar seu cadastro agora. Tente novamente em instantes.", "danger")
             return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
 
-        flash("Cadastro recebido com sucesso! Você foi registrado como visitante.", "success")
-        return redirect(url_for("app_usuario_inicio"))
+        flash("Cadastro realizado com sucesso! Entre com seu e-mail e senha para acessar o app.", "success")
+        return redirect(url_for("login"))
 
     return render_template(
         "cadastro.html",
@@ -3177,9 +3474,11 @@ def arquivar_mural(aviso_id):
 def listar_intercessao():
     pedidos = db_select(
         """
-        SELECT id, solicitante_nome, contato, categoria, pedido, status, privado, oracoes, criado_em
-        FROM pedidos_oracao
-        ORDER BY criado_em DESC, id DESC
+        SELECT p.id, p.solicitante_nome, p.contato, p.categoria, p.pedido, p.status, p.privado, p.oracoes, p.criado_em,
+               (SELECT COUNT(*) FROM pedido_oracao_reacoes r WHERE r.pedido_id = p.id) AS reacoes_total,
+               (SELECT COUNT(*) FROM pedido_oracao_comentarios c WHERE c.pedido_id = p.id AND c.aprovado = 1) AS comentarios_total
+        FROM pedidos_oracao p
+        ORDER BY p.criado_em DESC, p.id DESC
         """
     )
     return render_template(
@@ -3262,10 +3561,12 @@ def arquivar_intercessao(pedido_id):
 @app.route("/relatorios/listar")
 @login_required
 def listar_relatorios():
+    grupos = montar_grupos_relatorio()
     linhas = montar_linhas_relatorio()
     return render_template(
         "relatorios/listar_relatorios.html",
         linhas=linhas,
+        grupos=grupos,
         metricas=gerar_metricas(),
     )
 
@@ -3273,10 +3574,25 @@ def listar_relatorios():
 @app.route("/relatorios/exportar/excel")
 @login_required
 def exportar_relatorio_excel():
-    linhas = montar_linhas_relatorio()
-    html = ["<table><tr><th>Relatório</th><th>Módulo</th><th>Indicador</th><th>Status</th></tr>"]
-    html.extend("<tr>" + "".join(f"<td>{valor}</td>" for valor in linha) + "</tr>" for linha in linhas)
-    html.append("</table>")
+    grupos = montar_grupos_relatorio()
+    html = [
+        "<html><head><meta charset='utf-8'><style>",
+        "body{font-family:Arial,sans-serif;color:#1d2636}",
+        "h1{color:#21435e} h2{background:#21435e;color:white;padding:8px}",
+        "table{border-collapse:collapse;width:100%;margin-bottom:18px}",
+        "th,td{border:1px solid #d8dee6;padding:8px;text-align:left}",
+        "th{background:#f5efe6;color:#1d2636}",
+        "</style></head><body>",
+        "<h1>Igreja Viva - Relatórios do Sistema de Membresia</h1>",
+        f"<p>Gerado em {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>",
+    ]
+    for grupo in grupos:
+        html.append(f"<h2>{grupo['modulo']}</h2>")
+        html.append(f"<p>{grupo['descricao']}</p>")
+        html.append("<table><tr><th>Relatório</th><th>Indicador</th><th>Status</th></tr>")
+        html.extend("<tr>" + "".join(f"<td>{valor}</td>" for valor in linha) + "</tr>" for linha in grupo["linhas"])
+        html.append("</table>")
+    html.append("</body></html>")
     return Response(
         "\n".join(html),
         headers={"Content-Disposition": "attachment; filename=relatorios_membresia.xls"},
@@ -3287,7 +3603,7 @@ def exportar_relatorio_excel():
 @app.route("/relatorios/exportar/pdf")
 @login_required
 def exportar_relatorio_pdf():
-    conteudo = pdf_simples("Relatórios - Sistema de Membresia", montar_linhas_relatorio())
+    conteudo = pdf_simples("Relatórios por categoria", montar_grupos_relatorio())
     return Response(
         conteudo,
         headers={"Content-Disposition": "attachment; filename=relatorios_membresia.pdf"},

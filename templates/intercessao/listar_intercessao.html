@@ -32,6 +32,7 @@
                         <th>Pedido</th>
                         <th>Status</th>
                         <th>Orações</th>
+                        <th>Interações</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -47,6 +48,10 @@
                         <td class="metric-text">{{ pedido.pedido }}</td>
                         <td><span class="badge rounded-pill text-bg-light">{{ pedido.status|rotulo }}</span></td>
                         <td>{{ pedido.oracoes }}</td>
+                        <td>
+                            <span class="d-block">{{ pedido.reacoes_total or 0 }} reações</span>
+                            <span class="text-muted small">{{ pedido.comentarios_total or 0 }} comentários</span>
+                        </td>
                         <td>
                             <div class="d-flex gap-2 flex-wrap">
                                 <form method="post" action="{{ url_for('orar_intercessao', pedido_id=pedido.id) }}">
@@ -66,7 +71,7 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="7" class="text-center text-muted py-4">Nenhum pedido cadastrado.</td></tr>
+                    <tr><td colspan="8" class="text-center text-muted py-4">Nenhum pedido cadastrado.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

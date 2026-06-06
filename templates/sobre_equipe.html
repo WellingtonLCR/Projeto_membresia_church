@@ -1,54 +1,66 @@
-<!doctype html>
-<html lang="pt-BR">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Equipe de Desenvolvimento</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    </head>
+{% extends "base_publica.html" %}
 
-    <body class="bg-light">
-        <div class="container py-5">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h2">Equipe de Desenvolvimento</h1>
-                <a class="btn btn-outline-primary" href="{{ url_for('listar_usuarios') }}">Acessar painel</a>
+{% block titulo %}Equipe de Desenvolvimento • Igreja Viva{% endblock %}
+
+{% block conteudo %}
+<section class="hero-panel hero-panel--landing mb-4">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+            <span class="eyebrow">Equipe</span>
+            <h1 class="display-5 fw-bold mt-2">Wellington Luís Costa Ribeiro</h1>
+            <p class="lead mb-0">
+                Responsável pelo desenvolvimento do Sistema de Membresia Church como projeto acadêmico da Fatec Jahu.
+            </p>
+        </div>
+        <div class="col-lg-4">
+            <div class="insight-card">
+                <strong class="d-block h5 mb-2">Contato</strong>
+                <p class="mb-1"><strong>E-mail:</strong> w.luiscostaribeiro@gmail.com</p>
+                <p class="mb-0"><strong>Telefone:</strong> (14) 99164-6300</p>
             </div>
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <img src="{{ url_for('static', filename='imgs/perfil_1.png') }}" alt="Foto integrante 1" class="profile-photo mb-3">
-                            <h2 class="h5">Mariana Araújo</h2>
-                            <p class="mb-1"><strong>E-mail:</strong> mariana.araujo@igreja.org</p>
-                            <p class="mb-2"><strong>Cargo:</strong> Desenvolvedora Front-end</p>
-                            <p class="text-muted mb-0">
-                                Aluna de Sistemas para Internet, dedicada ao desenvolvimento Web e a interfaces claras
-                                e consistentes. Possui conhecimentos em Python, HTML, CSS, JavaScript e SQL.
-                                Tem interesse em evoluir com novas tecnologias e boas práticas para apoiar projetos
-                                de comunidades e organizações.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <img src="{{ url_for('static', filename='imgs/perfil_2.png') }}" alt="Foto integrante 2" class="profile-photo mb-3">
-                            <h2 class="h5">Lucas Batista</h2>
-                            <p class="mb-1"><strong>E-mail:</strong> lucas.batista@igreja.org</p>
-                            <p class="mb-2"><strong>Cargo:</strong> Desenvolvedor Back-end</p>
-                            <p class="text-muted mb-0">
-                                Estudante de Sistemas para Internet, focado em lógica de negócio, APIs e integrações.
-                                Possui conhecimentos em Python, Flask, HTML, CSS e JavaScript.
-                                Busca aprofundar boas práticas de desenvolvimento e arquitetura para sistemas internos.
-                            </p>
-                        </div>
-                    </div>
+        </div>
+    </div>
+</section>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body p-4">
+                <span class="eyebrow">Formação</span>
+                <h2 class="h4 mt-2">Tecnologia e desenvolvimento web</h2>
+                <p class="text-muted mb-3">
+                    Tecnólogo em Sistemas para Internet pela Faculdade de Tecnologia de Jahu, com conclusão prevista para dezembro de 2025.
+                </p>
+                <div class="app-chip-list">
+                    <span>HTML5</span>
+                    <span>CSS3</span>
+                    <span>Bootstrap</span>
+                    <span>JavaScript</span>
+                    <span>React</span>
+                    <span>PHP</span>
+                    <span>MySQL</span>
+                    <span>MVC</span>
+                    <span>APIs</span>
                 </div>
             </div>
         </div>
-    </body>
-</html>
-
-
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body p-4">
+                <span class="eyebrow">Atuação no projeto</span>
+                <h2 class="h4 mt-2">Desenvolvedor Full Stack</h2>
+                <p class="text-muted mb-3">
+                    O projeto foi conduzido com foco em back-end Flask, templates Jinja2, banco de dados MySQL, organização visual, documentação acadêmica e testes automatizados.
+                </p>
+                <ul class="mb-0">
+                    <li>Modelagem e criação das tabelas relacionais.</li>
+                    <li>Implementação das rotas administrativas e do app do usuário.</li>
+                    <li>Criação de telas responsivas e relatórios.</li>
+                    <li>Revisão de funcionalidades, dados demonstrativos e documentação para entrega do TCC.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

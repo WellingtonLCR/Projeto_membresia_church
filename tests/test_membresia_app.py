@@ -2,6 +2,8 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
+from werkzeug.security import generate_password_hash
+
 from app import app
 
 
@@ -14,6 +16,7 @@ class MembresiaAppTestCase(unittest.TestCase):
             sess["usuario_logado"] = "teste@igreja.org"
             sess["usuario_nome"] = "Usuario Teste"
             sess["usuario_perfil"] = "Administrador"
+            sess["usuario_modo"] = "admin"
             sess["usuario_id"] = 1
 
     def test_rotas_publicas_renderizam(self):
@@ -46,20 +49,20 @@ class MembresiaAppTestCase(unittest.TestCase):
         aviso = {
             "titulo": "Aviso Admin",
             "categoria": "Comunicado",
-            "conteudo": "Conteúdo publicado pelo painel administrativo.",
+            "conteudo": "Conteudo publicado pelo painel administrativo.",
         }
         devocional = {
             "titulo": "Devocional Admin",
             "categoria": "Devocional",
-            "conteudo": "Reflexão publicada pela equipe.",
+            "conteudo": "Reflexao publicada pela equipe.",
         }
 
         def config(chave, padrao=""):
             valores = {
-                "programacao.domingo": "Domingo às 18h",
-                "programacao.quarta": "Quarta às 20h",
+                "programacao.domingo": "Domingo as 18h",
+                "programacao.quarta": "Quarta as 20h",
                 "programacao.celulas": "Durante a semana",
-                "doacao.mensagem": "Mensagem de contribuição configurada no painel.",
+                "doacao.mensagem": "Mensagem de contribuicao configurada no painel.",
             }
             return valores.get(chave, padrao)
 
@@ -91,7 +94,7 @@ class MembresiaAppTestCase(unittest.TestCase):
         )
 
         self.assertEqual(resposta.status_code, 200)
-        self.assertIn("Informe seu nome e o pedido de oração".encode(), resposta.data)
+        self.assertIn("Informe seu nome e o pedido de".encode(), resposta.data)
 
     def test_rotas_privadas_exigem_login(self):
         resposta = self.client.get("/membros/listar", follow_redirects=False)
@@ -145,20 +148,20 @@ class MembresiaAppTestCase(unittest.TestCase):
                 resposta = self.client.get(rota)
                 self.assertEqual(resposta.status_code, 200)
 
-    def test_cadastro_publico_exige_contato_para_visitante(self):
+    def test_cadastro_publico_exige_email_e_senha_para_visitante(self):
         resposta = self.client.post(
             "/cadastro",
-            data={
-                "nome": "Pessoa Teste",
-            },
+            data={"nome": "Pessoa Teste"},
             follow_redirects=True,
         )
 
         self.assertEqual(resposta.status_code, 200)
-        self.assertIn("Informe seu nome e pelo menos um contato".encode(), resposta.data)
+        self.assertIn("Informe seu nome, e-mail e senha".encode(), resposta.data)
 
     def test_cadastro_publico_registra_visitante_no_app(self):
-        with patch("app.email_membro_em_uso", return_value=False), patch("app.db_write") as db_write:
+        with patch("app.email_membro_em_uso", return_value=False), \
+             patch("app.email_em_uso", return_value=False), \
+             patch("app.cadastrar_visitante_app") as cadastrar_visitante:
             resposta = self.client.post(
                 "/app/cadastro",
                 data={
@@ -166,6 +169,8 @@ class MembresiaAppTestCase(unittest.TestCase):
                     "email": "visitante@exemplo.com",
                     "telefone": "(14) 99999-9999",
                     "whatsapp": "(14) 99999-9999",
+                    "senha": "visitante123",
+                    "confirmar_senha": "visitante123",
                     "interesse": "Quero conhecer a igreja",
                     "mensagem": "Participei do culto pelo app.",
                 },
@@ -173,13 +178,16 @@ class MembresiaAppTestCase(unittest.TestCase):
             )
 
         self.assertEqual(resposta.status_code, 302)
-        self.assertIn("/app", resposta.headers["Location"])
-        sql, params = db_write.call_args.args
-        self.assertIn("INSERT INTO membros", sql)
-        self.assertIn("'Visitante'", sql)
-        self.assertEqual(params[0], "Visitante Teste")
-        self.assertEqual(params[3], "visitante@exemplo.com")
-        self.assertIn("Cadastro realizado pelo app do usuário", params[5])
+        self.assertIn("/login", resposta.headers["Location"])
+        cadastrar_visitante.assert_called_once_with(
+            "Visitante Teste",
+            "visitante@exemplo.com",
+            "(14) 99999-9999",
+            "(14) 99999-9999",
+            "Quero conhecer a igreja",
+            "Participei do culto pelo app.",
+            "visitante123",
+        )
 
     def test_inserir_membro_valida_telefone(self):
         self.autenticar()
@@ -193,7 +201,7 @@ class MembresiaAppTestCase(unittest.TestCase):
         self.assertEqual(resposta.status_code, 200)
         self.assertIn("Informe um telefone v".encode(), resposta.data)
 
-    def test_login_redireciona_para_listagem_de_usuarios(self):
+    def test_login_admin_redireciona_para_dashboard(self):
         resposta = self.client.post(
             "/login",
             data={"email": "admin@igreja.org", "senha": "admin123"},
@@ -201,7 +209,63 @@ class MembresiaAppTestCase(unittest.TestCase):
         )
 
         self.assertEqual(resposta.status_code, 302)
-        self.assertIn("/usuarios/listar", resposta.headers["Location"])
+        self.assertIn("/dashboard", resposta.headers["Location"])
+
+    def test_login_visitante_redireciona_para_app(self):
+        usuario = {
+            "id": 2,
+            "nome": "Visitante Teste",
+            "email": "visitante@igreja.org",
+            "senha_hash": generate_password_hash("visitante123"),
+            "status": "Ativo",
+            "perfil": "Visitante",
+        }
+        with patch("app.obter_usuario_por_email", return_value=usuario), patch("app.db_write"):
+            resposta = self.client.post(
+                "/login",
+                data={"email": "visitante@igreja.org", "senha": "visitante123"},
+                follow_redirects=False,
+            )
+
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn("/app", resposta.headers["Location"])
+
+    def test_visitante_logado_nao_acessa_admin(self):
+        with self.client.session_transaction() as sess:
+            sess["usuario_logado"] = "visitante@igreja.org"
+            sess["usuario_nome"] = "Visitante Teste"
+            sess["usuario_perfil"] = "Visitante"
+            sess["usuario_id"] = 2
+
+        resposta = self.client.get("/dashboard", follow_redirects=False)
+
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn("/app", resposta.headers["Location"])
+
+    def test_app_oracao_registra_reacao_publica(self):
+        with patch("app.pedido_oracao_publico_existe", return_value=True), patch("app.db_write") as db_write:
+            resposta = self.client.post(
+                "/app/oracao/10/reagir",
+                data={"tipo": "amem", "autor_nome": "Visitante"},
+                follow_redirects=False,
+            )
+
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn("/app/oracao", resposta.headers["Location"])
+        self.assertIn("INSERT INTO pedido_oracao_reacoes", db_write.call_args_list[0].args[0])
+        self.assertIn("UPDATE pedidos_oracao", db_write.call_args_list[1].args[0])
+
+    def test_app_oracao_registra_comentario_publico(self):
+        with patch("app.pedido_oracao_publico_existe", return_value=True), patch("app.db_write") as db_write:
+            resposta = self.client.post(
+                "/app/oracao/10/comentar",
+                data={"autor_nome": "Visitante", "comentario": "Estamos juntos em oracao."},
+                follow_redirects=False,
+            )
+
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn("/app/oracao", resposta.headers["Location"])
+        self.assertIn("INSERT INTO pedido_oracao_comentarios", db_write.call_args.args[0])
 
     def test_exclusao_logica_nao_aceita_get(self):
         self.autenticar()
@@ -227,6 +291,8 @@ class MembresiaAppTestCase(unittest.TestCase):
             "/intercessao/orar/1",
             "/intercessao/responder/1",
             "/intercessao/arquivar/1",
+            "/app/oracao/1/reagir",
+            "/app/oracao/1/comentar",
             "/doacoes/receber/1",
             "/doacoes/cancelar/1",
         ]:

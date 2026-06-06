@@ -28,8 +28,13 @@
             <a class="{% if request.endpoint == 'app_usuario_doacoes' %}active{% endif %}" href="{{ url_for('app_usuario_doacoes') }}">Doações</a>
         </nav>
         <div class="app-user-top-actions">
+            {% if usuario_logado and usuario_perfil == "Visitante" %}
+            <span class="app-user-session">{{ usuario_nome or usuario_logado }}</span>
+            <a class="btn btn-sm btn-outline-light" href="{{ url_for('logout') }}">Sair</a>
+            {% else %}
             <a class="btn btn-sm btn-light" href="{{ url_for('app_usuario_cadastro') }}">Sou visitante</a>
-            <a class="btn btn-sm btn-outline-light" href="{{ url_for('login') }}">Admin</a>
+            <a class="btn btn-sm btn-outline-light" href="{{ url_for('login') }}">Entrar</a>
+            {% endif %}
         </div>
     </header>
 
