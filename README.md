@@ -750,6 +750,7 @@ http://127.0.0.1:5000
 
 ### 5.2 Usuário inicial
 
+Usuário administrador para demonstrar o app:
 ```text
 E-mail: admin@igreja.org
 Senha: admin123
