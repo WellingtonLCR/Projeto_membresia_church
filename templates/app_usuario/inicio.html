@@ -1,0 +1,111 @@
+{% extends "app_usuario/base.html" %}
+
+{% block titulo %}App • {{ igreja.nome or "Igreja Viva" }}{% endblock %}
+
+{% block conteudo %}
+<section class="app-user-hero app-user-hero--home">
+    <span class="eyebrow">Igreja Viva no seu dia a dia</span>
+    <h1>{{ igreja.nome or "Igreja Viva" }}</h1>
+    <p>{{ igreja.endereco or "Acompanhe cultos, eventos, avisos, devocionais, pedidos de oração e contribuições em um só lugar." }}</p>
+    <div class="app-user-actions">
+        <a href="{{ url_for('app_usuario_cadastro') }}" class="btn btn-light">Sou visitante</a>
+        <a href="{{ url_for('app_usuario_eventos') }}" class="btn btn-outline-light">Ver agenda</a>
+        <a href="{{ url_for('app_usuario_oracao') }}" class="btn btn-outline-light">Pedir oração</a>
+    </div>
+</section>
+
+<section class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="metric-card"><span>Eventos</span><strong>{{ metricas_app.eventos }}</strong></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="metric-card"><span>Avisos</span><strong>{{ metricas_app.avisos }}</strong></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="metric-card"><span>Devocionais</span><strong>{{ metricas_app.devocionais }}</strong></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="metric-card"><span>Visitantes</span><strong>{{ metricas_app.visitantes }}</strong></div>
+    </div>
+</section>
+
+<section class="row g-3">
+    <div class="col-lg-7">
+        <div class="app-user-section-title">
+            <h2>Próximos eventos</h2>
+            <a href="{{ url_for('app_usuario_eventos') }}">Ver todos</a>
+        </div>
+        <div class="app-user-card-list">
+            {% for evento in eventos %}
+            <a class="app-event-card" href="{{ url_for('app_usuario_evento', evento_id=evento.id) }}">
+                {% if evento.banner_path %}
+                <img src="{{ url_for('static', filename=evento.banner_path) }}" alt="Banner {{ evento.nome }}">
+                {% endif %}
+                <div>
+                    <span>{{ evento.data_inicio|data_br }}</span>
+                    <strong>{{ evento.nome }}</strong>
+                    <small>{{ evento.local or "Local a confirmar" }}</small>
+                </div>
+            </a>
+            {% else %}
+            <div class="app-user-empty">Nenhum evento publicado no momento.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <section class="app-user-card h-100">
+            <span class="app-user-kicker">Programação</span>
+            <h2 class="h5">Cultos e encontros</h2>
+            <dl class="app-info-list">
+                {% for item in programacao %}
+                <div><dt>{{ item[0] }}</dt><dd>{{ item[1] }}</dd></div>
+                {% endfor %}
+            </dl>
+            <a class="btn btn-primary w-100" href="{{ url_for('app_usuario_cultos') }}">Abrir cultos</a>
+        </section>
+    </div>
+</section>
+
+{% if devocional %}
+<section class="app-user-section">
+    <div class="app-user-section-title">
+        <h2>Devocional</h2>
+        <a href="{{ url_for('app_usuario_devocional') }}">Abrir</a>
+    </div>
+    <article class="app-user-card">
+        <span class="app-user-kicker">{{ devocional.categoria or "Reflexão" }}</span>
+        <h3>{{ devocional.titulo }}</h3>
+        <p>{{ devocional.conteudo|truncate(180) }}</p>
+    </article>
+</section>
+{% endif %}
+
+<section class="row g-3 app-user-section">
+    <div class="col-lg-8">
+        <div class="app-user-section-title">
+            <h2>Feed da igreja</h2>
+            <a href="{{ url_for('app_usuario_feed') }}">Ver feed</a>
+        </div>
+        <div class="app-feed-list">
+            {% for item in feed %}
+            <article class="app-user-card">
+                <span class="app-user-kicker">{{ item.categoria or "Aviso" }}</span>
+                <h3>{{ item.titulo }}</h3>
+                <p>{{ item.conteudo|truncate(150) }}</p>
+            </article>
+            {% else %}
+            <div class="app-user-empty">Nenhum aviso publicado no momento.</div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <section class="app-user-card h-100">
+            <span class="app-user-kicker">Contribuições</span>
+            <h2 class="h5">Doações e ofertas</h2>
+            <p>{{ doacao }}</p>
+            <a class="btn btn-outline-primary w-100" href="{{ url_for('app_usuario_doacoes') }}">Ver formas de contribuição</a>
+        </section>
+    </div>
+</section>
+{% endblock %}

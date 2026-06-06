@@ -10,6 +10,7 @@ SQL_FILES = [
     BASE_DIR / "database" / "migrations" / "0001_core_security.sql",
     BASE_DIR / "database" / "migrations" / "0002_membresia_core.sql",
     BASE_DIR / "database" / "seeds" / "0001_rbac_perfis_permissoes.sql",
+    BASE_DIR / "database" / "seeds" / "0002_dados_demo_app.sql",
 ]
 
 

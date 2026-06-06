@@ -1,0 +1,32 @@
+{% extends "app_usuario/base.html" %}
+
+{% block titulo %}Doações • {{ igreja.nome or "Igreja Viva" }}{% endblock %}
+
+{% block conteudo %}
+<div class="app-user-page-title">
+    <span class="eyebrow">Contribuições</span>
+    <h1>Doações e ofertas</h1>
+    <p>Informações de contribuição configuradas pela administração.</p>
+</div>
+
+<section class="app-user-card">
+    <h2 class="h5">Como contribuir</h2>
+    <dl class="app-info-list">
+        {% for linha in linhas %}
+        <div><dt>{{ linha[0] }}</dt><dd>{{ linha[1] }}</dd></div>
+        {% endfor %}
+    </dl>
+    <p class="text-muted mb-0">Após contribuir, procure a secretaria para conferência e registro quando necessário.</p>
+</section>
+
+<section class="app-user-section">
+    <div class="app-user-section-title">
+        <h2>Formas aceitas</h2>
+    </div>
+    <div class="app-chip-list">
+        {% for forma in formas %}
+        <span>{{ forma|rotulo }}</span>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

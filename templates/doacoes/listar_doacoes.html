@@ -1,23 +1,22 @@
 {% extends "base.html" %}
 
-{% block titulo %}Doacoes - Painel{% endblock %}
+{% block titulo %}Doações • Painel{% endblock %}
 
 {% block conteudo %}
 <div class="page-header mb-4">
     <div>
-        <span class="eyebrow">Gestao</span>
-        <h1 class="h2 mb-1">Doacoes</h1>
-        <p class="text-muted mb-0">Registre doacoes recebidas, pendentes e recorrentes, integrando com o financeiro.</p>
+        <span class="eyebrow">Gestão</span>
+        <h1 class="h2 mb-1">Doações</h1>
+        <p class="text-muted mb-0">Registre doações recebidas, pendentes e recorrentes, integrando com o financeiro.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a href="{{ url_for('inserir_doacao') }}" class="btn btn-primary">Nova doacao</a>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
+        <a href="{{ url_for('inserir_doacao') }}" class="btn btn-primary">Nova doação</a>
     </div>
 </div>
 
 <div class="row g-3 mb-4">
     <div class="col-md-4"><div class="metric-card"><span>Total recebido</span><strong>{{ metricas.doacoes_valor|moeda_br }}</strong></div></div>
-    <div class="col-md-4"><div class="metric-card"><span>Doacoes</span><strong>{{ metricas.doacoes }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Doações</span><strong>{{ metricas.doacoes }}</strong></div></div>
     <div class="col-md-4"><div class="metric-card"><span>Pendentes</span><strong>{{ pendentes }}</strong></div></div>
 </div>
 
@@ -35,7 +34,7 @@
                         <th>Conta</th>
                         <th>Status</th>
                         <th>Valor</th>
-                        <th>Acoes</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,10 +43,10 @@
                         <td class="text-muted">#{{ doacao.id }}</td>
                         <td>{{ doacao.data_doacao|data_br }}</td>
                         <td class="fw-semibold">{{ doacao.membro or doacao.doador_nome }}</td>
-                        <td>{{ doacao.tipo }}</td>
-                        <td>{{ doacao.forma_recebimento or "-" }}</td>
+                        <td>{{ doacao.tipo|rotulo }}</td>
+                        <td>{{ doacao.forma_recebimento|rotulo if doacao.forma_recebimento else "-" }}</td>
                         <td>{{ doacao.conta }}</td>
-                        <td><span class="badge rounded-pill text-bg-light">{{ doacao.status }}</span></td>
+                        <td><span class="badge rounded-pill text-bg-light">{{ doacao.status|rotulo }}</span></td>
                         <td class="fw-semibold">{{ doacao.valor|moeda_br }}</td>
                         <td>
                             {% if doacao.status == 'Pendente' %}
@@ -65,7 +64,7 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="9" class="text-center text-muted py-4">Nenhuma doacao cadastrada.</td></tr>
+                    <tr><td colspan="9" class="text-center text-muted py-4">Nenhuma doação cadastrada.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

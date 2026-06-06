@@ -1,23 +1,22 @@
 {% extends "base.html" %}
 
-{% block titulo %}Fornecedores - Painel{% endblock %}
+{% block titulo %}Fornecedores • Painel{% endblock %}
 
 {% block conteudo %}
 <div class="page-header mb-4">
     <div>
-        <span class="eyebrow">Gestao</span>
+        <span class="eyebrow">Gestão</span>
         <h1 class="h2 mb-1">Fornecedores</h1>
         <p class="text-muted mb-0">Cadastre fornecedores para qualificar os gastos registrados no financeiro.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <a href="{{ url_for('inserir_fornecedor') }}" class="btn btn-primary">Novo fornecedor</a>
-        <a href="{{ url_for('listar_financeiro') }}" class="btn btn-outline-secondary">Voltar ao financeiro</a>
     </div>
 </div>
 
 <div class="row g-3 mb-4">
     <div class="col-md-4"><div class="metric-card"><span>Fornecedores ativos</span><strong>{{ metricas.fornecedores }}</strong></div></div>
-    <div class="col-md-4"><div class="metric-card"><span>Saidas</span><strong>{{ metricas.saidas|moeda_br }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Saídas</span><strong>{{ metricas.saidas|moeda_br }}</strong></div></div>
     <div class="col-md-4"><div class="metric-card"><span>Saldo</span><strong>{{ metricas.saldo|moeda_br }}</strong></div></div>
 </div>
 
@@ -43,8 +42,8 @@
                         <th>Documento</th>
                         <th>Telefone</th>
                         <th>E-mail</th>
-                        <th>Endereco</th>
-                        <th>Acoes</th>
+                        <th>Endereço</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>

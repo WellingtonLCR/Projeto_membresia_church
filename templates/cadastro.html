@@ -1,35 +1,52 @@
-{% extends "base_publica.html" %}
+{% extends layout_base or "base_publica.html" %}
 
-{% block titulo %}Cadastro • Igreja Viva{% endblock %}
+{% block titulo %}Cadastro de visitante • Igreja Viva{% endblock %}
 
 {% block conteudo %}
 <div class="row justify-content-center auth-page">
-    <div class="col-md-7 col-lg-6">
+    <div class="col-md-9 col-lg-7">
         <div class="card auth-card">
             <div class="card-body p-4 p-lg-5">
-                <span class="eyebrow">Primeiro acesso</span>
-                <h1 class="h3 mt-2 mb-2">Novo cadastro</h1>
-                <p class="text-muted mb-4">Preencha os dados abaixo. Sua senha deve ter pelo menos 8 caracteres.</p>
+                <span class="eyebrow">Visitantes</span>
+                <h1 class="h3 mt-2 mb-2">Quero me conectar</h1>
+                <p class="text-muted mb-4">Preencha seus dados para a equipe da igreja acompanhar sua visita e manter contato.</p>
                 <form method="post" novalidate>
                     <div class="mb-3">
                         <label for="nome" class="form-label">Nome completo</label>
                         <input type="text" class="form-control" id="nome" name="nome" placeholder="Digite seu nome completo" autocomplete="name" required>
                     </div>
-                    <div class="mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="telefone" class="form-label">Telefone</label>
+                            <input type="tel" class="form-control" id="telefone" name="telefone" placeholder="(14) 99999-9999" autocomplete="tel">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="whatsapp" class="form-label">WhatsApp</label>
+                            <input type="tel" class="form-control" id="whatsapp" name="whatsapp" placeholder="(14) 99999-9999">
+                        </div>
+                    </div>
+                    <div class="mb-3 mt-3">
                         <label for="email" class="form-label">E-mail</label>
-                        <input type="email" class="form-control" id="email" name="email" placeholder="voce@igreja.org" autocomplete="email" required>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="voce@exemplo.com" autocomplete="email">
                     </div>
                     <div class="mb-3">
-                        <label for="senha" class="form-label">Senha</label>
-                        <input type="password" class="form-control" id="senha" name="senha" placeholder="Crie uma senha segura" minlength="8" autocomplete="new-password" required>
-                        <div id="forca-senha" class="form-text" aria-live="polite">Use letras maiúsculas, números e pelo menos 8 caracteres.</div>
+                        <label for="interesse" class="form-label">Como deseja participar?</label>
+                        <select class="form-select" id="interesse" name="interesse">
+                            <option value="">Selecione uma opção</option>
+                            <option>Quero conhecer a igreja</option>
+                            <option>Quero participar de uma célula</option>
+                            <option>Quero servir em um ministério</option>
+                            <option>Quero conversar com a liderança</option>
+                        </select>
                     </div>
                     <div class="mb-3">
-                        <label for="confirma_senha" class="form-label">Confirmação de senha</label>
-                        <input type="password" class="form-control" id="confirma_senha" name="confirma_senha" placeholder="Repita a senha criada" minlength="8" autocomplete="new-password" required>
+                        <label for="mensagem" class="form-label">Mensagem</label>
+                        <textarea class="form-control" id="mensagem" name="mensagem" rows="4" placeholder="Conte brevemente como podemos ajudar"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-success w-100">Cadastrar</button>
-                    <p class="text-center mt-3 mb-0">Já tem cadastro? <a href="{{ url_for('login') }}">Faça login</a></p>
+                    <button type="submit" class="btn btn-success w-100">Enviar cadastro</button>
+                    <p class="text-center mt-3 mb-0">
+                        Acesso administrativo? <a href="{{ url_for('login') }}">Entrar no painel</a>
+                    </p>
                 </form>
             </div>
         </div>

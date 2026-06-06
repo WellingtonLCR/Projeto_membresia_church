@@ -17,7 +17,7 @@
             <label for="canal" class="form-label">Canal</label>
             <select class="form-select" id="canal" name="canal" required>
                 {% for canal in canais %}
-                <option value="{{ canal }}">{{ canal }}</option>
+                <option value="{{ canal }}">{{ canal|rotulo }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -25,7 +25,7 @@
             <label for="destino_tipo" class="form-label">Destino</label>
             <select class="form-select" id="destino_tipo" name="destino_tipo" required>
                 {% for destino in destinos %}
-                <option value="{{ destino }}">{{ destino }}</option>
+                <option value="{{ destino }}">{{ destino|rotulo }}</option>
                 {% endfor %}
             </select>
         </div>

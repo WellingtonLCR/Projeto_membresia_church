@@ -28,33 +28,11 @@
             </div>
 
             <nav class="sidebar-nav">
-                <a class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
-
-                <span class="sidebar-section">Pessoas</span>
-                <a class="sidebar-link {% if request.endpoint in ['listar_membros', 'inserir_membro', 'editar_membro', 'historico_membro'] %}active{% endif %}" href="{{ url_for('listar_membros') }}">Membros</a>
-                <a class="sidebar-link {% if request.endpoint == 'listar_visitantes' %}active{% endif %}" href="{{ url_for('listar_visitantes') }}">Visitantes</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_familias', 'inserir_familia'] %}active{% endif %}" href="{{ url_for('listar_familias') }}">Famílias</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_presencas', 'inserir_presenca'] %}active{% endif %}" href="{{ url_for('listar_presencas') }}">Presença</a>
-
-                <span class="sidebar-section">Organização</span>
-                <a class="sidebar-link {% if request.endpoint in ['listar_ministerios', 'inserir_ministerio', 'editar_ministerio'] %}active{% endif %}" href="{{ url_for('listar_ministerios') }}">Ministérios</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_celulas', 'inserir_celula'] %}active{% endif %}" href="{{ url_for('listar_celulas') }}">Células</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_eventos', 'inserir_evento'] %}active{% endif %}" href="{{ url_for('listar_eventos') }}">Eventos</a>
-
-                <span class="sidebar-section">Gestão</span>
-                <a class="sidebar-link {% if request.endpoint in ['listar_financeiro', 'inserir_lancamento_financeiro'] %}active{% endif %}" href="{{ url_for('listar_financeiro') }}">Financeiro</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_fornecedores', 'inserir_fornecedor'] %}active{% endif %}" href="{{ url_for('listar_fornecedores') }}">Fornecedores</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_doacoes', 'inserir_doacao'] %}active{% endif %}" href="{{ url_for('listar_doacoes') }}">Doações</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_comunicacao', 'inserir_mensagem'] %}active{% endif %}" href="{{ url_for('listar_comunicacao') }}">Comunicação</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_mural', 'inserir_mural'] %}active{% endif %}" href="{{ url_for('listar_mural') }}">Mural</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_intercessao', 'inserir_intercessao'] %}active{% endif %}" href="{{ url_for('listar_intercessao') }}">Intercessão</a>
-                <a class="sidebar-link {% if request.endpoint == 'listar_relatorios' %}active{% endif %}" href="{{ url_for('listar_relatorios') }}">Relatórios</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_usuarios', 'inserir_usuario', 'editar_usuario'] %}active{% endif %}" href="{{ url_for('listar_usuarios') }}">Usuários</a>
-                <a class="sidebar-link {% if request.endpoint == 'listar_configuracoes' %}active{% endif %}" href="{{ url_for('listar_configuracoes') }}">Configurações</a>
-                <a class="sidebar-link {% if request.endpoint == 'equipe' %}active{% endif %}" href="{{ url_for('equipe') }}">Equipe</a>
+                {% include "partials/menu_lateral.html" %}
             </nav>
 
             <div class="sidebar-footer">
+                <a class="btn btn-light w-100 mb-2" href="{{ url_for('app_usuario_inicio') }}">Ver app do usuário</a>
                 <a class="btn btn-outline-light w-100" href="{{ url_for('logout') }}">Logout</a>
             </div>
         </aside>
@@ -108,33 +86,11 @@
             </div>
 
             <nav class="sidebar-nav">
-                <a class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
-
-                <span class="sidebar-section">Pessoas</span>
-                <a class="sidebar-link {% if request.endpoint in ['listar_membros', 'inserir_membro', 'editar_membro', 'historico_membro'] %}active{% endif %}" href="{{ url_for('listar_membros') }}">Membros</a>
-                <a class="sidebar-link {% if request.endpoint == 'listar_visitantes' %}active{% endif %}" href="{{ url_for('listar_visitantes') }}">Visitantes</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_familias', 'inserir_familia'] %}active{% endif %}" href="{{ url_for('listar_familias') }}">Famílias</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_presencas', 'inserir_presenca'] %}active{% endif %}" href="{{ url_for('listar_presencas') }}">Presença</a>
-
-                <span class="sidebar-section">Organização</span>
-                <a class="sidebar-link {% if request.endpoint in ['listar_ministerios', 'inserir_ministerio', 'editar_ministerio'] %}active{% endif %}" href="{{ url_for('listar_ministerios') }}">Ministérios</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_celulas', 'inserir_celula'] %}active{% endif %}" href="{{ url_for('listar_celulas') }}">Células</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_eventos', 'inserir_evento'] %}active{% endif %}" href="{{ url_for('listar_eventos') }}">Eventos</a>
-
-                <span class="sidebar-section">Gestão</span>
-                <a class="sidebar-link {% if request.endpoint in ['listar_financeiro', 'inserir_lancamento_financeiro'] %}active{% endif %}" href="{{ url_for('listar_financeiro') }}">Financeiro</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_fornecedores', 'inserir_fornecedor'] %}active{% endif %}" href="{{ url_for('listar_fornecedores') }}">Fornecedores</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_doacoes', 'inserir_doacao'] %}active{% endif %}" href="{{ url_for('listar_doacoes') }}">Doações</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_comunicacao', 'inserir_mensagem'] %}active{% endif %}" href="{{ url_for('listar_comunicacao') }}">Comunicação</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_mural', 'inserir_mural'] %}active{% endif %}" href="{{ url_for('listar_mural') }}">Mural</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_intercessao', 'inserir_intercessao'] %}active{% endif %}" href="{{ url_for('listar_intercessao') }}">Intercessão</a>
-                <a class="sidebar-link {% if request.endpoint == 'listar_relatorios' %}active{% endif %}" href="{{ url_for('listar_relatorios') }}">Relatórios</a>
-                <a class="sidebar-link {% if request.endpoint in ['listar_usuarios', 'inserir_usuario', 'editar_usuario'] %}active{% endif %}" href="{{ url_for('listar_usuarios') }}">Usuários</a>
-                <a class="sidebar-link {% if request.endpoint == 'listar_configuracoes' %}active{% endif %}" href="{{ url_for('listar_configuracoes') }}">Configurações</a>
-                <a class="sidebar-link {% if request.endpoint == 'equipe' %}active{% endif %}" href="{{ url_for('equipe') }}">Equipe</a>
+                {% include "partials/menu_lateral.html" %}
             </nav>
 
-            <a class="btn btn-outline-light w-100 mt-4" href="{{ url_for('logout') }}">Logout</a>
+            <a class="btn btn-light w-100 mt-4" href="{{ url_for('app_usuario_inicio') }}">Ver app do usuário</a>
+            <a class="btn btn-outline-light w-100 mt-2" href="{{ url_for('logout') }}">Logout</a>
         </div>
     </div>
 

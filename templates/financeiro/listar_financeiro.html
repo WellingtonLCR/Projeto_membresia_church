@@ -1,18 +1,16 @@
 {% extends "base.html" %}
 
-{% block titulo %}Financeiro • Painel{% endblock %}
+{% block titulo %}{{ titulo_lista or "Financeiro" }} • Painel{% endblock %}
 
 {% block conteudo %}
 <div class="page-header mb-4">
     <div>
-        <span class="eyebrow">Gestão</span>
-        <h1 class="h2 mb-1">Financeiro</h1>
-        <p class="text-muted mb-0">Registre entradas e gastos, acompanhe saldo e mantenha o histórico financeiro organizado.</p>
+        <span class="eyebrow">Financeiro</span>
+        <h1 class="h2 mb-1">{{ titulo_lista or "Financeiro" }}</h1>
+        <p class="text-muted mb-0">{{ descricao_lista or "Registre entradas e gastos, acompanhe saldo e mantenha o histórico financeiro organizado." }}</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <a href="{{ url_for('inserir_lancamento_financeiro') }}" class="btn btn-primary">Novo lançamento</a>
-        <a href="{{ url_for('listar_fornecedores') }}" class="btn btn-outline-primary">Fornecedores</a>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
     </div>
 </div>
 

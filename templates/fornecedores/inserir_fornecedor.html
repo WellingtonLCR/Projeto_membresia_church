@@ -1,15 +1,14 @@
 {% extends "base.html" %}
 
-{% block titulo %}Inserir Fornecedor - Painel{% endblock %}
+{% block titulo %}Inserir fornecedor • Painel{% endblock %}
 
 {% block conteudo %}
 <div class="page-header mb-4">
     <div>
-        <span class="eyebrow">Gestao</span>
+        <span class="eyebrow">Gestão</span>
         <h1 class="h2 mb-1">Inserir fornecedor</h1>
-        <p class="text-muted mb-0">Use este cadastro ao registrar gastos e saidas no financeiro.</p>
+        <p class="text-muted mb-0">Use este cadastro ao registrar gastos e saídas no financeiro.</p>
     </div>
-    <a href="{{ url_for('listar_fornecedores') }}" class="btn btn-outline-secondary">Voltar</a>
 </div>
 
 <form method="post" class="card form-card">
@@ -21,7 +20,7 @@
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="documento">Documento</label>
-                <input class="form-control" id="documento" name="documento" placeholder="CNPJ, CPF ou identificacao">
+                <input class="form-control" id="documento" name="documento" placeholder="CNPJ, CPF ou identificação">
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="telefone">Telefone</label>
@@ -32,11 +31,11 @@
                 <input class="form-control" id="email" name="email" type="email">
             </div>
             <div class="col-md-12">
-                <label class="form-label" for="endereco">Endereco</label>
+                <label class="form-label" for="endereco">Endereço</label>
                 <input class="form-control" id="endereco" name="endereco">
             </div>
             <div class="col-md-12">
-                <label class="form-label" for="observacoes">Observacoes</label>
+                <label class="form-label" for="observacoes">Observações</label>
                 <textarea class="form-control" id="observacoes" name="observacoes" rows="3"></textarea>
             </div>
         </div>

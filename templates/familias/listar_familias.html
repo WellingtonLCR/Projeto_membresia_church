@@ -1,22 +1,21 @@
 {% extends "base.html" %}
 
-{% block titulo %}Familias - Painel{% endblock %}
+{% block titulo %}Famílias • Painel{% endblock %}
 
 {% block conteudo %}
 <div class="page-header mb-4">
     <div>
         <span class="eyebrow">Pessoas</span>
-        <h1 class="h2 mb-1">Familias</h1>
-        <p class="text-muted mb-0">Organize nucleos familiares, responsaveis e membros vinculados.</p>
+        <h1 class="h2 mb-1">Famílias</h1>
+        <p class="text-muted mb-0">Organize núcleos familiares, responsáveis e membros vinculados.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a href="{{ url_for('inserir_familia') }}" class="btn btn-primary">Nova familia</a>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
+        <a href="{{ url_for('inserir_familia') }}" class="btn btn-primary">Nova família</a>
     </div>
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-md-4"><div class="metric-card"><span>Familias ativas</span><strong>{{ metricas.familias }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card"><span>Famílias ativas</span><strong>{{ metricas.familias }}</strong></div></div>
     <div class="col-md-4"><div class="metric-card"><span>Membros ativos</span><strong>{{ metricas.membros_ativos }}</strong></div></div>
     <div class="col-md-4"><div class="metric-card"><span>Visitantes</span><strong>{{ metricas.visitantes }}</strong></div></div>
 </div>
@@ -26,7 +25,7 @@
         <form class="row g-2 align-items-end mb-3" method="get">
             <div class="col-md-10">
                 <label class="form-label" for="q">Buscar</label>
-                <input class="form-control" id="q" name="q" value="{{ busca }}" placeholder="Nome da familia, responsavel ou telefone">
+                <input class="form-control" id="q" name="q" value="{{ busca }}" placeholder="Nome da família, responsável ou telefone">
             </div>
             <div class="col-md-2 d-grid d-md-flex gap-2">
                 <button class="btn btn-outline-primary" type="submit">Filtrar</button>
@@ -39,12 +38,12 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Familia</th>
-                        <th>Responsavel</th>
+                        <th>Família</th>
+                        <th>Responsável</th>
                         <th>Telefone</th>
                         <th>Membros</th>
-                        <th>Endereco</th>
-                        <th>Acoes</th>
+                        <th>Endereço</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -66,7 +65,7 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="7" class="text-center text-muted py-4">Nenhuma familia cadastrada.</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted py-4">Nenhuma família cadastrada.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

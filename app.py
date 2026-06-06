@@ -54,6 +54,120 @@ TELEFONE_PATTERN = r"^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$"
 CPF_PATTERN = r"^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$"
 BANNER_EXTENSOES = {"jpg", "jpeg", "png", "webp"}
 
+ROTULOS_TELA = {
+    "Dizimo": "Dízimo",
+    "Contribuicao": "Contribuição",
+    "Missao": "Missão",
+    "Cartao": "Cartão",
+    "Transferencia": "Transferência",
+    "Saida": "Saída",
+    "Em oracao": "Em oração",
+    "Saude": "Saúde",
+    "Familia": "Família",
+    "Responsavel": "Responsável",
+    "Ministerio": "Ministério",
+    "Celula": "Célula",
+    "Email": "E-mail",
+}
+
+MENU_LATERAL = [
+    {
+        "itens": [
+            {"label": "Dashboard", "rota": "dashboard", "ativos": ["dashboard"]},
+        ],
+    },
+    {
+        "titulo": "Financeiro",
+        "itens": [
+            {"label": "Painel", "rota": "painel_financeiro", "ativos": ["painel_financeiro"]},
+            {"label": "Receitas", "rota": "listar_receitas", "ativos": ["listar_receitas"]},
+            {"label": "Despesas", "rota": "listar_despesas", "ativos": ["listar_despesas"]},
+            {"label": "Doações", "rota": "listar_doacoes", "ativos": ["listar_doacoes", "inserir_doacao"]},
+            {
+                "label": "Movimentações",
+                "rota": "listar_financeiro",
+                "ativos": ["listar_financeiro", "inserir_lancamento_financeiro"],
+            },
+            {"label": "Cadastros", "rota": "cadastros_financeiros", "ativos": ["cadastros_financeiros"]},
+            {"label": "Fornecedores", "rota": "listar_fornecedores", "ativos": ["listar_fornecedores", "inserir_fornecedor"]},
+        ],
+    },
+    {
+        "titulo": "Pessoas",
+        "itens": [
+            {"label": "Painel", "rota": "painel_pessoas", "ativos": ["painel_pessoas"]},
+            {
+                "label": "Membros",
+                "rota": "listar_membros",
+                "ativos": ["listar_membros", "inserir_membro", "editar_membro", "historico_membro"],
+            },
+            {"label": "Visitantes", "rota": "listar_visitantes", "ativos": ["listar_visitantes"]},
+            {"label": "Aniversários", "rota": "listar_aniversarios", "ativos": ["listar_aniversarios"]},
+            {"label": "Famílias", "rota": "listar_familias", "ativos": ["listar_familias", "inserir_familia"]},
+        ],
+    },
+    {
+        "titulo": "Ministérios",
+        "itens": [
+            {"label": "Painel", "rota": "painel_ministerios", "ativos": ["painel_ministerios"]},
+            {
+                "label": "Gerenciamento",
+                "rota": "listar_ministerios",
+                "ativos": ["listar_ministerios", "inserir_ministerio", "editar_ministerio"],
+            },
+        ],
+    },
+    {
+        "titulo": "Células",
+        "itens": [
+            {"label": "Painel", "rota": "painel_celulas", "ativos": ["painel_celulas"]},
+            {"label": "Gerenciamento", "rota": "listar_celulas", "ativos": ["listar_celulas", "inserir_celula"]},
+            {"label": "Presença", "rota": "listar_presencas", "ativos": ["listar_presencas", "inserir_presenca"]},
+        ],
+    },
+    {
+        "titulo": "Comunicação",
+        "itens": [
+            {"label": "Painel", "rota": "painel_comunicacao", "ativos": ["painel_comunicacao"]},
+            {"label": "Feed", "rota": "listar_mural", "ativos": ["listar_mural", "inserir_mural"]},
+            {"label": "Comunicados", "rota": "listar_comunicacao", "ativos": ["listar_comunicacao", "inserir_mensagem"]},
+            {"label": "Devocional", "rota": "listar_mural", "ativos": ["listar_mural", "inserir_mural"]},
+        ],
+    },
+    {
+        "titulo": "Intercessão",
+        "itens": [
+            {"label": "Painel", "rota": "painel_intercessao", "ativos": ["painel_intercessao"]},
+            {
+                "label": "Pedidos de oração",
+                "rota": "listar_intercessao",
+                "ativos": ["listar_intercessao", "inserir_intercessao"],
+            },
+            {"label": "Testemunhos", "rota": "listar_testemunhos", "ativos": ["listar_testemunhos"]},
+        ],
+    },
+    {
+        "titulo": "Relatórios",
+        "itens": [
+            {"label": "Indicadores", "rota": "listar_relatorios", "ativos": ["listar_relatorios"]},
+        ],
+    },
+    {
+        "titulo": "Configurações",
+        "itens": [
+            {"label": "Painel", "rota": "listar_configuracoes", "ativos": ["listar_configuracoes"]},
+            {"label": "Igreja", "rota": "configuracoes_igreja", "ativos": ["configuracoes_igreja"]},
+            {"label": "História", "rota": "configuracoes_historia", "ativos": ["configuracoes_historia"]},
+            {"label": "Informações", "rota": "configuracoes_informacoes", "ativos": ["configuracoes_informacoes"]},
+            {"label": "Permissões", "rota": "configuracoes_permissoes", "ativos": ["configuracoes_permissoes"]},
+            {"label": "Programação", "rota": "configuracoes_programacao", "ativos": ["configuracoes_programacao"]},
+            {"label": "App", "rota": "configuracoes_app", "ativos": ["configuracoes_app"]},
+            {"label": "Módulos", "rota": "configuracoes_modulos", "ativos": ["configuracoes_modulos"]},
+            {"label": "Equipe", "rota": "equipe", "ativos": ["equipe"]},
+        ],
+    },
+]
+
 
 def validar_email(email):
     return bool(fullmatch(EMAIL_PATTERN, email))
@@ -416,35 +530,35 @@ def obter_dados_membro_form():
 
 def validar_dados_membro(dados, rota, **kwargs):
     if not dados["nome"] or not dados["telefone"] or not dados["situacao"]:
-        flash("Nome, telefone e situacao sao obrigatorios.", "danger")
+        flash("Nome, telefone e situação são obrigatórios.", "danger")
         return redirect(url_for(rota, **kwargs))
 
     if not validar_telefone(dados["telefone"]):
-        flash("Informe um telefone valido com DDD.", "danger")
+        flash("Informe um telefone válido com DDD.", "danger")
         return redirect(url_for(rota, **kwargs))
 
     if dados["whatsapp"] and not validar_telefone(dados["whatsapp"]):
-        flash("Informe um WhatsApp valido com DDD.", "danger")
+        flash("Informe um WhatsApp válido com DDD.", "danger")
         return redirect(url_for(rota, **kwargs))
 
     if dados["email"] and not validar_email(dados["email"]):
-        flash("Informe um e-mail valido.", "danger")
+        flash("Informe um e-mail válido.", "danger")
         return redirect(url_for(rota, **kwargs))
 
     if not validar_cpf(dados["cpf"]):
-        flash("Informe um CPF valido.", "danger")
+        flash("Informe um CPF válido.", "danger")
         return redirect(url_for(rota, **kwargs))
 
     if dados["situacao"] not in SITUACOES_MEMBRO:
-        flash("Selecione uma situacao valida.", "danger")
+        flash("Selecione uma situação válida.", "danger")
         return redirect(url_for(rota, **kwargs))
 
     if dados["estado_civil"] and dados["estado_civil"] not in ESTADOS_CIVIS:
-        flash("Selecione um estado civil valido.", "danger")
+        flash("Selecione um estado civil válido.", "danger")
         return redirect(url_for(rota, **kwargs))
 
     if dados["celula"] and dados["celula"] not in obter_opcoes_celula():
-        flash("Selecione uma celula valida.", "danger")
+        flash("Selecione uma célula válida.", "danger")
         return redirect(url_for(rota, **kwargs))
 
     return None
@@ -545,9 +659,9 @@ def atualizar_membro_db(membro_id, dados):
 
 def obter_nome_membro(membro_id):
     if not membro_id:
-        return "Visitante/Nao vinculado"
+        return "Visitante/Não vinculado"
     row = db_one("SELECT nome FROM membros WHERE id = %s AND excluido_em IS NULL", (membro_id,))
-    return row["nome"] if row else "Visitante/Nao vinculado"
+    return row["nome"] if row else "Visitante/Não vinculado"
 
 
 def listar_membros_select():
@@ -649,25 +763,29 @@ def obter_igreja():
 def montar_linhas_relatorio():
     metricas = gerar_metricas()
     return [
-        ["Membros ativos", "Pessoas", metricas["membros_ativos"], "Disponivel"],
-        ["Membros inativos", "Pessoas", metricas["membros_inativos"], "Disponivel"],
-        ["Visitantes", "Pessoas", metricas["visitantes"], "Disponivel"],
-        ["Familias", "Pessoas", metricas["familias"], "Disponivel"],
-        ["Batizados", "Eclesiastico", db_scalar("SELECT COUNT(*) AS valor FROM historico_espiritual WHERE tipo = 'Batismo'"), "Disponivel"],
-        ["Novos membros", "Crescimento", db_scalar("SELECT COUNT(*) AS valor FROM membros WHERE excluido_em IS NULL"), "Disponivel"],
-        ["Membros por ministerio", "Ministerios", metricas["ministerios"], "Disponivel"],
-        ["Membros por celula", "Celulas", metricas["celulas"], "Disponivel"],
-        ["Presenca", "Frequencia", metricas["presencas"], "Disponivel"],
-        ["Financeiro", "Financeiro", moeda_br(metricas["saldo"]), "Disponivel"],
-        ["Fornecedores", "Financeiro", metricas["fornecedores"], "Disponivel"],
-        ["Doacoes", "Financeiro", moeda_br(metricas["doacoes_valor"]), "Disponivel"],
-        ["Mural", "Comunicacao", metricas["mural"], "Disponivel"],
-        ["Pedidos de oracao", "Cuidado", metricas["pedidos_oracao"], "Disponivel"],
+        ["Membros ativos", "Pessoas", metricas["membros_ativos"], "Disponível"],
+        ["Membros inativos", "Pessoas", metricas["membros_inativos"], "Disponível"],
+        ["Visitantes", "Pessoas", metricas["visitantes"], "Disponível"],
+        ["Famílias", "Pessoas", metricas["familias"], "Disponível"],
+        ["Aniversariantes do mês", "Pessoas", db_scalar("SELECT COUNT(*) AS valor FROM membros WHERE data_nascimento IS NOT NULL AND excluido_em IS NULL AND MONTH(data_nascimento) = MONTH(CURDATE())"), "Disponível"],
+        ["Batizados", "Eclesiástico", db_scalar("SELECT COUNT(*) AS valor FROM historico_espiritual WHERE tipo = 'Batismo'"), "Disponível"],
+        ["Novos membros", "Crescimento", db_scalar("SELECT COUNT(*) AS valor FROM membros WHERE excluido_em IS NULL"), "Disponível"],
+        ["Membros por ministério", "Ministérios", metricas["ministerios"], "Disponível"],
+        ["Membros por célula", "Células", metricas["celulas"], "Disponível"],
+        ["Presença", "Frequência", metricas["presencas"], "Disponível"],
+        ["Receitas", "Financeiro", moeda_br(metricas["entradas"]), "Disponível"],
+        ["Despesas", "Financeiro", moeda_br(metricas["saidas"]), "Disponível"],
+        ["Saldo financeiro", "Financeiro", moeda_br(metricas["saldo"]), "Disponível"],
+        ["Fornecedores", "Financeiro", metricas["fornecedores"], "Disponível"],
+        ["Doações", "Financeiro", moeda_br(metricas["doacoes_valor"]), "Disponível"],
+        ["Mural", "Comunicação", metricas["mural"], "Disponível"],
+        ["Pedidos de oração", "Cuidado", metricas["pedidos_oracao"], "Disponível"],
+        ["Testemunhos", "Cuidado", db_scalar("SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status = 'Respondido'"), "Disponível"],
     ]
 
 
 def pdf_simples(titulo, linhas):
-    conteudo = [titulo, "", "Relatorio | Modulo | Indicador | Status"]
+    conteudo = [titulo, "", "Relatório | Módulo | Indicador | Status"]
     conteudo.extend(" | ".join(str(valor) for valor in linha) for linha in linhas)
     comandos = ["BT /F1 11 Tf 50 790 Td 14 TL"]
     for linha in conteudo:
@@ -812,23 +930,188 @@ def gerar_metricas():
 def montar_modulos_dashboard():
     metricas = gerar_metricas()
     return [
-        {"titulo": "Membros", "descricao": "Cadastro, edicao, status e historico espiritual.", "rota": "listar_membros", "valor": metricas["membros_ativos"]},
-        {"titulo": "Visitantes", "descricao": "Acompanhamento de visitantes e integracao.", "rota": "listar_visitantes", "valor": metricas["visitantes"]},
-        {"titulo": "Familias", "descricao": "Nucleos familiares, responsaveis e membros vinculados.", "rota": "listar_familias", "valor": metricas["familias"]},
-        {"titulo": "Ministerios", "descricao": "Lideres, participantes, atividades e relatorios.", "rota": "listar_ministerios", "valor": metricas["ministerios"]},
-        {"titulo": "Celulas", "descricao": "Grupos pequenos, reunioes, presenca e crescimento.", "rota": "listar_celulas", "valor": metricas["celulas"]},
-        {"titulo": "Presenca", "descricao": "Frequencia por culto, evento, celula e membro.", "rota": "listar_presencas", "valor": metricas["presencas"]},
-        {"titulo": "Eventos", "descricao": "Inscricoes, participantes e listas de presenca.", "rota": "listar_eventos", "valor": metricas["eventos"]},
-        {"titulo": "Financeiro", "descricao": "Dizimos, ofertas, contribuicoes, contas e relatorios.", "rota": "listar_financeiro", "valor": f"R$ {metricas['saldo']:.2f}"},
-        {"titulo": "Fornecedores", "descricao": "Cadastros usados no controle de gastos e saidas.", "rota": "listar_fornecedores", "valor": metricas["fornecedores"]},
-        {"titulo": "Doacoes", "descricao": "Registro de doacoes recebidas, pendentes e recorrentes.", "rota": "listar_doacoes", "valor": metricas["doacoes"]},
-        {"titulo": "Comunicacao", "descricao": "WhatsApp, e-mail, listas e historico de mensagens.", "rota": "listar_comunicacao", "valor": metricas["mensagens"]},
-        {"titulo": "Mural", "descricao": "Avisos e conteudos publicados para a igreja.", "rota": "listar_mural", "valor": metricas["mural"]},
-        {"titulo": "Intercessao", "descricao": "Pedidos de oracao, acompanhamento e respostas.", "rota": "listar_intercessao", "valor": metricas["pedidos_oracao"]},
-        {"titulo": "Relatorios", "descricao": "Indicadores pastorais, financeiros e de crescimento.", "rota": "listar_relatorios", "valor": "10+"},
-        {"titulo": "Usuarios", "descricao": "Perfis, permissoes, bloqueio e auditoria.", "rota": "listar_usuarios", "valor": metricas["usuarios_ativos"]},
-        {"titulo": "Configuracoes", "descricao": "Dados da igreja, logo, cargos, backups e parametros.", "rota": "listar_configuracoes", "valor": "OK"},
+        {"titulo": "Pessoas", "descricao": "Painel de membros, visitantes, famílias e aniversários.", "rota": "painel_pessoas", "valor": metricas["membros_ativos"]},
+        {"titulo": "Financeiro", "descricao": "Painel de receitas, despesas, doações e movimentações.", "rota": "painel_financeiro", "valor": f"R$ {metricas['saldo']:.2f}"},
+        {"titulo": "Ministérios", "descricao": "Painel de líderes, participantes e relatórios.", "rota": "painel_ministerios", "valor": metricas["ministerios"]},
+        {"titulo": "Células", "descricao": "Painel de grupos pequenos, presenças e crescimento.", "rota": "painel_celulas", "valor": metricas["celulas"]},
+        {"titulo": "Presença", "descricao": "Frequência por culto, evento, célula e membro.", "rota": "listar_presencas", "valor": metricas["presencas"]},
+        {"titulo": "Eventos", "descricao": "Inscrições, participantes e listas de presença.", "rota": "listar_eventos", "valor": metricas["eventos"]},
+        {"titulo": "Comunicação", "descricao": "Painel de feed, comunicados, mural e devocional.", "rota": "painel_comunicacao", "valor": metricas["mensagens"]},
+        {"titulo": "Intercessão", "descricao": "Painel de pedidos de oração e testemunhos.", "rota": "painel_intercessao", "valor": metricas["pedidos_oracao"]},
+        {"titulo": "App do usuário", "descricao": "Pré-visualização pública alimentada pelos dados do painel administrativo.", "rota": "app_usuario_inicio", "valor": "Ver"},
+        {"titulo": "Relatórios", "descricao": "Indicadores pastorais, financeiros e de crescimento.", "rota": "listar_relatorios", "valor": "10+"},
+        {"titulo": "Usuários", "descricao": "Perfis, permissões, bloqueio e auditoria.", "rota": "listar_usuarios", "valor": metricas["usuarios_ativos"]},
+        {"titulo": "Configurações", "descricao": "Dados da igreja, logo, cargos, backups e parâmetros.", "rota": "listar_configuracoes", "valor": "OK"},
     ]
+
+
+def card(label, valor):
+    return {"label": label, "valor": valor}
+
+
+def atalho(titulo, descricao, rota, valor="Acessar"):
+    return {"titulo": titulo, "descricao": descricao, "rota": rota, "valor": valor}
+
+
+def bloco_lista(titulo, cabecalhos, linhas):
+    return {"titulo": titulo, "cabecalhos": cabecalhos, "linhas": linhas}
+
+
+def linhas_lancamentos(lancamentos):
+    return [
+        [
+            data_br(lancamento.get("data_lancamento")),
+            "Saída" if lancamento.get("tipo") == "Saida" else "Entrada",
+            lancamento.get("categoria") or "-",
+            lancamento.get("conta") or "-",
+            lancamento.get("membro") or lancamento.get("fornecedor") or "-",
+            moeda_br(lancamento.get("valor")),
+        ]
+        for lancamento in lancamentos
+    ]
+
+
+def listar_lancamentos_financeiros(tipo=""):
+    sql = """
+        SELECT l.id, l.data_lancamento, l.tipo, c.nome AS categoria,
+               m.nome AS membro, f.nome AS fornecedor, cf.nome AS conta, l.valor
+        FROM lancamentos_financeiros l
+        JOIN categorias_financeiras c ON c.id = l.categoria_id
+        JOIN contas_financeiras cf ON cf.id = l.conta_id
+        LEFT JOIN membros m ON m.id = l.membro_id
+        LEFT JOIN fornecedores f ON f.id = l.fornecedor_id
+        WHERE 1=1
+    """
+    params = []
+    if tipo:
+        sql += " AND l.tipo = %s"
+        params.append(tipo)
+    sql += " ORDER BY l.data_lancamento DESC, l.id DESC"
+    return db_select(sql, params)
+
+
+def renderizar_lancamentos_financeiros(tipo, titulo_lista, descricao_lista):
+    return render_template(
+        "financeiro/listar_financeiro.html",
+        lancamentos=listar_lancamentos_financeiros(tipo),
+        metricas=gerar_metricas(),
+        titulo_lista=titulo_lista,
+        descricao_lista=descricao_lista,
+        tipo_atual=tipo,
+    )
+
+
+def renderizar_resumo_configuracao(titulo, subtitulo, cards, cabecalhos, linhas):
+    return render_template(
+        "modulos/resumo.html",
+        titulo=titulo,
+        subtitulo=subtitulo,
+        cards=cards,
+        filtros=[],
+        cabecalhos=cabecalhos,
+        linhas=linhas,
+        acao_url=url_for("listar_configuracoes"),
+        acao_label="Editar configurações",
+    )
+
+
+def listar_eventos_publicos(limite=None):
+    sql = """
+        SELECT id, nome, descricao, data_inicio, data_fim, local, banner_path, status
+        FROM eventos
+        WHERE status <> 'Cancelado'
+        ORDER BY
+            CASE WHEN data_inicio >= NOW() THEN 0 ELSE 1 END,
+            data_inicio ASC,
+            id DESC
+    """
+    if limite:
+        sql += " LIMIT %s"
+        return db_select(sql, (limite,))
+    return db_select(sql)
+
+
+def listar_mural_publico(limite=None, devocional=False):
+    sql = """
+        SELECT id, titulo, categoria, conteudo, imagem_path, publicado_em, criado_em
+        FROM mural_avisos
+        WHERE status = 'Publicado'
+    """
+    params = []
+    if devocional:
+        sql += " AND (categoria LIKE %s OR titulo LIKE %s)"
+        params.extend(["%devoc%", "%devoc%"])
+    sql += " ORDER BY COALESCE(publicado_em, criado_em) DESC, id DESC"
+    if limite:
+        sql += " LIMIT %s"
+        params.append(limite)
+    return db_select(sql, params)
+
+
+def gerar_metricas_app():
+    return {
+        "eventos": db_scalar("SELECT COUNT(*) AS valor FROM eventos WHERE status <> 'Cancelado'"),
+        "avisos": db_scalar("SELECT COUNT(*) AS valor FROM mural_avisos WHERE status = 'Publicado'"),
+        "devocionais": db_scalar(
+            """
+            SELECT COUNT(*) AS valor
+            FROM mural_avisos
+            WHERE status = 'Publicado'
+              AND (categoria LIKE '%devoc%' OR titulo LIKE '%devoc%')
+            """
+        ),
+        "testemunhos": db_scalar(
+            "SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status = 'Respondido' AND privado = 0"
+        ),
+        "visitantes": db_scalar("SELECT COUNT(*) AS valor FROM membros WHERE status = 'Visitante' AND excluido_em IS NULL"),
+    }
+
+
+def email_membro_em_uso(email):
+    if not email:
+        return False
+    return bool(
+        db_one(
+            """
+            SELECT id
+            FROM membros
+            WHERE email = %s AND excluido_em IS NULL
+            LIMIT 1
+            """,
+            (email,),
+        )
+    )
+
+
+def cadastrar_visitante_app(nome, email, telefone, whatsapp, interesse, mensagem):
+    observacoes = ["Cadastro realizado pelo app do usuário."]
+    if interesse:
+        observacoes.append(f"Interesse informado: {interesse}.")
+    if mensagem:
+        observacoes.append(f"Mensagem: {mensagem}")
+
+    db_write(
+        """
+        INSERT INTO membros
+            (nome, telefone, whatsapp, email, status, data_entrada, observacoes)
+        VALUES (%s, %s, %s, %s, 'Visitante', %s, %s)
+        """,
+        (
+            nome,
+            valor_ou_none(telefone),
+            valor_ou_none(whatsapp),
+            valor_ou_none(email),
+            date.today(),
+            "\n".join(observacoes),
+        ),
+    )
+
+
+def resumo_texto(valor, tamanho=130):
+    valor = (valor or "").strip()
+    if len(valor) <= tamanho:
+        return valor
+    return valor[: tamanho - 3].rstrip() + "..."
 
 
 def login_required(function):
@@ -867,6 +1150,11 @@ def moeda_br(valor):
     return f"R$ {float(valor or 0):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
+@app.template_filter("rotulo")
+def rotulo_tela(valor):
+    return ROTULOS_TELA.get(valor, valor)
+
+
 @app.context_processor
 def inject_layout_context():
     return {
@@ -874,12 +1162,192 @@ def inject_layout_context():
         "usuario_nome": session.get("usuario_nome"),
         "usuario_perfil": session.get("usuario_perfil"),
         "metricas_layout": gerar_metricas(),
+        "menu_lateral": MENU_LATERAL,
     }
 
 
 @app.route("/")
 def index():
     return render_template("index.html", metricas=gerar_metricas())
+
+
+@app.route("/app")
+@app.route("/app/inicio")
+def app_usuario_inicio():
+    igreja = obter_igreja()
+    eventos = listar_eventos_publicos(4)
+    feed = listar_mural_publico(4)
+    devocionais = listar_mural_publico(1, devocional=True)
+    if not devocionais:
+        devocionais = feed[:1]
+    programacao = [
+        ["Domingo", obter_config("programacao.domingo", "Culto de celebração")],
+        ["Quarta", obter_config("programacao.quarta", "Encontro de oração e ensino")],
+        ["Células", obter_config("programacao.celulas", "Durante a semana, conforme cada bairro")],
+    ]
+    doacao = obter_config("doacao.mensagem", "Contribua com alegria e acompanhe a secretaria para obter comprovantes.")
+    return render_template(
+        "app_usuario/inicio.html",
+        igreja=igreja,
+        eventos=eventos,
+        feed=feed,
+        devocional=devocionais[0] if devocionais else None,
+        metricas=gerar_metricas(),
+        metricas_app=gerar_metricas_app(),
+        programacao=programacao,
+        doacao=doacao,
+    )
+
+
+@app.route("/app/eventos")
+def app_usuario_eventos():
+    return render_template(
+        "app_usuario/eventos.html",
+        igreja=obter_igreja(),
+        eventos=listar_eventos_publicos(),
+    )
+
+
+@app.route("/app/eventos/<int:evento_id>")
+def app_usuario_evento(evento_id):
+    evento = db_one(
+        """
+        SELECT id, nome, descricao, data_inicio, data_fim, local, banner_path, status
+        FROM eventos
+        WHERE id = %s AND status <> 'Cancelado'
+        LIMIT 1
+        """,
+        (evento_id,),
+    )
+    if not evento:
+        flash("Evento não encontrado ou indisponível.", "warning")
+        return redirect(url_for("app_usuario_eventos"))
+    return render_template("app_usuario/evento.html", igreja=obter_igreja(), evento=evento)
+
+
+@app.route("/app/cultos")
+def app_usuario_cultos():
+    eventos = db_select(
+        """
+        SELECT id, nome, descricao, data_inicio, data_fim, local, banner_path, status
+        FROM eventos
+        WHERE status <> 'Cancelado'
+          AND (nome LIKE %s OR descricao LIKE %s)
+        ORDER BY data_inicio ASC, id DESC
+        """,
+        ("%cult%", "%cult%"),
+    )
+    if not eventos:
+        eventos = listar_eventos_publicos(8)
+    programacao = [
+        ["Domingo", obter_config("programacao.domingo", "Culto de celebracao")],
+        ["Quarta", obter_config("programacao.quarta", "Encontro de oração e ensino")],
+        ["Células", obter_config("programacao.celulas", "Durante a semana, conforme cada bairro")],
+    ]
+    return render_template(
+        "app_usuario/cultos.html",
+        igreja=obter_igreja(),
+        eventos=eventos,
+        programacao=programacao,
+    )
+
+
+@app.route("/app/feed")
+def app_usuario_feed():
+    return render_template(
+        "app_usuario/feed.html",
+        igreja=obter_igreja(),
+        itens=listar_mural_publico(),
+        titulo="Feed",
+        subtitulo="Avisos, comunicados e publicacoes da igreja.",
+        aba="feed",
+    )
+
+
+@app.route("/app/devocional")
+def app_usuario_devocional():
+    itens = listar_mural_publico(devocional=True)
+    if not itens:
+        itens = listar_mural_publico()
+    return render_template(
+        "app_usuario/feed.html",
+        igreja=obter_igreja(),
+        itens=itens,
+        titulo="Devocional",
+        subtitulo="Reflexoes e conteudos publicados pela equipe.",
+        aba="devocional",
+    )
+
+
+@app.route("/app/oracao", methods=["GET", "POST"])
+def app_usuario_oracao():
+    if request.method == "POST":
+        solicitante_nome = request.form.get("solicitante_nome", "").strip()
+        contato = request.form.get("contato", "").strip()
+        categoria = request.form.get("categoria", "").strip()
+        pedido = request.form.get("pedido", "").strip()
+        privado = 1 if request.form.get("privado") else 0
+
+        if not solicitante_nome or not pedido:
+            flash("Informe seu nome e o pedido de oração.", "danger")
+            return redirect(url_for("app_usuario_oracao"))
+
+        if categoria and categoria not in ORACAO_CATEGORIAS:
+            flash("Selecione uma categoria válida.", "danger")
+            return redirect(url_for("app_usuario_oracao"))
+
+        try:
+            db_write(
+                """
+                INSERT INTO pedidos_oracao (solicitante_nome, contato, categoria, pedido, privado)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (
+                    solicitante_nome,
+                    valor_ou_none(contato),
+                    valor_ou_none(categoria),
+                    pedido,
+                    privado,
+                ),
+            )
+        except Exception as erro:
+            app.logger.error("Erro ao registrar pedido pelo app do usuário: %s", erro)
+            flash("Não foi possível enviar o pedido agora. Tente novamente em instantes.", "danger")
+            return redirect(url_for("app_usuario_oracao"))
+
+        flash("Pedido enviado para a equipe de intercessao.", "success")
+        return redirect(url_for("app_usuario_oracao"))
+
+    testemunhos = db_select(
+        """
+        SELECT solicitante_nome, categoria, pedido, oracoes, criado_em
+        FROM pedidos_oracao
+        WHERE status = 'Respondido' AND privado = 0
+        ORDER BY criado_em DESC, id DESC
+        LIMIT 4
+        """
+    )
+    return render_template(
+        "app_usuario/oracao.html",
+        igreja=obter_igreja(),
+        categorias=ORACAO_CATEGORIAS,
+        testemunhos=testemunhos,
+    )
+
+
+@app.route("/app/doacoes")
+def app_usuario_doacoes():
+    linhas = [
+        ["PIX", obter_config("doacao.pix", "Informe a chave PIX nas configurações")],
+        ["Banco", obter_config("doacao.banco", "Conta principal da igreja")],
+        ["Mensagem", obter_config("doacao.mensagem", "Contribua com alegria e acompanhe a secretaria para obter comprovantes.")],
+    ]
+    return render_template(
+        "app_usuario/doacoes.html",
+        igreja=obter_igreja(),
+        linhas=linhas,
+        formas=FORMAS_RECEBIMENTO,
+    )
 
 
 @app.route("/dashboard")
@@ -911,6 +1379,498 @@ def dashboard():
     )
 
 
+@app.route("/pessoas/painel")
+@login_required
+def painel_pessoas():
+    metricas = gerar_metricas()
+    aniversarios = db_select(
+        """
+        SELECT id, nome, data_nascimento, telefone, status
+        FROM membros
+        WHERE data_nascimento IS NOT NULL
+          AND excluido_em IS NULL
+          AND MONTH(data_nascimento) = MONTH(CURDATE())
+        ORDER BY DAY(data_nascimento), nome
+        LIMIT 6
+        """
+    )
+    recentes = db_select(
+        """
+        SELECT id, nome, status, telefone
+        FROM membros
+        WHERE excluido_em IS NULL
+        ORDER BY criado_em DESC, id DESC
+        LIMIT 6
+        """
+    )
+    return render_template(
+        "modulos/painel.html",
+        eyebrow="Pessoas",
+        titulo="Painel de pessoas",
+        subtitulo="Visão de membros, visitantes, famílias, aniversários e cuidado cadastral.",
+        cards=[
+            card("Membros ativos", metricas["membros_ativos"]),
+            card("Visitantes", metricas["visitantes"]),
+            card("Famílias", metricas["familias"]),
+            card("Afastados", metricas["afastados"]),
+        ],
+        atalhos=[
+            atalho("Membros", "Gerencie cadastros, status, ministérios e histórico.", "listar_membros", metricas["membros_ativos"]),
+            atalho("Visitantes", "Acompanhe visitantes e encaminhe integração.", "listar_visitantes", metricas["visitantes"]),
+            atalho("Aniversários", "Consulte aniversariantes do mês.", "listar_aniversarios", len(aniversarios)),
+        ],
+        blocos=[
+            bloco_lista(
+                "Aniversários do mês",
+                ["Nome", "Data", "Contato", "Status"],
+                [[p["nome"], data_br(p["data_nascimento"]), p.get("telefone") or "-", p["status"]] for p in aniversarios],
+            ),
+            bloco_lista(
+                "Cadastros recentes",
+                ["Nome", "Status", "Contato"],
+                [[p["nome"], p["status"], p.get("telefone") or "-"] for p in recentes],
+            ),
+        ],
+    )
+
+
+@app.route("/pessoas/aniversarios")
+@login_required
+def listar_aniversarios():
+    mes = request.args.get("mes", "").strip()
+    if not mes.isdigit() or int(mes) < 1 or int(mes) > 12:
+        mes = str(date.today().month)
+    aniversarios = db_select(
+        """
+        SELECT nome, data_nascimento, telefone, email, status
+        FROM membros
+        WHERE data_nascimento IS NOT NULL
+          AND excluido_em IS NULL
+          AND MONTH(data_nascimento) = %s
+        ORDER BY DAY(data_nascimento), nome
+        """,
+        (int(mes),),
+    )
+    linhas = [
+        [
+            pessoa["nome"],
+            data_br(pessoa["data_nascimento"]),
+            pessoa.get("telefone") or "-",
+            pessoa.get("email") or "-",
+            pessoa["status"],
+        ]
+        for pessoa in aniversarios
+    ]
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Aniversários",
+        subtitulo="Consulta de aniversariantes por mês para apoiar acompanhamento e comunicação.",
+        cards=[card("Aniversariantes", len(aniversarios)), card("Mês", mes), card("Membros ativos", gerar_metricas()["membros_ativos"])],
+        filtros=[{"name": "mes", "label": "Mês", "type": "number", "value": mes, "placeholder": "1 a 12"}],
+        cabecalhos=["Nome", "Nascimento", "Telefone", "E-mail", "Status"],
+        linhas=linhas,
+        acao_url=url_for("inserir_membro"),
+        acao_label="Cadastrar pessoa",
+    )
+
+
+@app.route("/financeiro/painel")
+@login_required
+def painel_financeiro():
+    metricas = gerar_metricas()
+    lancamentos = listar_lancamentos_financeiros()[:6]
+    doacoes_pendentes = db_select(
+        """
+        SELECT doador_nome, tipo, valor, data_doacao, status
+        FROM doacoes
+        WHERE status = 'Pendente'
+        ORDER BY data_doacao DESC, id DESC
+        LIMIT 6
+        """
+    )
+    return render_template(
+        "modulos/painel.html",
+        eyebrow="Financeiro",
+        titulo="Painel financeiro",
+        subtitulo="Visão de receitas, despesas, doações, movimentações e cadastros auxiliares.",
+        cards=[
+            card("Receitas", moeda_br(metricas["entradas"])),
+            card("Despesas", moeda_br(metricas["saidas"])),
+            card("Saldo", moeda_br(metricas["saldo"])),
+            card("Doações", moeda_br(metricas["doacoes_valor"])),
+        ],
+        atalhos=[
+            atalho("Receitas", "Entradas financeiras registradas no sistema.", "listar_receitas", moeda_br(metricas["entradas"])),
+            atalho("Despesas", "Saídas e gastos vinculados a fornecedores.", "listar_despesas", moeda_br(metricas["saidas"])),
+            atalho("Doações", "Doações recebidas, pendentes e canceladas.", "listar_doacoes", metricas["doacoes"]),
+            atalho("Movimentações", "Histórico geral de lançamentos.", "listar_financeiro", "Abrir"),
+            atalho("Cadastros", "Categorias, contas, formas e fornecedores.", "cadastros_financeiros", "Abrir"),
+        ],
+        blocos=[
+            bloco_lista("Últimas movimentações", ["Data", "Tipo", "Categoria", "Conta", "Pessoa/Fornecedor", "Valor"], linhas_lancamentos(lancamentos)),
+            bloco_lista(
+                "Doações pendentes",
+                ["Doador", "Tipo", "Valor", "Data", "Status"],
+                [[d.get("doador_nome") or "-", d["tipo"], moeda_br(d["valor"]), data_br(d["data_doacao"]), d["status"]] for d in doacoes_pendentes],
+            ),
+        ],
+    )
+
+
+@app.route("/financeiro/receitas")
+@login_required
+def listar_receitas():
+    return renderizar_lancamentos_financeiros("Entrada", "Receitas", "Entradas financeiras registradas por categoria, conta e data.")
+
+
+@app.route("/financeiro/despesas")
+@login_required
+def listar_despesas():
+    return renderizar_lancamentos_financeiros("Saida", "Despesas", "Saídas financeiras vinculadas a categorias, contas e fornecedores.")
+
+
+@app.route("/financeiro/cadastros")
+@login_required
+def cadastros_financeiros():
+    categorias = listar_categorias_financeiras()
+    contas = listar_contas_financeiras()
+    fornecedores = listar_fornecedores_select()
+    formas_pagamento = FORMAS_RECEBIMENTO
+    return render_template(
+        "modulos/painel.html",
+        eyebrow="Financeiro",
+        titulo="Cadastros financeiros",
+        subtitulo="Cadastros auxiliares usados por receitas, despesas, doações e movimentações.",
+        cards=[
+            card("Categorias", len(categorias)),
+            card("Contas bancárias", len(contas)),
+            card("Fornecedores", len(fornecedores)),
+            card("Formas", len(FORMAS_RECEBIMENTO)),
+        ],
+        atalhos=[
+            atalho("Categorias", "Classificações de receitas e despesas.", "listar_categorias_financeiro", len(categorias)),
+            atalho("Centro de custos", "Agrupamento de despesas por categoria.", "listar_centros_custo", len([c for c in categorias if c["tipo"] == "Saida"])),
+            atalho("Contas bancárias", "Contas usadas em lançamentos e doações.", "listar_contas_bancarias", len(contas)),
+            atalho("Formas de recebimento", "Formas usadas nas doações.", "listar_formas_recebimento", len(FORMAS_RECEBIMENTO)),
+            atalho("Formas de pagamento", "Formas consideradas para despesas.", "listar_formas_pagamento", "Abrir"),
+            atalho("Novo lançamento", "Cadastre receita ou despesa.", "inserir_lancamento_financeiro", "Novo"),
+            atalho("Fornecedores", "Gerencie fornecedores usados nas despesas.", "listar_fornecedores", len(fornecedores)),
+        ],
+        blocos=[
+            bloco_lista("Categorias", ["Nome", "Tipo"], [[c["nome"], rotulo_tela(c["tipo"])] for c in categorias]),
+            bloco_lista("Contas bancárias", ["Conta"], [[c["nome"]] for c in contas]),
+            bloco_lista("Formas de recebimento", ["Forma"], [[rotulo_tela(forma)] for forma in FORMAS_RECEBIMENTO]),
+            bloco_lista("Formas de pagamento", ["Forma"], [[rotulo_tela(forma)] for forma in formas_pagamento]),
+        ],
+    )
+
+
+@app.route("/financeiro/categorias")
+@login_required
+def listar_categorias_financeiro():
+    categorias = listar_categorias_financeiras()
+    linhas = [[categoria["nome"], categoria["tipo"], "Ativa"] for categoria in categorias]
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Categorias financeiras",
+        subtitulo="Categorias usadas para classificar receitas, despesas e doações.",
+        cards=[
+            card("Categorias", len(categorias)),
+            card("Receitas", sum(1 for categoria in categorias if categoria["tipo"] == "Entrada")),
+            card("Despesas", sum(1 for categoria in categorias if categoria["tipo"] == "Saida")),
+        ],
+        filtros=[],
+        cabecalhos=["Nome", "Tipo", "Status"],
+        linhas=linhas,
+        acao_url=url_for("cadastros_financeiros"),
+        acao_label="Cadastros financeiros",
+    )
+
+
+@app.route("/financeiro/centros-custo")
+@login_required
+def listar_centros_custo():
+    categorias_saida = listar_categorias_financeiras("Saida")
+    linhas = [
+        [categoria["nome"], "Saida", moeda_br(db_scalar(
+            """
+            SELECT COALESCE(SUM(l.valor), 0) AS valor
+            FROM lancamentos_financeiros l
+            WHERE l.categoria_id = %s AND l.tipo = 'Saida'
+            """,
+            (categoria["id"],),
+        ))]
+        for categoria in categorias_saida
+    ]
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Centro de custos",
+        subtitulo="Visão de custos por categoria de despesa, seguindo o agrupamento financeiro estudado.",
+        cards=[
+            card("Centros", len(categorias_saida)),
+            card("Despesas", moeda_br(gerar_metricas()["saidas"])),
+            card("Fornecedores", gerar_metricas()["fornecedores"]),
+        ],
+        filtros=[],
+        cabecalhos=["Centro", "Tipo", "Total movimentado"],
+        linhas=linhas,
+        acao_url=url_for("listar_despesas"),
+        acao_label="Ver despesas",
+    )
+
+
+@app.route("/financeiro/contas")
+@login_required
+def listar_contas_bancarias():
+    contas = db_select(
+        """
+        SELECT nome, banco, saldo_inicial, ativo
+        FROM contas_financeiras
+        ORDER BY nome
+        """
+    )
+    linhas = [
+        [conta["nome"], conta.get("banco") or "-", moeda_br(conta.get("saldo_inicial")), "Ativa" if conta.get("ativo") else "Inativa"]
+        for conta in contas
+    ]
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Contas bancárias",
+        subtitulo="Contas usadas nos lançamentos financeiros e doações.",
+        cards=[
+            card("Contas", len(contas)),
+            card("Saldo inicial", moeda_br(sum(float(conta.get("saldo_inicial") or 0) for conta in contas))),
+            card("Saldo atual", moeda_br(gerar_metricas()["saldo"])),
+        ],
+        filtros=[],
+        cabecalhos=["Conta", "Banco", "Saldo inicial", "Status"],
+        linhas=linhas,
+        acao_url=url_for("cadastros_financeiros"),
+        acao_label="Cadastros financeiros",
+    )
+
+
+@app.route("/financeiro/formas-recebimento")
+@login_required
+def listar_formas_recebimento():
+    linhas = [
+        [rotulo_tela(forma), db_scalar("SELECT COUNT(*) AS valor FROM doacoes WHERE forma_recebimento = %s", (forma,)), "Ativa"]
+        for forma in FORMAS_RECEBIMENTO
+    ]
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Formas de recebimento",
+        subtitulo="Formas utilizadas no registro de doações e entradas.",
+        cards=[
+            card("Formas", len(FORMAS_RECEBIMENTO)),
+            card("Doações recebidas", gerar_metricas()["doacoes"]),
+            card("Valor recebido", moeda_br(gerar_metricas()["doacoes_valor"])),
+        ],
+        filtros=[],
+        cabecalhos=["Forma", "Doações", "Status"],
+        linhas=linhas,
+        acao_url=url_for("listar_doacoes"),
+        acao_label="Ver doações",
+    )
+
+
+@app.route("/financeiro/formas-pagamento")
+@login_required
+def listar_formas_pagamento():
+    formas_pagamento = ["Dinheiro", "PIX", "Cartão", "Transferência", "Boleto"]
+    linhas = [[forma, "Disponível"] for forma in formas_pagamento]
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Formas de pagamento",
+        subtitulo="Formas consideradas para organização de despesas e pagamentos.",
+        cards=[
+            card("Formas", len(formas_pagamento)),
+            card("Despesas", moeda_br(gerar_metricas()["saidas"])),
+            card("Movimentações", len(listar_lancamentos_financeiros("Saida"))),
+        ],
+        filtros=[],
+        cabecalhos=["Forma", "Status"],
+        linhas=linhas,
+        acao_url=url_for("listar_despesas"),
+        acao_label="Ver despesas",
+    )
+
+
+@app.route("/ministerios/painel")
+@login_required
+def painel_ministerios():
+    metricas = gerar_metricas()
+    ministerios = listar_ministerios_db(status="Ativo")[:8]
+    return render_template(
+        "modulos/painel.html",
+        eyebrow="Ministérios",
+        titulo="Painel de ministérios",
+        subtitulo="Visão de líderes, capacidade, participantes e organização ministerial.",
+        cards=[
+            card("Ministérios ativos", metricas["ministerios"]),
+            card("Vagas", metricas["vagas"]),
+            card("Participantes", db_scalar("SELECT COUNT(*) AS valor FROM membro_ministerio WHERE ativo = 1")),
+        ],
+        atalhos=[
+            atalho("Gerenciamento", "Cadastre, edite e acompanhe ministérios.", "listar_ministerios", metricas["ministerios"]),
+            atalho("Novo ministério", "Crie um ministério com líder e dia de reunião.", "inserir_ministerio", "Novo"),
+        ],
+        blocos=[
+            bloco_lista(
+                "Ministérios ativos",
+                ["Nome", "Líder", "Dia", "Participantes", "Vagas"],
+                [[m["nome"], m.get("lider") or "-", m.get("dia_reuniao") or "-", len(m.get("participantes") or []), m.get("vagas") or 0] for m in ministerios],
+            )
+        ],
+    )
+
+
+@app.route("/celulas/painel")
+@login_required
+def painel_celulas():
+    metricas = gerar_metricas()
+    celulas = db_select(
+        """
+        SELECT c.nome, c.lider_nome, c.bairro, c.dia_reuniao,
+               COUNT(m.id) AS membros
+        FROM celulas c
+        LEFT JOIN membros m ON m.celula_id = c.id AND m.excluido_em IS NULL
+        WHERE c.excluido_em IS NULL AND c.ativo = 1
+        GROUP BY c.id
+        ORDER BY c.nome
+        LIMIT 8
+        """
+    )
+    return render_template(
+        "modulos/painel.html",
+        eyebrow="Células",
+        titulo="Painel de células",
+        subtitulo="Visão de pequenos grupos, líderes, bairros, membros e presenças.",
+        cards=[
+            card("Células ativas", metricas["celulas"]),
+            card("Presenças", metricas["presencas"]),
+            card("Ausências", metricas["ausencias"]),
+            card("Visitantes", metricas["visitantes"]),
+        ],
+        atalhos=[
+            atalho("Gerenciamento", "Cadastre e acompanhe células.", "listar_celulas", metricas["celulas"]),
+            atalho("Nova célula", "Crie uma célula com líder, bairro e horário.", "inserir_celula", "Nova"),
+            atalho("Presenças", "Registre frequência por encontro.", "listar_presencas", metricas["presencas"]),
+        ],
+        blocos=[
+            bloco_lista(
+                "Células ativas",
+                ["Nome", "Líder", "Bairro", "Dia", "Membros"],
+                [[c["nome"], c.get("lider_nome") or "-", c.get("bairro") or "-", c.get("dia_reuniao") or "-", c.get("membros") or 0] for c in celulas],
+            )
+        ],
+    )
+
+
+@app.route("/comunicacao/painel")
+@login_required
+def painel_comunicacao():
+    metricas = gerar_metricas()
+    mensagens = db_select(
+        """
+        SELECT canal, destino_tipo, assunto, status
+        FROM mensagens
+        ORDER BY criado_em DESC, id DESC
+        LIMIT 6
+        """
+    )
+    avisos = db_select(
+        """
+        SELECT titulo, categoria, status, COALESCE(publicado_em, criado_em) AS data_ref
+        FROM mural_avisos
+        ORDER BY COALESCE(publicado_em, criado_em) DESC, id DESC
+        LIMIT 6
+        """
+    )
+    return render_template(
+        "modulos/painel.html",
+        eyebrow="Comunicação",
+        titulo="Painel de comunicação",
+        subtitulo="Visão de feed, comunicados, mural, devocional e relatórios.",
+        cards=[
+            card("Mensagens", metricas["mensagens"]),
+            card("Mural ativo", metricas["mural"]),
+            card("Canais", db_scalar("SELECT COUNT(DISTINCT canal) AS valor FROM mensagens")),
+            card("Listas", db_scalar("SELECT COUNT(*) AS valor FROM comunicacao_listas WHERE ativo = 1")),
+        ],
+        atalhos=[
+            atalho("Feed", "Acompanhe avisos publicados no mural.", "listar_mural", metricas["mural"]),
+            atalho("Comunicados", "Gerencie mensagens internas, WhatsApp e e-mail.", "listar_comunicacao", metricas["mensagens"]),
+            atalho("Devocional", "Use o mural para publicar devocionais e avisos.", "listar_mural", "Abrir"),
+        ],
+        blocos=[
+            bloco_lista("Últimos comunicados", ["Canal", "Destino", "Assunto", "Status"], [[rotulo_tela(m["canal"]), rotulo_tela(m["destino_tipo"]), m["assunto"], m["status"]] for m in mensagens]),
+            bloco_lista("Feed e mural", ["Título", "Categoria", "Status", "Data"], [[a["titulo"], a.get("categoria") or "-", a["status"], data_br(a["data_ref"])] for a in avisos]),
+        ],
+    )
+
+
+@app.route("/intercessao/painel")
+@login_required
+def painel_intercessao():
+    pedidos = db_select(
+        """
+        SELECT solicitante_nome, categoria, status, oracoes, criado_em
+        FROM pedidos_oracao
+        ORDER BY criado_em DESC, id DESC
+        LIMIT 8
+        """
+    )
+    return render_template(
+        "modulos/painel.html",
+        eyebrow="Intercessão",
+        titulo="Painel de intercessão",
+        subtitulo="Visão de pedidos de oração, testemunhos, respostas e acompanhamento pastoral.",
+        cards=[
+            card("Pedidos abertos", db_scalar("SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status IN ('Pendente', 'Em oracao')")),
+            card("Respondidos", db_scalar("SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status = 'Respondido'")),
+            card("Testemunhos", db_scalar("SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status = 'Respondido'")),
+            card("Orações", db_scalar("SELECT COALESCE(SUM(oracoes), 0) AS valor FROM pedidos_oracao")),
+        ],
+        atalhos=[
+            atalho("Pedidos de oração", "Gerencie pedidos abertos, privados e arquivados.", "listar_intercessao", "Abrir"),
+            atalho("Novo pedido", "Cadastre um pedido de oração.", "inserir_intercessao", "Novo"),
+            atalho("Testemunhos", "Pedidos respondidos funcionam como base de testemunhos.", "listar_testemunhos", "Abrir"),
+        ],
+        blocos=[
+            bloco_lista("Pedidos recentes", ["Solicitante", "Categoria", "Status", "Orações", "Data"], [[p["solicitante_nome"], rotulo_tela(p.get("categoria")) if p.get("categoria") else "-", rotulo_tela(p["status"]), p["oracoes"], data_br(p["criado_em"])] for p in pedidos])
+        ],
+    )
+
+
+@app.route("/intercessao/testemunhos")
+@login_required
+def listar_testemunhos():
+    testemunhos = db_select(
+        """
+        SELECT solicitante_nome, categoria, pedido, oracoes, criado_em
+        FROM pedidos_oracao
+        WHERE status = 'Respondido'
+        ORDER BY criado_em DESC, id DESC
+        """
+    )
+    linhas = [
+        [pedido["solicitante_nome"], rotulo_tela(pedido.get("categoria")) if pedido.get("categoria") else "-", pedido["pedido"][:90], pedido["oracoes"], data_br(pedido["criado_em"])]
+        for pedido in testemunhos
+    ]
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Testemunhos",
+        subtitulo="Pedidos marcados como respondidos para acompanhamento e memória pastoral.",
+        cards=[card("Testemunhos", len(testemunhos)), card("Orações", sum(int(p["oracoes"] or 0) for p in testemunhos)), card("Pedidos abertos", db_scalar("SELECT COUNT(*) AS valor FROM pedidos_oracao WHERE status IN ('Pendente', 'Em oracao')"))],
+        filtros=[],
+        cabecalhos=["Solicitante", "Categoria", "Resumo", "Orações", "Data"],
+        linhas=linhas,
+        acao_url=url_for("inserir_intercessao"),
+        acao_label="Novo pedido",
+    )
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -922,16 +1882,16 @@ def login():
             return redirect(url_for("login"))
 
         if not validar_email(email):
-            flash("Informe um e-mail valido para acessar o sistema.", "danger")
+            flash("Informe um e-mail válido para acessar o sistema.", "danger")
             return redirect(url_for("login"))
 
         usuario = obter_usuario_por_email(email)
         if not usuario or not check_password_hash(usuario["senha_hash"], senha):
-            flash("Credenciais invalidas.", "danger")
+            flash("Credenciais inválidas.", "danger")
             return redirect(url_for("login"))
 
         if usuario["status"] != "Ativo":
-            flash("Usuario bloqueado ou inativo. Procure um administrador.", "danger")
+            flash("Usuário bloqueado ou inativo. Procure um administrador.", "danger")
             return redirect(url_for("login"))
 
         db_write("UPDATE usuarios SET ultimo_login_em = NOW() WHERE id = %s", (usuario["id"],))
@@ -950,7 +1910,7 @@ def recuperar_senha():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         if not email or not validar_email(email):
-            flash("Informe um e-mail valido para recuperacao de senha.", "danger")
+            flash("Informe um e-mail válido para recuperação de senha.", "danger")
             return redirect(url_for("recuperar_senha"))
 
         flash("Se o e-mail estiver cadastrado, as instrucoes de recuperacao serao enviadas.", "info")
@@ -959,45 +1919,61 @@ def recuperar_senha():
     return render_template("recuperar_senha.html")
 
 
-@app.route("/cadastro", methods=["GET", "POST"])
-def cadastro():
+def processar_cadastro_visitante(modo_app=False):
     if request.method == "POST":
         nome = request.form.get("nome", "").strip()
         email = request.form.get("email", "").strip().lower()
-        senha = request.form.get("senha", "").strip()
-        confirmar_senha = request.form.get("confirma_senha", "").strip()
+        telefone = request.form.get("telefone", "").strip()
+        whatsapp = request.form.get("whatsapp", "").strip()
+        interesse = request.form.get("interesse", "").strip()
+        mensagem = request.form.get("mensagem", "").strip()
 
-        if not nome or not email or not senha or not confirmar_senha:
-            flash("Por favor, preencha todos os campos.", "danger")
-            return redirect(url_for("cadastro"))
+        if not nome or not (email or telefone or whatsapp):
+            flash("Informe seu nome e pelo menos um contato.", "danger")
+            return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
 
-        if not validar_email(email):
-            flash("Informe um e-mail valido.", "danger")
-            return redirect(url_for("cadastro"))
+        if email and not validar_email(email):
+            flash("Informe um e-mail válido.", "danger")
+            return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
 
-        if len(senha) < 8:
-            flash("A senha deve ter pelo menos 8 caracteres.", "danger")
-            return redirect(url_for("cadastro"))
+        if telefone and not validar_telefone(telefone):
+            flash("Informe um telefone válido com DDD.", "danger")
+            return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
 
-        if senha != confirmar_senha:
-            flash("A confirmacao de senha nao confere.", "danger")
-            return redirect(url_for("cadastro"))
+        if whatsapp and not validar_telefone(whatsapp):
+            flash("Informe um WhatsApp válido com DDD.", "danger")
+            return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
 
-        if email_em_uso(email):
-            flash("Ja existe um usuario com este e-mail.", "danger")
-            return redirect(url_for("cadastro"))
+        if email_membro_em_uso(email):
+            flash("Já existe um visitante ou membro com este e-mail.", "danger")
+            return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
 
         try:
-            criar_usuario(nome, email, senha, "Secretaria")
+            cadastrar_visitante_app(nome, email, telefone, whatsapp, interesse, mensagem)
         except Exception as erro:
-            app.logger.error("Erro ao cadastrar usuario: %s", erro)
-            flash("Nao foi possivel cadastrar o usuario no banco.", "danger")
-            return redirect(url_for("cadastro"))
+            app.logger.error("Erro ao cadastrar visitante pelo app: %s", erro)
+            flash("Não foi possível registrar seu cadastro agora. Tente novamente em instantes.", "danger")
+            return redirect(url_for("app_usuario_cadastro" if modo_app else "cadastro"))
 
-        flash("Cadastro realizado com sucesso! Agora realize o login para acessar o sistema.", "success")
-        return redirect(url_for("login"))
+        flash("Cadastro recebido com sucesso! Você foi registrado como visitante.", "success")
+        return redirect(url_for("app_usuario_inicio"))
 
-    return render_template("cadastro.html")
+    return render_template(
+        "cadastro.html",
+        igreja=obter_igreja(),
+        layout_base="app_usuario/base.html" if modo_app else "base_publica.html",
+        modo_app=modo_app,
+    )
+
+
+@app.route("/cadastro", methods=["GET", "POST"])
+def cadastro():
+    return processar_cadastro_visitante(modo_app=False)
+
+
+@app.route("/app/cadastro", methods=["GET", "POST"])
+def app_usuario_cadastro():
+    return processar_cadastro_visitante(modo_app=True)
 
 
 @app.route("/logout")
@@ -1030,33 +2006,33 @@ def inserir_usuario():
         senha_provisoria = request.form.get("senha_provisoria", "").strip()
 
         if not nome or not email or not perfil or not senha_provisoria:
-            flash("Nome, e-mail, perfil e senha provisoria sao obrigatorios.", "danger")
+            flash("Nome, e-mail, perfil e senha provisória são obrigatórios.", "danger")
             return redirect(url_for("inserir_usuario"))
 
         if not validar_email(email):
-            flash("Informe um e-mail valido.", "danger")
+            flash("Informe um e-mail válido.", "danger")
             return redirect(url_for("inserir_usuario"))
 
         if perfil not in PERFIS_USUARIO:
-            flash("Selecione um perfil valido.", "danger")
+            flash("Selecione um perfil válido.", "danger")
             return redirect(url_for("inserir_usuario"))
 
         if len(senha_provisoria) < 8:
-            flash("A senha provisoria deve ter pelo menos 8 caracteres.", "danger")
+            flash("A senha provisória deve ter pelo menos 8 caracteres.", "danger")
             return redirect(url_for("inserir_usuario"))
 
         if email_em_uso(email):
-            flash("Ja existe um usuario com este e-mail.", "danger")
+            flash("Já existe um usuário com este e-mail.", "danger")
             return redirect(url_for("inserir_usuario"))
 
         try:
             criar_usuario(nome, email, senha_provisoria, perfil)
         except Exception as erro:
-            app.logger.error("Erro ao inserir usuario: %s", erro)
-            flash("Nao foi possivel salvar o usuario no banco.", "danger")
+            app.logger.error("Erro ao inserir usuário: %s", erro)
+            flash("Não foi possível salvar o usuário no banco.", "danger")
             return redirect(url_for("inserir_usuario"))
 
-        flash("Usuario cadastrado com sucesso. Informe a senha provisoria para o primeiro acesso.", "success")
+        flash("Usuário cadastrado com sucesso. Informe a senha provisória para o primeiro acesso.", "success")
         return redirect(url_for("listar_usuarios"))
 
     return render_template("usuarios/inserir_usuario.html", perfis=PERFIS_USUARIO)
@@ -1067,7 +2043,7 @@ def inserir_usuario():
 def editar_usuario(usuario_id):
     usuario = obter_usuario(usuario_id)
     if not usuario:
-        flash("Usuario nao encontrado.", "danger")
+        flash("Usuário não encontrado.", "danger")
         return redirect(url_for("listar_usuarios"))
 
     if request.method == "POST":
@@ -1085,17 +2061,17 @@ def editar_usuario(usuario_id):
             return redirect(url_for("editar_usuario", usuario_id=usuario_id))
 
         if email_em_uso(email, usuario_id):
-            flash("Ja existe outro usuario com este e-mail.", "danger")
+            flash("Já existe outro usuário com este e-mail.", "danger")
             return redirect(url_for("editar_usuario", usuario_id=usuario_id))
 
         try:
             atualizar_usuario(usuario_id, nome, email, perfil, status)
         except Exception as erro:
-            app.logger.error("Erro ao editar usuario: %s", erro)
-            flash("Nao foi possivel atualizar o usuario no banco.", "danger")
+            app.logger.error("Erro ao editar usuário: %s", erro)
+            flash("Não foi possível atualizar o usuário no banco.", "danger")
             return redirect(url_for("editar_usuario", usuario_id=usuario_id))
 
-        flash("Usuario atualizado com sucesso.", "success")
+        flash("Usuário atualizado com sucesso.", "success")
         return redirect(url_for("listar_usuarios"))
 
     return render_template("usuarios/editar_usuario.html", usuario=usuario, perfis=PERFIS_USUARIO, status_opcoes=STATUS_USUARIO)
@@ -1106,11 +2082,11 @@ def editar_usuario(usuario_id):
 def excluir_usuario(usuario_id):
     usuario = obter_usuario(usuario_id)
     if not usuario:
-        flash("Usuario nao encontrado.", "danger")
+        flash("Usuário não encontrado.", "danger")
         return redirect(url_for("listar_usuarios"))
 
     db_write("UPDATE usuarios SET ativo = 0, excluido_em = NOW() WHERE id = %s", (usuario_id,))
-    flash("Usuario inativado por exclusao logica.", "success")
+    flash("Usuário inativado por exclusão lógica.", "success")
     return redirect(url_for("listar_usuarios"))
 
 
@@ -1129,7 +2105,7 @@ def listar_membros():
         status_atual=situacao,
         status_opcoes=SITUACOES_MEMBRO,
         titulo_lista="Membros",
-        descricao_lista="Gerencie cadastros, status, contato, ministerios e historico espiritual.",
+        descricao_lista="Gerencie cadastros, status, contato, ministérios e histórico espiritual.",
         novo_url=url_for("inserir_membro"),
         novo_label="Cadastrar membro",
         modo_visitantes=False,
@@ -1203,11 +2179,11 @@ def inserir_familia():
         membros_ids = request.form.getlist("membros")
 
         if not nome:
-            flash("Nome da familia e obrigatorio.", "danger")
+            flash("Nome da família é obrigatório.", "danger")
             return redirect(url_for("inserir_familia"))
 
         if telefone and not validar_telefone(telefone):
-            flash("Informe um telefone valido com DDD.", "danger")
+            flash("Informe um telefone válido com DDD.", "danger")
             return redirect(url_for("inserir_familia"))
 
         membros_vinculados = {int(membro_id) for membro_id in membros_ids if membro_id.isdigit()}
@@ -1248,7 +2224,7 @@ def inserir_familia():
             finally:
                 cursor.close()
 
-        flash("Familia cadastrada com sucesso.", "success")
+        flash("Família cadastrada com sucesso.", "success")
         return redirect(url_for("listar_familias"))
 
     return render_template("familias/inserir_familia.html", membros=membros)
@@ -1258,7 +2234,7 @@ def inserir_familia():
 @login_required
 def excluir_familia(familia_id):
     db_write("UPDATE familias SET ativo = 0, excluido_em = NOW() WHERE id = %s", (familia_id,))
-    flash("Familia removida da listagem por exclusao logica.", "success")
+    flash("Família removida da listagem por exclusão lógica.", "success")
     return redirect(url_for("listar_familias"))
 
 
@@ -1279,7 +2255,7 @@ def inserir_membro():
             inserir_membro_db(dados)
         except Exception as erro:
             app.logger.error("Erro ao inserir membro: %s", erro)
-            flash("Nao foi possivel salvar a pessoa no banco.", "danger")
+            flash("Não foi possível salvar a pessoa no banco.", "danger")
             return redirect(url_for("inserir_membro", situacao=situacao_padrao))
 
         flash("Pessoa cadastrada com sucesso!", "success")
@@ -1300,7 +2276,7 @@ def inserir_membro():
 def editar_membro(membro_id):
     membro = obter_membro(membro_id)
     if not membro:
-        flash("Membro nao encontrado.", "danger")
+        flash("Membro não encontrado.", "danger")
         return redirect(url_for("listar_membros"))
 
     if request.method == "POST":
@@ -1313,7 +2289,7 @@ def editar_membro(membro_id):
             atualizar_membro_db(membro_id, dados)
         except Exception as erro:
             app.logger.error("Erro ao editar membro: %s", erro)
-            flash("Nao foi possivel atualizar a pessoa no banco.", "danger")
+            flash("Não foi possível atualizar a pessoa no banco.", "danger")
             return redirect(url_for("editar_membro", membro_id=membro_id))
 
         flash("Cadastro atualizado com sucesso.", "success")
@@ -1334,7 +2310,7 @@ def editar_membro(membro_id):
 def inativar_membro(membro_id):
     membro = obter_membro(membro_id)
     if not membro:
-        flash("Membro nao encontrado.", "danger")
+        flash("Membro não encontrado.", "danger")
         return redirect(url_for("listar_membros"))
 
     db_write("UPDATE membros SET status = 'Inativo' WHERE id = %s AND excluido_em IS NULL", (membro_id,))
@@ -1347,14 +2323,14 @@ def inativar_membro(membro_id):
 def excluir_membro(membro_id):
     membro = obter_membro(membro_id)
     if not membro:
-        flash("Membro nao encontrado.", "danger")
+        flash("Membro não encontrado.", "danger")
         return redirect(url_for("listar_membros"))
 
     db_write(
         "UPDATE membros SET status = 'Inativo', excluido_em = NOW() WHERE id = %s",
         (membro_id,),
     )
-    flash("Membro removido da listagem por exclusao logica.", "success")
+    flash("Membro removido da listagem por exclusão lógica.", "success")
     return redirect(url_for("listar_membros"))
 
 
@@ -1363,7 +2339,7 @@ def excluir_membro(membro_id):
 def historico_membro(membro_id):
     membro = obter_membro(membro_id, incluir_historico=True)
     if not membro:
-        flash("Membro nao encontrado.", "danger")
+        flash("Membro não encontrado.", "danger")
         return redirect(url_for("listar_membros"))
 
     if request.method == "POST":
@@ -1372,7 +2348,7 @@ def historico_membro(membro_id):
         descricao = request.form.get("descricao", "").strip()
 
         if tipo not in TIPOS_HISTORICO or not data or not descricao:
-            flash("Tipo, data e descricao sao obrigatorios para registrar o historico.", "danger")
+            flash("Tipo, data e descrição são obrigatórios para registrar o histórico.", "danger")
             return redirect(url_for("historico_membro", membro_id=membro_id))
 
         db_write(
@@ -1383,7 +2359,7 @@ def historico_membro(membro_id):
             """,
             (membro_id, tipo, data, descricao, session.get("usuario_id")),
         )
-        flash("Historico espiritual registrado com sucesso.", "success")
+        flash("Histórico espiritual registrado com sucesso.", "success")
         return redirect(url_for("historico_membro", membro_id=membro_id))
 
     return render_template("membros/historico_membro.html", membro=membro, tipos_historico=TIPOS_HISTORICO)
@@ -1418,21 +2394,21 @@ def inserir_ministerio():
         vagas_raw = request.form.get("vagas", "0").strip()
 
         if not nome or not lider or not dia_reuniao or not vagas_raw:
-            flash("Nome, lider, dia de reuniao e vagas sao obrigatorios.", "danger")
+            flash("Nome, líder, dia de reunião e vagas são obrigatórios.", "danger")
             return redirect(url_for("inserir_ministerio"))
 
         if dia_reuniao not in DIAS_REUNIAO:
-            flash("Selecione um dia de reuniao valido.", "danger")
+            flash("Selecione um dia de reunião válido.", "danger")
             return redirect(url_for("inserir_ministerio"))
 
         try:
             vagas = int(vagas_raw)
         except ValueError:
-            flash("Informe uma quantidade de vagas valida.", "danger")
+            flash("Informe uma quantidade de vagas válida.", "danger")
             return redirect(url_for("inserir_ministerio"))
 
         if vagas < 0:
-            flash("Vagas nao pode ser negativo.", "danger")
+            flash("O número de vagas não pode ser negativo.", "danger")
             return redirect(url_for("inserir_ministerio"))
 
         db_write(
@@ -1442,7 +2418,7 @@ def inserir_ministerio():
             """,
             (nome, lider, dia_reuniao, vagas),
         )
-        flash("Ministerio cadastrado com sucesso!", "success")
+        flash("Ministério cadastrado com sucesso!", "success")
         return redirect(url_for("listar_ministerios"))
 
     return render_template("ministerios/inserir_ministerio.html", dias=DIAS_REUNIAO)
@@ -1453,7 +2429,7 @@ def inserir_ministerio():
 def editar_ministerio(ministerio_id):
     ministerio = obter_ministerio(ministerio_id)
     if not ministerio:
-        flash("Ministerio nao encontrado.", "danger")
+        flash("Ministério não encontrado.", "danger")
         return redirect(url_for("listar_ministerios"))
 
     if request.method == "POST":
@@ -1470,7 +2446,7 @@ def editar_ministerio(ministerio_id):
         try:
             vagas = int(vagas_raw)
         except ValueError:
-            flash("Informe uma quantidade de vagas valida.", "danger")
+            flash("Informe uma quantidade de vagas válida.", "danger")
             return redirect(url_for("editar_ministerio", ministerio_id=ministerio_id))
 
         if dia_reuniao not in DIAS_REUNIAO or vagas < 0 or status not in STATUS_MINISTERIO:
@@ -1485,7 +2461,7 @@ def editar_ministerio(ministerio_id):
             """,
             (nome, lider, dia_reuniao, vagas, 1 if status == "Ativo" else 0, ministerio_id),
         )
-        flash("Ministerio atualizado com sucesso.", "success")
+        flash("Ministério atualizado com sucesso.", "success")
         return redirect(url_for("listar_ministerios"))
 
     return render_template("ministerios/editar_ministerio.html", ministerio=ministerio, dias=DIAS_REUNIAO, status_opcoes=STATUS_MINISTERIO)
@@ -1496,11 +2472,11 @@ def editar_ministerio(ministerio_id):
 def excluir_ministerio(ministerio_id):
     ministerio = obter_ministerio(ministerio_id)
     if not ministerio:
-        flash("Ministerio nao encontrado.", "danger")
+        flash("Ministério não encontrado.", "danger")
         return redirect(url_for("listar_ministerios"))
 
     db_write("UPDATE ministerios SET ativo = 0, excluido_em = NOW() WHERE id = %s", (ministerio_id,))
-    flash("Ministerio inativado por exclusao logica.", "success")
+    flash("Ministério inativado por exclusão lógica.", "success")
     return redirect(url_for("listar_ministerios"))
 
 
@@ -1540,11 +2516,11 @@ def inserir_celula():
         horario = request.form.get("horario", "").strip()
 
         if not nome or not lider or not bairro or not dia_reuniao:
-            flash("Nome, lider, bairro e dia de reuniao sao obrigatorios.", "danger")
+            flash("Nome, líder, bairro e dia de reunião são obrigatórios.", "danger")
             return redirect(url_for("inserir_celula"))
 
         if dia_reuniao not in DIAS_REUNIAO:
-            flash("Selecione um dia de reuniao valido.", "danger")
+            flash("Selecione um dia de reunião válido.", "danger")
             return redirect(url_for("inserir_celula"))
 
         db_write(
@@ -1554,7 +2530,7 @@ def inserir_celula():
             """,
             (nome, lider, bairro, valor_ou_none(endereco), dia_reuniao, valor_ou_none(horario)),
         )
-        flash("Celula cadastrada com sucesso.", "success")
+        flash("Célula cadastrada com sucesso.", "success")
         return redirect(url_for("listar_celulas"))
 
     return render_template("celulas/inserir_celula.html", dias=DIAS_REUNIAO)
@@ -1588,25 +2564,25 @@ def listar_presencas():
             data_br(presenca["data_presenca"]),
             presenca["tipo"],
             presenca.get("referencia_nome") or "-",
-            presenca.get("membro_nome") or "Visitante/Nao vinculado",
+            presenca.get("membro_nome") or "Visitante/Não vinculado",
             "Presente" if presenca["presente"] else "Ausente",
         ]
         for presenca in presencas
     ]
     return render_template(
         "modulos/resumo.html",
-        titulo="Controle de presenca",
-        subtitulo="Registre e filtre presenca por culto, evento, celula, data e membro.",
+        titulo="Controle de presença",
+        subtitulo="Registre e filtre presença por culto, evento, célula, data e membro.",
         cards=[
-            {"label": "Presencas", "valor": gerar_metricas()["presencas"]},
-            {"label": "Ausencias", "valor": gerar_metricas()["ausencias"]},
-            {"label": "Baixa frequencia", "valor": 0},
+            {"label": "Presenças", "valor": gerar_metricas()["presencas"]},
+            {"label": "Ausências", "valor": gerar_metricas()["ausencias"]},
+            {"label": "Baixa frequência", "valor": 0},
         ],
         filtros=[
             {"name": "data", "label": "Data", "type": "date", "value": data},
             {"name": "membro", "label": "Membro", "type": "search", "value": membro_busca, "placeholder": "Buscar membro"},
         ],
-        cabecalhos=["ID", "Data", "Tipo", "Referencia", "Membro", "Status"],
+        cabecalhos=["ID", "Data", "Tipo", "Referência", "Membro", "Status"],
         linhas=linhas,
         acao_url=url_for("inserir_presenca"),
         acao_label="Registrar presença",
@@ -1626,7 +2602,7 @@ def inserir_presenca():
         presente = 1 if request.form.get("presente") else 0
 
         if not data_presenca or tipo not in ["Culto", "Evento", "Celula"] or not referencia_nome:
-            flash("Data, tipo e referencia sao obrigatorios.", "danger")
+            flash("Data, tipo e referência são obrigatórios.", "danger")
             return redirect(url_for("inserir_presenca"))
 
         db_write(
@@ -1636,7 +2612,7 @@ def inserir_presenca():
             """,
             (int(membro_id) if membro_id else None, tipo, referencia_nome, data_presenca, presente),
         )
-        flash("Presenca registrada com sucesso.", "success")
+        flash("Presença registrada com sucesso.", "success")
         return redirect(url_for("listar_presencas"))
 
     return render_template("presencas/inserir_presenca.html", membros=membros)
@@ -1679,11 +2655,11 @@ def inserir_evento():
         banner_path = salvar_banner_evento(request.files.get("banner"))
 
         if not nome or not data_inicio or not local:
-            flash("Nome, data e local sao obrigatorios.", "danger")
+            flash("Nome, data e local são obrigatórios.", "danger")
             return redirect(url_for("inserir_evento"))
 
         if status not in ["Agendado", "Realizado", "Cancelado"]:
-            flash("Selecione um status valido.", "danger")
+            flash("Selecione um status válido.", "danger")
             return redirect(url_for("inserir_evento"))
 
         db_write(
@@ -1710,23 +2686,7 @@ def inserir_evento():
 @app.route("/financeiro/listar")
 @login_required
 def listar_financeiro():
-    lancamentos = db_select(
-        """
-        SELECT l.id, l.data_lancamento, l.tipo, c.nome AS categoria,
-               m.nome AS membro, f.nome AS fornecedor, cf.nome AS conta, l.valor
-        FROM lancamentos_financeiros l
-        JOIN categorias_financeiras c ON c.id = l.categoria_id
-        JOIN contas_financeiras cf ON cf.id = l.conta_id
-        LEFT JOIN membros m ON m.id = l.membro_id
-        LEFT JOIN fornecedores f ON f.id = l.fornecedor_id
-        ORDER BY l.data_lancamento DESC, l.id DESC
-        """
-    )
-    return render_template(
-        "financeiro/listar_financeiro.html",
-        lancamentos=lancamentos,
-        metricas=gerar_metricas(),
-    )
+    return renderizar_lancamentos_financeiros("", "Movimentações", "Histórico geral de entradas e saídas financeiras.")
 
 
 @app.route("/financeiro/lancamentos/inserir", methods=["GET", "POST"])
@@ -1748,17 +2708,17 @@ def inserir_lancamento_financeiro():
         data_lancamento = request.form.get("data_lancamento", "").strip()
 
         if tipo not in ["Entrada", "Saida"] or not categoria_id or not conta_id or not valor_raw or not data_lancamento:
-            flash("Tipo, categoria, conta, valor e data sao obrigatorios.", "danger")
+            flash("Tipo, categoria, conta, valor e data são obrigatórios.", "danger")
             return redirect(url_for("inserir_lancamento_financeiro"))
 
         try:
             valor = float(valor_raw)
         except ValueError:
-            flash("Informe um valor valido.", "danger")
+            flash("Informe um valor válido.", "danger")
             return redirect(url_for("inserir_lancamento_financeiro"))
 
         if valor < 0:
-            flash("Valor nao pode ser negativo.", "danger")
+            flash("Valor não pode ser negativo.", "danger")
             return redirect(url_for("inserir_lancamento_financeiro"))
 
         db_write(
@@ -1779,7 +2739,7 @@ def inserir_lancamento_financeiro():
                 session.get("usuario_id"),
             ),
         )
-        flash("Lancamento financeiro cadastrado com sucesso.", "success")
+        flash("Lançamento financeiro cadastrado com sucesso.", "success")
         return redirect(url_for("listar_financeiro"))
 
     return render_template(
@@ -1827,15 +2787,15 @@ def inserir_fornecedor():
         observacoes = request.form.get("observacoes", "").strip()
 
         if not nome:
-            flash("Nome do fornecedor e obrigatorio.", "danger")
+            flash("Nome do fornecedor é obrigatório.", "danger")
             return redirect(url_for("inserir_fornecedor"))
 
         if telefone and not validar_telefone(telefone):
-            flash("Informe um telefone valido com DDD.", "danger")
+            flash("Informe um telefone válido com DDD.", "danger")
             return redirect(url_for("inserir_fornecedor"))
 
         if email and not validar_email(email):
-            flash("Informe um e-mail valido.", "danger")
+            flash("Informe um e-mail válido.", "danger")
             return redirect(url_for("inserir_fornecedor"))
 
         db_write(
@@ -1862,7 +2822,7 @@ def inserir_fornecedor():
 @login_required
 def excluir_fornecedor(fornecedor_id):
     db_write("UPDATE fornecedores SET ativo = 0, excluido_em = NOW() WHERE id = %s", (fornecedor_id,))
-    flash("Fornecedor removido da listagem por exclusao logica.", "success")
+    flash("Fornecedor removido da listagem por exclusão lógica.", "success")
     return redirect(url_for("listar_fornecedores"))
 
 
@@ -1902,7 +2862,7 @@ def receber_doacao(doacao_id):
         (doacao_id,),
     )
     if not doacao:
-        flash("Doacao pendente nao encontrada.", "danger")
+        flash("Doação pendente não encontrada.", "danger")
         return redirect(url_for("listar_doacoes"))
 
     with get_connection() as connection:
@@ -1918,7 +2878,7 @@ def receber_doacao(doacao_id):
                     doacao["categoria_id"],
                     doacao["conta_id"],
                     doacao["membro_id"],
-                    f"Doacao - {doacao['tipo']} - {doacao['doador_nome']}",
+                    f"Doação - {doacao['tipo']} - {doacao['doador_nome']}",
                     doacao["valor"],
                     doacao["data_doacao"],
                     session.get("usuario_id"),
@@ -1981,17 +2941,17 @@ def inserir_doacao():
             return redirect(url_for("inserir_doacao"))
 
         if not categoria_id or not conta_id or not valor_raw or not data_doacao:
-            flash("Categoria, conta, valor e data sao obrigatorios.", "danger")
+            flash("Categoria, conta, valor e data são obrigatórios.", "danger")
             return redirect(url_for("inserir_doacao"))
 
         try:
             valor = float(valor_raw)
         except ValueError:
-            flash("Informe um valor valido.", "danger")
+            flash("Informe um valor válido.", "danger")
             return redirect(url_for("inserir_doacao"))
 
         if valor <= 0:
-            flash("O valor da doacao precisa ser maior que zero.", "danger")
+            flash("O valor da doação precisa ser maior que zero.", "danger")
             return redirect(url_for("inserir_doacao"))
 
         membro_id_db = int(membro_id) if membro_id else None
@@ -2104,7 +3064,7 @@ def inserir_mensagem():
             return redirect(url_for("inserir_mensagem"))
 
         if not assunto or not corpo:
-            flash("Assunto e mensagem sao obrigatorios.", "danger")
+            flash("Assunto e mensagem são obrigatórios.", "danger")
             return redirect(url_for("inserir_mensagem"))
 
         db_write(
@@ -2164,11 +3124,11 @@ def inserir_mural():
         imagem_path = salvar_imagem_mural(request.files.get("imagem"))
 
         if not titulo or not conteudo:
-            flash("Titulo e conteudo sao obrigatorios.", "danger")
+            flash("Título e conteúdo são obrigatórios.", "danger")
             return redirect(url_for("inserir_mural"))
 
         if status not in STATUS_MURAL:
-            flash("Selecione um status valido.", "danger")
+            flash("Selecione um status válido.", "danger")
             return redirect(url_for("inserir_mural"))
 
         db_write(
@@ -2241,11 +3201,11 @@ def inserir_intercessao():
         privado = 1 if request.form.get("privado") else 0
 
         if not solicitante_nome or not pedido:
-            flash("Solicitante e pedido de oracao sao obrigatorios.", "danger")
+            flash("Solicitante e pedido de oração são obrigatórios.", "danger")
             return redirect(url_for("inserir_intercessao"))
 
         if categoria and categoria not in ORACAO_CATEGORIAS:
-            flash("Selecione uma categoria valida.", "danger")
+            flash("Selecione uma categoria válida.", "danger")
             return redirect(url_for("inserir_intercessao"))
 
         db_write(
@@ -2261,7 +3221,7 @@ def inserir_intercessao():
                 privado,
             ),
         )
-        flash("Pedido de oracao cadastrado.", "success")
+        flash("Pedido de oração cadastrado.", "success")
         return redirect(url_for("listar_intercessao"))
 
     return render_template("intercessao/inserir_intercessao.html", categorias=ORACAO_CATEGORIAS)
@@ -2279,7 +3239,7 @@ def orar_intercessao(pedido_id):
         """,
         (pedido_id,),
     )
-    flash("Oracao registrada no pedido.", "success")
+    flash("Oração registrada no pedido.", "success")
     return redirect(url_for("listar_intercessao"))
 
 
@@ -2314,7 +3274,7 @@ def listar_relatorios():
 @login_required
 def exportar_relatorio_excel():
     linhas = montar_linhas_relatorio()
-    html = ["<table><tr><th>Relatorio</th><th>Modulo</th><th>Indicador</th><th>Status</th></tr>"]
+    html = ["<table><tr><th>Relatório</th><th>Módulo</th><th>Indicador</th><th>Status</th></tr>"]
     html.extend("<tr>" + "".join(f"<td>{valor}</td>" for valor in linha) + "</tr>" for linha in linhas)
     html.append("</table>")
     return Response(
@@ -2327,7 +3287,7 @@ def exportar_relatorio_excel():
 @app.route("/relatorios/exportar/pdf")
 @login_required
 def exportar_relatorio_pdf():
-    conteudo = pdf_simples("Relatorios - Sistema de Membresia", montar_linhas_relatorio())
+    conteudo = pdf_simples("Relatórios - Sistema de Membresia", montar_linhas_relatorio())
     return Response(
         conteudo,
         headers={"Content-Disposition": "attachment; filename=relatorios_membresia.pdf"},
@@ -2347,7 +3307,7 @@ def listar_configuracoes():
             endereco = request.form.get("endereco", "").strip()
 
             if not nome:
-                flash("Nome da igreja e obrigatorio.", "danger")
+                flash("Nome da igreja é obrigatório.", "danger")
                 return redirect(url_for("listar_configuracoes"))
 
             igreja_atual = db_one("SELECT id FROM igrejas ORDER BY id LIMIT 1")
@@ -2372,14 +3332,23 @@ def listar_configuracoes():
             flash("Dados da igreja atualizados.", "success")
 
         elif acao == "parametros":
-            salvar_config("paginacao.tamanho_padrao", request.form.get("paginacao", "20"), "Quantidade padrao de registros por pagina")
-            salvar_config("frequencia.baixa.percentual", request.form.get("frequencia", "50"), "Percentual minimo de presenca mensal antes de alerta")
-            salvar_config("backup.agendamento", request.form.get("backup", "Diario as 02:00"), "Rotina recomendada de backup do banco MySQL")
-            flash("Parametros atualizados.", "success")
+            salvar_config("paginacao.tamanho_padrao", request.form.get("paginacao", "20"), "Quantidade padrão de registros por página")
+            salvar_config("frequencia.baixa.percentual", request.form.get("frequencia", "50"), "Percentual mínimo de presença mensal antes de alerta")
+            salvar_config("backup.agendamento", request.form.get("backup", "Diário às 02:00"), "Rotina recomendada de backup do banco MySQL")
+            flash("Parâmetros atualizados.", "success")
+
+        elif acao == "app_usuario":
+            salvar_config("programacao.domingo", request.form.get("programacao_domingo", ""), "Programação fixa de domingo exibida no app do usuário")
+            salvar_config("programacao.quarta", request.form.get("programacao_quarta", ""), "Programação fixa de quarta exibida no app do usuário")
+            salvar_config("programacao.celulas", request.form.get("programacao_celulas", ""), "Programação de células exibida no app do usuário")
+            salvar_config("doacao.pix", request.form.get("doacao_pix", ""), "Chave PIX exibida no app do usuário")
+            salvar_config("doacao.banco", request.form.get("doacao_banco", ""), "Dados bancários exibidos no app do usuário")
+            salvar_config("doacao.mensagem", request.form.get("doacao_mensagem", ""), "Mensagem de contribuição exibida no app do usuário")
+            flash("Informações do app do usuário atualizadas.", "success")
 
         elif acao == "backup":
             salvar_config("backup.ultimo", datetime.now().strftime("%d/%m/%Y %H:%M"), "Ultimo backup logico registrado")
-            flash("Backup logico registrado nas configuracoes.", "success")
+            flash("Backup lógico registrado nas configurações.", "success")
 
         return redirect(url_for("listar_configuracoes"))
 
@@ -2396,9 +3365,175 @@ def listar_configuracoes():
         configuracoes=configuracoes,
         paginacao=obter_config("paginacao.tamanho_padrao", "20"),
         frequencia=obter_config("frequencia.baixa.percentual", "50"),
-        backup=obter_config("backup.agendamento", "Diario as 02:00"),
+        backup=obter_config("backup.agendamento", "Diário às 02:00"),
         ultimo_backup=obter_config("backup.ultimo", "-"),
+        programacao_domingo=obter_config("programacao.domingo", "Culto de celebracao"),
+        programacao_quarta=obter_config("programacao.quarta", "Encontro de oração e ensino"),
+        programacao_celulas=obter_config("programacao.celulas", "Durante a semana, conforme cada bairro"),
+        doacao_pix=obter_config("doacao.pix", ""),
+        doacao_banco=obter_config("doacao.banco", ""),
+        doacao_mensagem=obter_config("doacao.mensagem", "Contribua com alegria e acompanhe a secretaria para obter comprovantes."),
         perfis_total=db_scalar("SELECT COUNT(*) AS valor FROM perfis", default=0),
+    )
+
+
+@app.route("/configuracoes/igreja")
+@login_required
+def configuracoes_igreja():
+    igreja = obter_igreja()
+    linhas = [
+        ["Nome", igreja.get("nome") or "-"],
+        ["E-mail", igreja.get("email") or "-"],
+        ["Telefone", igreja.get("telefone") or "-"],
+        ["Endereço", igreja.get("endereco") or "-"],
+    ]
+    return renderizar_resumo_configuracao(
+        "Igreja",
+        "Dados institucionais usados no sistema.",
+        [card("Igreja", igreja.get("nome") or "-"), card("Usuários", gerar_metricas()["usuarios_ativos"]), card("Membros", gerar_metricas()["membros_ativos"])],
+        ["Campo", "Valor"],
+        linhas,
+    )
+
+
+@app.route("/configuracoes/historia")
+@login_required
+def configuracoes_historia():
+    linhas = [
+        ["História da igreja", obter_config("igreja.historia", "Não cadastrada")],
+        ["Missão", obter_config("igreja.missao", "Não cadastrada")],
+        ["Visão", obter_config("igreja.visao", "Não cadastrada")],
+        ["Valores", obter_config("igreja.valores", "Não cadastrados")],
+    ]
+    return renderizar_resumo_configuracao(
+        "História",
+        "Informações institucionais da igreja para evolução do módulo público e administrativo.",
+        [card("Campos", len(linhas)), card("Igreja", obter_config("igreja.nome", "Igreja Viva")), card("Status", "Base")],
+        ["Informação", "Valor"],
+        linhas,
+    )
+
+
+@app.route("/configuracoes/informacoes")
+@login_required
+def configuracoes_informacoes():
+    linhas = db_select(
+        """
+        SELECT chave, valor
+        FROM configuracoes_sistema
+        WHERE chave LIKE 'igreja.%'
+        ORDER BY chave
+        """
+    )
+    return renderizar_resumo_configuracao(
+        "Informações",
+        "Informações gerais gravadas na configuração da igreja.",
+        [card("Registros", len(linhas)), card("Configurações", db_scalar("SELECT COUNT(*) AS valor FROM configuracoes_sistema")), card("Igreja", obter_config("igreja.nome", "Igreja Viva"))],
+        ["Chave", "Valor"],
+        [[linha["chave"], linha.get("valor") or "-"] for linha in linhas],
+    )
+
+
+@app.route("/configuracoes/programacao")
+@login_required
+def configuracoes_programacao():
+    eventos = db_select(
+        """
+        SELECT nome, data_inicio, local, status
+        FROM eventos
+        ORDER BY data_inicio DESC, id DESC
+        LIMIT 12
+        """
+    )
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Programação",
+        subtitulo="Eventos cadastrados que compõem a programação da igreja.",
+        cards=[
+            card("Eventos", gerar_metricas()["eventos"]),
+            card("Agendados", db_scalar("SELECT COUNT(*) AS valor FROM eventos WHERE status = 'Agendado'")),
+            card("Realizados", db_scalar("SELECT COUNT(*) AS valor FROM eventos WHERE status = 'Realizado'")),
+        ],
+        filtros=[],
+        cabecalhos=["Evento", "Data", "Local", "Status"],
+        linhas=[[evento["nome"], data_br(evento["data_inicio"]), evento.get("local") or "-", evento["status"]] for evento in eventos],
+        acao_url=url_for("inserir_evento"),
+        acao_label="Novo evento",
+    )
+
+
+@app.route("/configuracoes/permissoes")
+@login_required
+def configuracoes_permissoes():
+    linhas = db_select(
+        """
+        SELECT p.nome, p.descricao, COUNT(pp.permissao_id) AS permissoes
+        FROM perfis p
+        LEFT JOIN perfil_permissao pp ON pp.perfil_id = p.id
+        GROUP BY p.id
+        ORDER BY p.nome
+        """
+    )
+    return render_template(
+        "modulos/resumo.html",
+        titulo="Permissões de acesso",
+        subtitulo="Perfis e permissões cadastrados para controle de acesso administrativo.",
+        cards=[
+            card("Perfis", len(linhas)),
+            card("Usuários ativos", gerar_metricas()["usuarios_ativos"]),
+            card("Permissões", db_scalar("SELECT COUNT(*) AS valor FROM permissoes")),
+        ],
+        filtros=[],
+        cabecalhos=["Perfil", "Descrição", "Permissões"],
+        linhas=[[linha["nome"], linha.get("descricao") or "-", linha.get("permissoes") or 0] for linha in linhas],
+        acao_url=url_for("listar_usuarios"),
+        acao_label="Gerenciar usuários",
+    )
+
+
+@app.route("/configuracoes/app")
+@login_required
+def configuracoes_app():
+    linhas = [
+        ["Frente do usuário", url_for("app_usuario_inicio")],
+        ["Programação domingo", obter_config("programacao.domingo", "Culto de celebração")],
+        ["Programação quarta", obter_config("programacao.quarta", "Encontro de oração e ensino")],
+        ["Programação células", obter_config("programacao.celulas", "Durante a semana, conforme cada bairro")],
+        ["Chave PIX", obter_config("doacao.pix", "Não cadastrada")],
+        ["Dados bancários", obter_config("doacao.banco", "Não cadastrados")],
+        ["Mensagem de doação", obter_config("doacao.mensagem", "Contribua com alegria e acompanhe a secretaria para obter comprovantes.")],
+        ["Registros por página", obter_config("paginacao.tamanho_padrao", "20")],
+        ["Baixa frequência", f"{obter_config('frequencia.baixa.percentual', '50')}%"],
+        ["Backup", obter_config("backup.agendamento", "Diário às 02:00")],
+        ["Último backup", obter_config("backup.ultimo", "-")],
+    ]
+    return renderizar_resumo_configuracao(
+        "App",
+        "Parâmetros da aplicação administrativa e do app público do usuário.",
+        [card("Parâmetros", len(linhas)), card("App usuário", "Ativo"), card("Status", "Ativo")],
+        ["Parâmetro", "Valor"],
+        linhas,
+    )
+
+
+@app.route("/configuracoes/modulos")
+@login_required
+def configuracoes_modulos():
+    metricas = gerar_metricas()
+    modulos = [
+        ["Financeiro", "Ativo", moeda_br(metricas["saldo"])],
+        ["Pessoal", "Ativo", metricas["membros_ativos"]],
+        ["Ministérios", "Ativo", metricas["ministerios"]],
+        ["Células", "Ativo", metricas["celulas"]],
+        ["Comunicação", "Ativo", metricas["mensagens"]],
+        ["Intercessão", "Ativo", metricas["pedidos_oracao"]],
+    ]
+    return renderizar_resumo_configuracao(
+        "Módulos",
+        "Visão dos módulos ativos no sistema e seus principais indicadores.",
+        [card("Módulos", len(modulos)), card("Usuários", metricas["usuarios_ativos"]), card("Status", "Ativo")],
+        ["Módulo", "Status", "Indicador"],
+        modulos,
     )
 
 

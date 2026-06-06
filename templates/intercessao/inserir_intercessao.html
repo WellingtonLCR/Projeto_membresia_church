@@ -1,15 +1,14 @@
 {% extends "base.html" %}
 
-{% block titulo %}Inserir Pedido - Painel{% endblock %}
+{% block titulo %}Inserir pedido • Painel{% endblock %}
 
 {% block conteudo %}
 <div class="page-header mb-4">
     <div>
         <span class="eyebrow">Cuidado</span>
-        <h1 class="h2 mb-1">Inserir pedido de oracao</h1>
-        <p class="text-muted mb-0">Registre o pedido para acompanhamento da equipe de intercessao.</p>
+        <h1 class="h2 mb-1">Inserir pedido de oração</h1>
+        <p class="text-muted mb-0">Registre o pedido para acompanhamento da equipe de intercessão.</p>
     </div>
-    <a href="{{ url_for('listar_intercessao') }}" class="btn btn-outline-secondary">Voltar</a>
 </div>
 
 <form method="post" class="card form-card">
@@ -28,7 +27,7 @@
                 <select class="form-select" id="categoria" name="categoria">
                     <option value="">Sem categoria</option>
                     {% for categoria in categorias %}
-                    <option value="{{ categoria }}">{{ categoria }}</option>
+                    <option value="{{ categoria }}">{{ categoria|rotulo }}</option>
                     {% endfor %}
                 </select>
             </div>

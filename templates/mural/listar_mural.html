@@ -1,17 +1,16 @@
 {% extends "base.html" %}
 
-{% block titulo %}Mural - Painel{% endblock %}
+{% block titulo %}Mural • Painel{% endblock %}
 
 {% block conteudo %}
 <div class="page-header mb-4">
     <div>
-        <span class="eyebrow">Comunicacao</span>
+        <span class="eyebrow">Comunicação</span>
         <h1 class="h2 mb-1">Mural</h1>
         <p class="text-muted mb-0">Cadastre avisos e publique comunicados internos para a igreja.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <a href="{{ url_for('inserir_mural') }}" class="btn btn-primary">Novo aviso</a>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
     </div>
 </div>
 
@@ -28,11 +27,11 @@
                 <thead>
                     <tr>
                         <th>Imagem</th>
-                        <th>Titulo</th>
+                        <th>Título</th>
                         <th>Categoria</th>
                         <th>Status</th>
                         <th>Publicado em</th>
-                        <th>Acoes</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>

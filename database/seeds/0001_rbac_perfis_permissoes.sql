@@ -92,7 +92,13 @@ VALUES
   ('igreja.nome', 'Igreja Viva', 'Nome exibido no sistema'),
   ('backup.agendamento', 'Diário às 02:00', 'Rotina recomendada de backup do banco MySQL'),
   ('frequencia.baixa.percentual', '50', 'Percentual mínimo de presença mensal antes de alerta'),
-  ('paginacao.tamanho_padrao', '20', 'Quantidade padrão de registros por página');
+  ('paginacao.tamanho_padrao', '20', 'Quantidade padrão de registros por página'),
+  ('programacao.domingo', 'Culto de celebração', 'Programação fixa de domingo exibida no app do usuário'),
+  ('programacao.quarta', 'Encontro de oração e ensino', 'Programação fixa de quarta exibida no app do usuário'),
+  ('programacao.celulas', 'Durante a semana, conforme cada bairro', 'Programação de células exibida no app do usuário'),
+  ('doacao.pix', '', 'Chave PIX exibida no app do usuário'),
+  ('doacao.banco', 'Conta principal da igreja', 'Dados bancários exibidos no app do usuário'),
+  ('doacao.mensagem', 'Contribua com alegria e acompanhe a secretaria para comprovantes.', 'Mensagem de contribuição exibida no app do usuário');
 
 INSERT IGNORE INTO usuarios (nome, email, senha_hash, ativo, bloqueado)
 VALUES (

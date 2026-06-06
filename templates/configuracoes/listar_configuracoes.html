@@ -9,7 +9,6 @@
         <h1 class="h2 mb-1">Configurações</h1>
         <p class="text-muted mb-0">Atualize os dados da igreja e parâmetros usados pelo sistema.</p>
     </div>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
 </div>
 
 <div class="row g-3 mb-4">
@@ -64,6 +63,50 @@
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 <button type="submit" class="btn btn-success">Salvar parâmetros</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card data-card mt-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+            <div>
+                <h2 class="h5 mb-1">App do usuário</h2>
+                <p class="text-muted mb-0">Configure informações que aparecem na frente pública de cultos e doações.</p>
+            </div>
+            <a href="{{ url_for('app_usuario_inicio') }}" class="btn btn-outline-primary">Pré-visualizar app</a>
+        </div>
+        <form method="post">
+            <input type="hidden" name="acao" value="app_usuario">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="programacao_domingo" class="form-label">Domingo</label>
+                    <input type="text" class="form-control" id="programacao_domingo" name="programacao_domingo" value="{{ programacao_domingo }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="programacao_quarta" class="form-label">Quarta</label>
+                    <input type="text" class="form-control" id="programacao_quarta" name="programacao_quarta" value="{{ programacao_quarta }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="programacao_celulas" class="form-label">Células</label>
+                    <input type="text" class="form-control" id="programacao_celulas" name="programacao_celulas" value="{{ programacao_celulas }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="doacao_pix" class="form-label">Chave PIX</label>
+                    <input type="text" class="form-control" id="doacao_pix" name="doacao_pix" value="{{ doacao_pix }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="doacao_banco" class="form-label">Dados bancários</label>
+                    <input type="text" class="form-control" id="doacao_banco" name="doacao_banco" value="{{ doacao_banco }}">
+                </div>
+                <div class="col-12">
+                    <label for="doacao_mensagem" class="form-label">Mensagem de contribuição</label>
+                    <textarea class="form-control" id="doacao_mensagem" name="doacao_mensagem" rows="3">{{ doacao_mensagem }}</textarea>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success">Salvar informações do app</button>
             </div>
         </form>
     </div>

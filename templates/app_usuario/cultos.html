@@ -1,0 +1,42 @@
+{% extends "app_usuario/base.html" %}
+
+{% block titulo %}Cultos • {{ igreja.nome or "Igreja Viva" }}{% endblock %}
+
+{% block conteudo %}
+<div class="app-user-page-title">
+    <span class="eyebrow">Cultos</span>
+    <h1>Programação da igreja</h1>
+    <p>Horários, encontros e cultos cadastrados pela administração.</p>
+</div>
+
+<section class="app-user-section">
+    <div class="app-user-card">
+        <h2 class="h5">Programação fixa</h2>
+        <dl class="app-info-list">
+            {% for item in programacao %}
+            <div><dt>{{ item[0] }}</dt><dd>{{ item[1] }}</dd></div>
+            {% endfor %}
+        </dl>
+    </div>
+</section>
+
+<section class="app-user-section">
+    <div class="app-user-section-title">
+        <h2>Agenda relacionada</h2>
+        <a href="{{ url_for('app_usuario_eventos') }}">Eventos</a>
+    </div>
+    <div class="app-user-card-list">
+        {% for evento in eventos %}
+        <a class="app-event-card" href="{{ url_for('app_usuario_evento', evento_id=evento.id) }}">
+            <div>
+                <span>{{ evento.data_inicio|data_br }}</span>
+                <strong>{{ evento.nome }}</strong>
+                <small>{{ evento.local or "Local a confirmar" }}</small>
+            </div>
+        </a>
+        {% else %}
+        <div class="app-user-empty">Nenhum culto ou evento publicado.</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

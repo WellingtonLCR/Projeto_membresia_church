@@ -1,0 +1,29 @@
+{% extends "app_usuario/base.html" %}
+
+{% block titulo %}Eventos • {{ igreja.nome or "Igreja Viva" }}{% endblock %}
+
+{% block conteudo %}
+<div class="app-user-page-title">
+    <span class="eyebrow">Agenda</span>
+    <h1>Eventos e encontros</h1>
+    <p>Acompanhe a programação publicada pela equipe administrativa.</p>
+</div>
+
+<div class="app-user-card-list">
+    {% for evento in eventos %}
+    <a class="app-event-card app-event-card--wide" href="{{ url_for('app_usuario_evento', evento_id=evento.id) }}">
+        {% if evento.banner_path %}
+        <img src="{{ url_for('static', filename=evento.banner_path) }}" alt="Banner {{ evento.nome }}">
+        {% endif %}
+        <div>
+            <span>{{ evento.data_inicio|data_br }} • {{ evento.status }}</span>
+            <strong>{{ evento.nome }}</strong>
+            <small>{{ evento.local or "Local a confirmar" }}</small>
+            <p>{{ evento.descricao|truncate(120) if evento.descricao else "Detalhes em breve." }}</p>
+        </div>
+    </a>
+    {% else %}
+    <div class="app-user-empty">Nenhum evento disponível no momento.</div>
+    {% endfor %}
+</div>
+{% endblock %}

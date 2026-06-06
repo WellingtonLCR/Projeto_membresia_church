@@ -1,28 +1,27 @@
 {% extends "base.html" %}
 
-{% block titulo %}Inserir Familia - Painel{% endblock %}
+{% block titulo %}Inserir família • Painel{% endblock %}
 
 {% block conteudo %}
 <div class="page-header mb-4">
     <div>
         <span class="eyebrow">Pessoas</span>
-        <h1 class="h2 mb-1">Inserir familia</h1>
-        <p class="text-muted mb-0">Cadastre o nucleo familiar e vincule os membros ja cadastrados.</p>
+        <h1 class="h2 mb-1">Inserir família</h1>
+        <p class="text-muted mb-0">Cadastre o núcleo familiar e vincule os membros já cadastrados.</p>
     </div>
-    <a href="{{ url_for('listar_familias') }}" class="btn btn-outline-secondary">Voltar</a>
 </div>
 
 <form method="post" class="card form-card">
     <div class="card-body">
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label" for="nome">Nome da familia</label>
-                <input class="form-control" id="nome" name="nome" placeholder="Familia Silva" required>
+                <label class="form-label" for="nome">Nome da família</label>
+                <input class="form-control" id="nome" name="nome" placeholder="Família Silva" required>
             </div>
             <div class="col-md-6">
-                <label class="form-label" for="responsavel_membro_id">Responsavel</label>
+                <label class="form-label" for="responsavel_membro_id">Responsável</label>
                 <select class="form-select" id="responsavel_membro_id" name="responsavel_membro_id">
-                    <option value="">Sem responsavel vinculado</option>
+                    <option value="">Sem responsável vinculado</option>
                     {% for membro in membros %}
                     <option value="{{ membro.id }}">{{ membro.nome }}</option>
                     {% endfor %}
@@ -33,11 +32,11 @@
                 <input class="form-control" id="telefone" name="telefone" placeholder="(14) 99999-9999">
             </div>
             <div class="col-md-6">
-                <label class="form-label" for="endereco">Endereco</label>
-                <input class="form-control" id="endereco" name="endereco" placeholder="Rua, numero, bairro">
+                <label class="form-label" for="endereco">Endereço</label>
+                <input class="form-control" id="endereco" name="endereco" placeholder="Rua, número, bairro">
             </div>
             <div class="col-md-12">
-                <label class="form-label" for="membros">Membros da familia</label>
+                <label class="form-label" for="membros">Membros da família</label>
                 <select class="form-select" id="membros" name="membros" multiple size="8">
                     {% for membro in membros %}
                     <option value="{{ membro.id }}">{{ membro.nome }}</option>
@@ -45,7 +44,7 @@
                 </select>
             </div>
             <div class="col-md-12">
-                <label class="form-label" for="observacoes">Observacoes</label>
+                <label class="form-label" for="observacoes">Observações</label>
                 <textarea class="form-control" id="observacoes" name="observacoes" rows="3"></textarea>
             </div>
         </div>

@@ -1,17 +1,16 @@
 {% extends "base.html" %}
 
-{% block titulo %}Intercessao - Painel{% endblock %}
+{% block titulo %}Intercessão • Painel{% endblock %}
 
 {% block conteudo %}
 <div class="page-header mb-4">
     <div>
         <span class="eyebrow">Cuidado</span>
-        <h1 class="h2 mb-1">Intercessao</h1>
-        <p class="text-muted mb-0">Acompanhe pedidos de oracao, registre intercessoes e marque respostas.</p>
+        <h1 class="h2 mb-1">Intercessão</h1>
+        <p class="text-muted mb-0">Acompanhe pedidos de oração, registre intercessões e marque respostas.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <a href="{{ url_for('inserir_intercessao') }}" class="btn btn-primary">Novo pedido</a>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Voltar ao painel</a>
     </div>
 </div>
 
@@ -32,8 +31,8 @@
                         <th>Categoria</th>
                         <th>Pedido</th>
                         <th>Status</th>
-                        <th>Oracoes</th>
-                        <th>Acoes</th>
+                        <th>Orações</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,9 +43,9 @@
                             <span class="fw-semibold d-block">{{ pedido.solicitante_nome }}</span>
                             <span class="text-muted small">{{ pedido.contato or "-" }}{% if pedido.privado %} - Privado{% endif %}</span>
                         </td>
-                        <td>{{ pedido.categoria or "-" }}</td>
+                        <td>{{ pedido.categoria|rotulo if pedido.categoria else "-" }}</td>
                         <td class="metric-text">{{ pedido.pedido }}</td>
-                        <td><span class="badge rounded-pill text-bg-light">{{ pedido.status }}</span></td>
+                        <td><span class="badge rounded-pill text-bg-light">{{ pedido.status|rotulo }}</span></td>
                         <td>{{ pedido.oracoes }}</td>
                         <td>
                             <div class="d-flex gap-2 flex-wrap">

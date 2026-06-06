@@ -26,9 +26,10 @@
             <div class="collapse navbar-collapse" id="navbarPublica">
                 <ul class="navbar-nav ms-auto align-items-lg-center">
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">Início</a></li>
+                    <li class="nav-item"><a class="nav-link {% if (request.endpoint or '').startswith('app_usuario') %}active{% endif %}" href="{{ url_for('app_usuario_inicio') }}">App</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'equipe' %}active{% endif %}" href="{{ url_for('equipe') }}">Equipe</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'login' %}active{% endif %}" href="{{ url_for('login') }}">Login</a></li>
-                    <li class="nav-item ms-lg-2"><a class="btn btn-light btn-sm" href="{{ url_for('cadastro') }}">Criar conta</a></li>
+                    <li class="nav-item ms-lg-2"><a class="btn btn-light btn-sm" href="{{ url_for('cadastro') }}">Sou visitante</a></li>
                 </ul>
             </div>
         </div>

@@ -1,0 +1,21 @@
+{% extends "app_usuario/base.html" %}
+
+{% block titulo %}{{ evento.nome }} • {{ igreja.nome or "Igreja Viva" }}{% endblock %}
+
+{% block conteudo %}
+<article class="app-user-detail">
+    {% if evento.banner_path %}
+    <img class="app-user-detail-media" src="{{ url_for('static', filename=evento.banner_path) }}" alt="Banner {{ evento.nome }}">
+    {% endif %}
+    <div class="app-user-card">
+        <span class="app-user-kicker">{{ evento.status }}</span>
+        <h1>{{ evento.nome }}</h1>
+        <dl class="app-info-list">
+            <div><dt>Data</dt><dd>{{ evento.data_inicio|data_br }}</dd></div>
+            <div><dt>Local</dt><dd>{{ evento.local or "Local a confirmar" }}</dd></div>
+        </dl>
+        <p>{{ evento.descricao or "Os detalhes deste evento serão atualizados pela equipe administrativa." }}</p>
+        <a class="btn btn-primary w-100" href="{{ url_for('app_usuario_eventos') }}">Voltar para agenda</a>
+    </div>
+</article>
+{% endblock %}

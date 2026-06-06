@@ -1,0 +1,31 @@
+{% extends "app_usuario/base.html" %}
+
+{% block titulo %}{{ titulo }} • {{ igreja.nome or "Igreja Viva" }}{% endblock %}
+
+{% block conteudo %}
+<div class="app-user-page-title">
+    <span class="eyebrow">Comunicação</span>
+    <h1>{{ titulo }}</h1>
+    <p>{{ subtitulo }}</p>
+</div>
+
+<div class="app-user-tabs">
+    <a class="{% if aba == 'feed' %}active{% endif %}" href="{{ url_for('app_usuario_feed') }}">Feed</a>
+    <a class="{% if aba == 'devocional' %}active{% endif %}" href="{{ url_for('app_usuario_devocional') }}">Devocional</a>
+</div>
+
+<div class="app-feed-list">
+    {% for item in itens %}
+    <article class="app-user-card app-feed-card">
+        {% if item.imagem_path %}
+        <img src="{{ url_for('static', filename=item.imagem_path) }}" alt="Imagem {{ item.titulo }}">
+        {% endif %}
+        <span class="app-user-kicker">{{ item.categoria or "Publicado" }} • {{ item.publicado_em|data_br }}</span>
+        <h2>{{ item.titulo }}</h2>
+        <p>{{ item.conteudo }}</p>
+    </article>
+    {% else %}
+    <div class="app-user-empty">Nenhuma publicação disponível.</div>
+    {% endfor %}
+</div>
+{% endblock %}
