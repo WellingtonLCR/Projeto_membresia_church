@@ -144,7 +144,7 @@ Também foram analisados materiais técnicos internos e protótipos de referênc
 
 ### 1.5 ESTRUTURA DO TRABALHO
 
-Este README foi organizado seguindo a estrutura do documento de referência:
+Foi organizado seguindo a estrutura do documento de referência:
 
 - O Capítulo 1 apresenta a introdução, problema, objetivos e metodologia.
 - O Capítulo 2 apresenta a revisão bibliográfica relacionada ao projeto.
