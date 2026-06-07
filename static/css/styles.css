@@ -3164,7 +3164,7 @@ body.admin-shell .status-pill.status-primary {
     position: fixed;
     right: 0;
     top: 0;
-    z-index: 1080;
+    z-index: 1045;
 }
 
 body.membresia-overlay-open {
@@ -3928,7 +3928,19 @@ body.admin-shell.modal-open {
 }
 
 body.admin-shell .modal-backdrop {
-    z-index: 1080;
+    z-index: 1040;
+    opacity: 0 !important;
+    transition: none !important;
+    pointer-events: none !important;
+    display: none !important;
+}
+
+body.admin-shell .modal-backdrop.show {
+    z-index: 1040;
+    opacity: 0 !important;
+    transition: none !important;
+    pointer-events: none !important;
+    display: none !important;
 }
 
 body.admin-shell .modal {
@@ -3952,7 +3964,7 @@ body.admin-shell .offcanvas.is-open {
 body.admin-shell .membresia-backdrop {
     border: 0;
     cursor: pointer;
-    z-index: 1080;
+    z-index: 1040;
 }
 
 body.admin-shell .modal.show,
@@ -4107,7 +4119,9 @@ body.admin-shell .filter-modal * {
 }
 
 body.admin-shell .modal-backdrop.show {
-    z-index: 1085;
+    z-index: 1040;
+    opacity: 1 !important;
+    transition: none !important;
 }
 
 body.admin-shell .admin-mobile-menu {
@@ -4901,12 +4915,16 @@ body.admin-shell .filter-modal * {
 }
 
 body.admin-shell .modal-backdrop.show {
-    z-index: 1085 !important;
+    z-index: 1040 !important;
 }
 
-body.admin-shell .membresia-backdrop {
-    pointer-events: auto;
-    z-index: 1080 !important;
+body.admin-shell .modal.show {
+    display: block !important;
+    z-index: 9999 !important;
+}
+
+body.admin-shell .modal.show .modal-dialog {
+    z-index: 10000 !important;
 }
 
 @media (max-width: 991.98px) {
