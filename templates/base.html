@@ -4,22 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block titulo %}Sistema de Membresia Church{% endblock %}</title>
+    <title>{% block titulo %}Sistema de Membresia da Igreja Viva{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         (function () {
             try {
-                var tema = localStorage.getItem('membresia-theme') || 'light';
-                document.documentElement.setAttribute('data-theme', tema === 'dark' ? 'dark' : 'light');
+                var escolha = localStorage.getItem('membresia-theme') || 'light';
+                var escuroSistema = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var tema = escolha === 'system' ? (escuroSistema ? 'dark' : 'light') : escolha;
+                document.documentElement.setAttribute('data-theme', tema === 'dark' || tema === 'contrast' ? tema : 'light');
+                document.documentElement.setAttribute('data-theme-choice', escolha);
             } catch (erro) {
                 document.documentElement.setAttribute('data-theme', 'light');
             }
         })();
     </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=20260607-ui4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=20260607-ui9">
 </head>
 
 <body class="admin-shell">
@@ -27,8 +30,8 @@
         <aside class="admin-sidebar d-none d-lg-flex" aria-label="Menu lateral principal">
             <div class="admin-brand">
                 <a href="{{ url_for('dashboard') }}" class="admin-brand-link">
-                    <img src="{{ url_for('static', filename='imgs/logo_church.png') }}" alt="Sistema de Membresia Church" class="brand-mark">
-                    <span>Membresia Church</span>
+                    <img src="{{ url_for('static', filename='imgs/logo_church.png') }}" alt="Igreja Viva" class="brand-mark">
+                    <span>Igreja Viva · Membresia</span>
                 </a>
                 <button class="icon-button icon-button-sm" type="button" aria-label="Recolher menu">
                     <i data-lucide="panel-left-close"></i>
@@ -44,7 +47,7 @@
                     <i data-lucide="log-out"></i>
                     <span>Sair</span>
                 </a>
-                <small><strong>Sistema de Membresia Church</strong> · 2026</small>
+                <small><strong>Sistema de Membresia da Igreja Viva</strong> · 2026</small>
             </div>
         </aside>
 
@@ -69,9 +72,29 @@
                     <kbd>Ctrl+K</kbd>
                 </form>
                 <div class="admin-top-actions">
-                    <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Alternar modo claro e escuro" title="Alternar modo claro e escuro">
-                        <i data-lucide="moon"></i>
-                    </button>
+                    <div class="dropdown theme-menu">
+                        <button class="icon-button theme-toggle" type="button" data-theme-toggle data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Escolher aparencia" title="Escolher aparencia">
+                            <i data-lucide="monitor"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end theme-dropdown">
+                            <button class="dropdown-item theme-option" type="button" data-theme-option="light">
+                                <i data-lucide="sun"></i>
+                                <span>Claro</span>
+                            </button>
+                            <button class="dropdown-item theme-option" type="button" data-theme-option="dark">
+                                <i data-lucide="moon"></i>
+                                <span>Escuro</span>
+                            </button>
+                            <button class="dropdown-item theme-option" type="button" data-theme-option="contrast">
+                                <i data-lucide="eye"></i>
+                                <span>Alto Contraste</span>
+                            </button>
+                            <button class="dropdown-item theme-option" type="button" data-theme-option="system">
+                                <i data-lucide="monitor"></i>
+                                <span>Sistema</span>
+                            </button>
+                        </div>
+                    </div>
                     <button class="icon-button" type="button" aria-label="Notificações">
                         <i data-lucide="bell"></i>
                     </button>
@@ -103,8 +126,8 @@
     <div class="offcanvas offcanvas-start admin-mobile-menu" tabindex="-1" id="menuLateralMobile" aria-labelledby="menuLateralMobileLabel">
         <div class="offcanvas-header">
             <div class="admin-brand-link">
-                <img src="{{ url_for('static', filename='imgs/logo_church.png') }}" alt="Sistema de Membresia Church" class="brand-mark">
-                <strong id="menuLateralMobileLabel">Membresia Church</strong>
+                <img src="{{ url_for('static', filename='imgs/logo_church.png') }}" alt="Igreja Viva" class="brand-mark">
+                <strong id="menuLateralMobileLabel">Igreja Viva &middot; Membresia</strong>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
         </div>
@@ -113,11 +136,17 @@
                 {% include "partials/menu_lateral.html" %}
             </nav>
         </div>
+        <div class="offcanvas-footer">
+            <a class="sidebar-link sidebar-link-root" href="{{ url_for('logout') }}">
+                <i data-lucide="log-out"></i>
+                <span>Sair</span>
+            </a>
+        </div>
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/script.js') }}?v=20260607-ui4"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}?v=20260607-ui9"></script>
 </body>
 
 </html>

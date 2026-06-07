@@ -70,8 +70,8 @@ class MembresiaAppTestCase(unittest.TestCase):
         resposta.close()
 
         self.assertEqual(resposta.status_code, 200)
-        self.assertIn("Sistema de Membresia Church", html)
-        self.assertIn("Membresia Church", html)
+        self.assertIn("Sistema de Membresia da Igreja Viva", html)
+        self.assertIn("Igreja Viva", html)
         marca_antiga = "Do" + "mus Control"
         self.assertNotIn(marca_antiga, html)
 
@@ -102,14 +102,89 @@ class MembresiaAppTestCase(unittest.TestCase):
         css = Path("static/css/styles.css").read_text(encoding="utf-8")
 
         self.assertIn("data-theme-toggle", html)
+        self.assertIn('data-theme-option="light"', html)
+        self.assertIn('data-theme-option="dark"', html)
+        self.assertIn('data-theme-option="contrast"', html)
+        self.assertIn('data-theme-option="system"', html)
+        self.assertIn("Igreja Viva &middot; Membresia", html)
         self.assertIn("membresia-theme", script)
+        self.assertIn("TEMAS_VALIDOS", script)
+        self.assertIn("prefers-color-scheme", script)
         self.assertIn("membresia-backdrop", script)
         self.assertIn("membresia-backdrop", css)
         self.assertIn("hidden.bs.modal", script)
         self.assertIn("liberarPagina", script)
+        self.assertIn("form.filter-modal", script)
+        self.assertIn("URLSearchParams", script)
+        self.assertIn("window.location.assign", script)
+        self.assertIn("show.bs.modal", script)
+        self.assertIn("body.admin-shell.modal-open", css)
+        self.assertIn("padding-right: 0 !important", css)
+        self.assertNotIn("getOrCreateInstance(alvo)", script)
         self.assertIn(':root[data-theme="dark"] body.admin-shell', css)
-        self.assertNotIn("domus-backdrop", script)
-        self.assertNotIn("domus-backdrop", css)
+        self.assertIn(':root[data-theme="contrast"] body.admin-shell', css)
+        self.assertIn("body.admin-shell .admin-mobile-menu .offcanvas-footer", css)
+        self.assertIn("body.admin-shell .dashboard-chart-legend", css)
+        overlay_antigo = "do" + "mus-backdrop"
+        self.assertNotIn(overlay_antigo, script)
+        self.assertNotIn(overlay_antigo, css)
+
+    def test_filtro_de_cultos_aplica_dia_da_semana_na_consulta(self):
+        self.autenticar()
+        consultas = []
+
+        def db_select_fake(sql, params=None):
+            consultas.append((sql, params or []))
+            return []
+
+        with patch("app.db_select", side_effect=db_select_fake), \
+             patch("app.db_scalar", return_value=0):
+            resposta = self.client.get("/eventos/listar?dia_semana=Domingo&status=Agendado")
+
+        self.assertEqual(resposta.status_code, 200)
+        sql_eventos, params_eventos = next(
+            item for item in consultas if "FROM eventos e" in item[0]
+        )
+        self.assertIn("e.status = %s", sql_eventos)
+        self.assertIn("DAYOFWEEK(e.data_inicio) = %s", sql_eventos)
+        self.assertEqual(params_eventos, ["Agendado", 1])
+        html = resposta.get_data(as_text=True)
+        self.assertIn('name="dia_semana"', html)
+        self.assertNotIn('name="recorrencia"', html)
+
+    def test_filtro_financeiro_aplica_parametros_na_consulta(self):
+        self.autenticar()
+        consultas = []
+
+        def db_select_fake(sql, params=None):
+            consultas.append((sql, params or []))
+            return []
+
+        with patch("app.db_select", side_effect=db_select_fake), \
+             patch("app.db_scalar", return_value=0):
+            resposta = self.client.get(
+                "/financeiro/listar"
+                "?data_inicio=2026-06-01"
+                "&data_fim=2026-06-07"
+                "&tipo=Entrada"
+                "&conta_id=1"
+                "&categoria_id=2"
+                "&status_baixa=Baixado"
+                "&usuario_id=3"
+            )
+
+        self.assertEqual(resposta.status_code, 200)
+        sql_financeiro, params_financeiro = next(
+            item for item in consultas if "FROM lancamentos_financeiros l" in item[0]
+        )
+        self.assertIn("l.tipo = %s", sql_financeiro)
+        self.assertIn("l.data_lancamento >= %s", sql_financeiro)
+        self.assertIn("l.data_lancamento <= %s", sql_financeiro)
+        self.assertIn("l.conta_id = %s", sql_financeiro)
+        self.assertIn("l.categoria_id = %s", sql_financeiro)
+        self.assertIn("l.criado_por_usuario_id = %s", sql_financeiro)
+        self.assertIn("l.data_lancamento <= CURDATE()", sql_financeiro)
+        self.assertEqual(params_financeiro, ["Entrada", "2026-06-01", "2026-06-07", "1", "2", "3"])
 
     def test_busca_superior_tem_comportamento_local(self):
         resposta = self.client.get("/static/js/script.js")

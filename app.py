@@ -318,6 +318,7 @@ def usuario_from_row(row):
     if not row:
         return None
     usuario = dict(row)
+    usuario["nome"] = normalizar_identidade_visual(usuario.get("nome"))
     usuario["perfil"] = perfil_para_tela(usuario.get("perfil_db"))
     usuario["status"] = status_usuario(usuario)
     ultimo = usuario.get("ultimo_login_em")
@@ -885,7 +886,7 @@ def listar_fornecedores_todos(busca=""):
 
 
 def listar_usuarios_select():
-    return db_select(
+    usuarios = db_select(
         """
         SELECT u.id, u.nome, COALESCE(p.nome, 'MEMBRO') AS perfil
         FROM usuarios u
@@ -895,6 +896,9 @@ def listar_usuarios_select():
         ORDER BY u.nome
         """
     )
+    for usuario in usuarios:
+        usuario["nome"] = normalizar_identidade_visual(usuario.get("nome"))
+    return usuarios
 
 
 def periodo_padrao():
@@ -1000,7 +1004,8 @@ def salvar_imagem_mural(arquivo):
 
 def obter_config(chave, padrao=""):
     row = db_one("SELECT valor FROM configuracoes_sistema WHERE chave = %s", (chave,))
-    return row["valor"] if row and row.get("valor") is not None else padrao
+    valor = row["valor"] if row and row.get("valor") is not None else padrao
+    return normalizar_identidade_visual(valor)
 
 
 def salvar_config(chave, valor, descricao):
@@ -1014,9 +1019,26 @@ def salvar_config(chave, valor, descricao):
     )
 
 
+def normalizar_identidade_visual(valor):
+    if not isinstance(valor, str):
+        return valor
+    substituicoes = [
+        ("Do" + "mus Control", "Igreja Viva"),
+        ("Igreja Do" + "mus", "Igreja Viva"),
+        ("Do" + "mus", "Igreja Viva"),
+        ("Sistema de Membresia " + "Church", "Sistema de Membresia da Igreja Viva"),
+        ("Membresia " + "Church", "Igreja Viva"),
+    ]
+    for antigo, novo in substituicoes:
+        valor = valor.replace(antigo, novo)
+    return valor
+
+
 def obter_igreja():
     igreja = db_one("SELECT * FROM igrejas ORDER BY id LIMIT 1")
     if igreja:
+        igreja = dict(igreja)
+        igreja["nome"] = normalizar_identidade_visual(igreja.get("nome") or "Igreja Viva")
         return igreja
     return {
         "nome": obter_config("igreja.nome", "Igreja Viva"),
@@ -1278,15 +1300,32 @@ def montar_pessoas_por_status():
     )
     totais = {linha["status"]: int(linha["total"] or 0) for linha in linhas}
     total = sum(totais.values())
-    ordem = ["Ativo", "Visitante", "Afastado", "Inativo"]
-    return [
-        {
-            "label": status,
-            "valor": totais.get(status, 0),
-            "percentual": round((totais.get(status, 0) / total) * 100) if total else 0,
-        }
-        for status in ordem
+    ordem = [
+        ("Ativo", "Membros", "#2454e8"),
+        ("Visitante", "Visitantes", "#00a9a5"),
+        ("Afastado", "Afastados", "#ff7a1a"),
+        ("Inativo", "Inativos", "#7a5af8"),
     ]
+    acumulado = 0
+    itens = []
+    for status, label, cor in ordem:
+        valor = totais.get(status, 0)
+        percentual = round((valor / total) * 100) if total else 0
+        graus = round((valor / total) * 360) if total else 0
+        inicio = acumulado
+        fim = 360 if len(itens) == len(ordem) - 1 and total else acumulado + graus
+        acumulado = fim
+        itens.append(
+            {
+                "label": label,
+                "valor": valor,
+                "percentual": percentual,
+                "cor": cor,
+                "inicio": inicio,
+                "fim": fim,
+            }
+        )
+    return itens
 
 
 def contar_interacoes_app(dias):
@@ -3259,8 +3298,16 @@ def listar_eventos():
     filtros = {
         "nome": request.args.get("nome", "").strip(),
         "status": request.args.get("status", "").strip(),
-        "recorrencia": request.args.get("recorrencia", "").strip(),
         "dia_semana": request.args.get("dia_semana", "").strip(),
+    }
+    dias_sql = {
+        "Domingo": 1,
+        "Segunda-feira": 2,
+        "TerÃ§a-feira": 3,
+        "Quarta-feira": 4,
+        "Quinta-feira": 5,
+        "Sexta-feira": 6,
+        "SÃ¡bado": 7,
     }
     sql = """
         SELECT e.id, e.nome, e.data_inicio, e.local, e.status, e.banner_path,
@@ -3279,6 +3326,9 @@ def listar_eventos():
     if filtros["status"]:
         sql += " AND e.status = %s"
         params.append(filtros["status"])
+    if filtros["dia_semana"] in dias_sql:
+        sql += " AND DAYOFWEEK(e.data_inicio) = %s"
+        params.append(dias_sql[filtros["dia_semana"]])
     sql += " GROUP BY e.id ORDER BY e.data_inicio"
     eventos = db_select(sql, params)
     return render_template(

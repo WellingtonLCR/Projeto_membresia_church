@@ -51,28 +51,70 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const CHAVE_TEMA = 'membresia-theme';
-    const temaAtual = () => document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-    const aplicarTema = (tema) => {
-        const temaNormalizado = tema === 'dark' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', temaNormalizado);
-        document.body.dataset.theme = temaNormalizado;
+    const TEMAS_VALIDOS = ['light', 'dark', 'contrast', 'system'];
+    const temaSistemaEscuro = () => window.matchMedia
+        && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const lerTemaPreferido = () => {
+        try {
+            const temaSalvo = localStorage.getItem(CHAVE_TEMA) || 'light';
+            return TEMAS_VALIDOS.includes(temaSalvo) ? temaSalvo : 'light';
+        } catch (erro) {
+            return 'light';
+        }
+    };
+    const temaAplicado = (preferencia) => {
+        if (preferencia === 'system') {
+            return temaSistemaEscuro() ? 'dark' : 'light';
+        }
+        return preferencia;
+    };
+    const iconeTema = {
+        light: 'sun',
+        dark: 'moon',
+        contrast: 'eye',
+        system: 'monitor',
+    };
+    const rotuloTema = {
+        light: 'Claro',
+        dark: 'Escuro',
+        contrast: 'Alto contraste',
+        system: 'Sistema',
+    };
+    const aplicarTema = (preferencia) => {
+        const temaPreferido = TEMAS_VALIDOS.includes(preferencia) ? preferencia : 'light';
+        const temaVisual = temaAplicado(temaPreferido);
+
+        document.documentElement.setAttribute('data-theme', temaVisual);
+        document.documentElement.setAttribute('data-theme-choice', temaPreferido);
+        document.body.dataset.theme = temaVisual;
 
         document.querySelectorAll('[data-theme-toggle]').forEach((botao) => {
-            const escuro = temaNormalizado === 'dark';
-            botao.setAttribute('aria-pressed', String(escuro));
-            botao.setAttribute('title', escuro ? 'Ativar modo claro' : 'Ativar modo escuro');
-            botao.setAttribute('aria-label', escuro ? 'Ativar modo claro' : 'Ativar modo escuro');
-            botao.innerHTML = `<i data-lucide="${escuro ? 'sun' : 'moon'}"></i>`;
+            botao.setAttribute('aria-pressed', String(temaVisual !== 'light'));
+            botao.setAttribute('title', `Aparencia: ${rotuloTema[temaPreferido]}`);
+            botao.setAttribute('aria-label', `Aparencia atual: ${rotuloTema[temaPreferido]}`);
+            botao.innerHTML = `<i data-lucide="${iconeTema[temaPreferido]}"></i>`;
+        });
+
+        document.querySelectorAll('[data-theme-option]').forEach((opcao) => {
+            const ativo = opcao.dataset.themeOption === temaPreferido;
+            opcao.classList.toggle('active', ativo);
+            opcao.setAttribute('aria-pressed', String(ativo));
         });
 
         atualizarIcones();
     };
 
-    aplicarTema(temaAtual());
+    let temaPreferidoAtual = lerTemaPreferido();
+    aplicarTema(temaPreferidoAtual);
 
-    document.querySelectorAll('[data-theme-toggle]').forEach((botao) => {
-        botao.addEventListener('click', () => {
-            const proximoTema = temaAtual() === 'dark' ? 'light' : 'dark';
+    document.querySelectorAll('[data-theme-option]').forEach((opcao) => {
+        opcao.addEventListener('click', () => {
+            const proximoTema = opcao.dataset.themeOption;
+            if (!TEMAS_VALIDOS.includes(proximoTema)) {
+                return;
+            }
+
+            temaPreferidoAtual = proximoTema;
             try {
                 localStorage.setItem(CHAVE_TEMA, proximoTema);
             } catch (erro) {
@@ -81,6 +123,14 @@ document.addEventListener('DOMContentLoaded', () => {
             aplicarTema(proximoTema);
         });
     });
+
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (temaPreferidoAtual === 'system') {
+                aplicarTema('system');
+            }
+        });
+    }
 
     const garantirBackdrop = () => {
         let backdrop = document.querySelector('.membresia-backdrop');
@@ -91,16 +141,96 @@ document.addEventListener('DOMContentLoaded', () => {
             backdrop.setAttribute('aria-label', 'Fechar painel');
             document.body.appendChild(backdrop);
         }
+        backdrop.style.setProperty('z-index', '1080', 'important');
         return backdrop;
     };
 
-    const overlayAberto = () => document.querySelector('.modal.show, .modal.is-open, .offcanvas.show, .offcanvas.is-open');
+    const removerBackdropLocal = () => {
+        document.querySelectorAll('.membresia-backdrop').forEach((backdrop) => backdrop.remove());
+        document.body.classList.remove('membresia-overlay-open');
+    };
+
+    const bootstrapModalAtivo = () => document.querySelector('.modal.show');
+    const bootstrapOffcanvasAtivo = () => document.querySelector('.offcanvas.show');
+    const overlayCustomAtivo = () => document.querySelector('.modal.is-open, .offcanvas.is-open');
+    const overlayAberto = () => bootstrapModalAtivo() || bootstrapOffcanvasAtivo() || overlayCustomAtivo();
+
+    const limparBackdropsOrfaos = () => {
+        const existeBootstrap = bootstrapModalAtivo() || bootstrapOffcanvasAtivo();
+        const existeCustom = overlayCustomAtivo();
+
+        document.querySelectorAll('.membresia-backdrop').forEach((backdrop) => backdrop.remove());
+
+        if (!existeBootstrap && !existeCustom) {
+            document.querySelectorAll('.modal-backdrop').forEach((backdrop) => backdrop.remove());
+        }
+    };
 
     const liberarPagina = () => {
-        document.querySelectorAll('.membresia-backdrop, .modal-backdrop').forEach((backdrop) => backdrop.remove());
-        document.body.classList.remove('membresia-overlay-open', 'modal-open');
-        document.body.style.removeProperty('overflow');
-        document.body.style.removeProperty('padding-right');
+        const existeBootstrap = bootstrapModalAtivo() || bootstrapOffcanvasAtivo();
+        const existeCustom = overlayCustomAtivo();
+
+        limparBackdropsOrfaos();
+
+        if (!existeCustom) {
+            document.body.classList.remove('membresia-overlay-open');
+        }
+
+        if (!existeBootstrap) {
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        }
+    };
+
+    const prepararInteracaoModal = (modal) => {
+        modal.removeAttribute('aria-hidden');
+        modal.style.pointerEvents = 'auto';
+
+        modal.querySelectorAll('.modal-dialog, .modal-content, .modal-body, form, input, select, textarea, button, a, [role="button"], [tabindex]').forEach((elemento) => {
+            elemento.style.pointerEvents = 'auto';
+        });
+
+        if (!modal.hasAttribute('tabindex')) {
+            modal.setAttribute('tabindex', '-1');
+        }
+    };
+
+    const corrigirCamadasDoModal = (modal) => {
+        if (!modal || !modal.classList.contains('modal')) {
+            return;
+        }
+
+        prepararInteracaoModal(modal);
+        modal.style.setProperty('z-index', '1095', 'important');
+        modal.style.pointerEvents = 'auto';
+
+        const dialog = modal.querySelector('.modal-dialog');
+        if (dialog) {
+            dialog.style.position = 'relative';
+            dialog.style.setProperty('z-index', '1096', 'important');
+            dialog.style.pointerEvents = 'auto';
+        }
+
+        const conteudo = modal.querySelector('.modal-content');
+        if (conteudo) {
+            conteudo.style.setProperty('z-index', '1097', 'important');
+            conteudo.style.pointerEvents = 'auto';
+        }
+
+        document.querySelectorAll('.modal-backdrop.show').forEach((backdrop) => {
+            backdrop.style.setProperty('z-index', '1085', 'important');
+        });
+
+        document.querySelectorAll('.membresia-backdrop').forEach((backdrop) => {
+            backdrop.style.setProperty('z-index', '1080', 'important');
+        });
+    };
+
+    const agendarCorrecaoCamadasDoModal = (modal) => {
+        corrigirCamadasDoModal(modal);
+        window.setTimeout(() => corrigirCamadasDoModal(modal), 0);
+        window.setTimeout(() => corrigirCamadasDoModal(modal), 120);
     };
 
     const limparTravamentoOverlay = () => {
@@ -113,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fecharOverlay = () => {
         document.querySelectorAll('.modal.is-open, .offcanvas.is-open').forEach((elemento) => {
-            elemento.classList.remove('is-open', 'show');
+            elemento.classList.remove('is-open');
             elemento.setAttribute('aria-hidden', 'true');
         });
 
@@ -125,10 +255,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        alvo.classList.add('is-open', 'show');
+        alvo.classList.remove('show');
+        alvo.classList.add('is-open');
         alvo.removeAttribute('aria-hidden');
         document.body.classList.add('membresia-overlay-open');
         garantirBackdrop().addEventListener('click', fecharOverlay, { once: true });
+
+        if (alvo.classList.contains('modal')) {
+            agendarCorrecaoCamadasDoModal(alvo);
+        }
 
         const campoFoco = alvo.querySelector('input, select, textarea, button:not(.btn-close)');
         if (campoFoco) {
@@ -137,6 +272,16 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.querySelectorAll('.modal, .offcanvas').forEach((elemento) => {
+        elemento.addEventListener('show.bs.modal', () => {
+            elemento.classList.remove('is-open');
+            removerBackdropLocal();
+            agendarCorrecaoCamadasDoModal(elemento);
+        });
+        elemento.addEventListener('shown.bs.modal', () => agendarCorrecaoCamadasDoModal(elemento));
+        elemento.addEventListener('show.bs.offcanvas', () => {
+            elemento.classList.remove('is-open');
+            removerBackdropLocal();
+        });
         elemento.addEventListener('hidden.bs.modal', limparTravamentoOverlay);
         elemento.addEventListener('hidden.bs.offcanvas', limparTravamentoOverlay);
     });
@@ -156,20 +301,108 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            if (!window.bootstrap) {
+            const temBootstrap = window.bootstrap
+                && ((alvo.classList.contains('offcanvas') && window.bootstrap.Offcanvas)
+                    || (alvo.classList.contains('modal') && window.bootstrap.Modal));
+
+            if (!temBootstrap) {
                 evento.preventDefault();
                 abrirOverlay(alvo);
                 return;
             }
 
-            window.setTimeout(() => {
-                if (!alvo.classList.contains('show')) {
-                    const instancia = alvo.classList.contains('offcanvas')
-                        ? window.bootstrap.Offcanvas.getOrCreateInstance(alvo)
-                        : window.bootstrap.Modal.getOrCreateInstance(alvo);
-                    instancia.show();
+            evento.preventDefault();
+            evento.stopPropagation();
+            if (typeof evento.stopImmediatePropagation === 'function') {
+                evento.stopImmediatePropagation();
+            }
+
+            removerBackdropLocal();
+            alvo.classList.remove('is-open');
+            alvo.removeAttribute('aria-hidden');
+
+            if (alvo.classList.contains('modal')) {
+                document.querySelectorAll('.modal.show').forEach((modalAberto) => {
+                    if (modalAberto !== alvo && window.bootstrap.Modal) {
+                        const instanciaAberta = window.bootstrap.Modal.getInstance(modalAberto);
+                        if (instanciaAberta) {
+                            instanciaAberta.hide();
+                        }
+                    }
+                });
+
+                const instancia = window.bootstrap.Modal.getOrCreateInstance(alvo, {
+                    backdrop: true,
+                    focus: true,
+                });
+                instancia.show();
+                agendarCorrecaoCamadasDoModal(alvo);
+                return;
+            }
+
+            if (alvo.classList.contains('offcanvas')) {
+                const instancia = window.bootstrap.Offcanvas.getOrCreateInstance(alvo, {
+                    backdrop: true,
+                    scroll: false,
+                });
+                instancia.show();
+            }
+        });
+    });
+
+    document.addEventListener('submit', (evento) => {
+        const formulario = evento.target.closest('form.filter-modal');
+        if (!formulario) {
+            return;
+        }
+
+        const metodo = (formulario.getAttribute('method') || 'get').toLowerCase();
+        if (metodo !== 'get') {
+            return;
+        }
+
+        evento.preventDefault();
+
+        const destino = formulario.getAttribute('action') || window.location.pathname;
+        const url = new URL(destino, window.location.origin);
+        const dados = new FormData(formulario);
+        const parametros = new URLSearchParams();
+
+        dados.forEach((valor, chave) => {
+            const texto = String(valor || '').trim();
+            if (texto && texto !== 'Todos' && texto !== 'Selecione') {
+                parametros.set(chave, texto);
+            }
+        });
+
+        url.search = parametros.toString();
+
+        const overlayPai = formulario.closest('.modal, .offcanvas');
+        if (overlayPai && window.bootstrap) {
+            if (overlayPai.classList.contains('modal') && window.bootstrap.Modal) {
+                const instancia = window.bootstrap.Modal.getInstance(overlayPai);
+                if (instancia) {
+                    instancia.hide();
                 }
-            }, 120);
+            } else if (overlayPai.classList.contains('offcanvas') && window.bootstrap.Offcanvas) {
+                const instancia = window.bootstrap.Offcanvas.getInstance(overlayPai);
+                if (instancia) {
+                    instancia.hide();
+                }
+            }
+        } else if (overlayPai) {
+            fecharOverlay();
+        }
+
+        window.setTimeout(() => {
+            liberarPagina();
+            window.location.assign(url.toString());
+        }, 30);
+    });
+
+    document.querySelectorAll('form.filter-modal a[href]').forEach((link) => {
+        link.addEventListener('click', () => {
+            liberarPagina();
         });
     });
 

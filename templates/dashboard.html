@@ -1,120 +1,203 @@
 {% extends "base.html" %}
 
-{% block titulo %}Dashboard · Sistema de Membresia Church{% endblock %}
+{% block titulo %}Dashboard · Igreja Viva{% endblock %}
 
 {% block conteudo %}
-<div class="page-header">
-    <div>
+<section class="dashboard-showcase">
+    <div class="dashboard-showcase-copy">
+        <span class="page-eyebrow">Painel administrativo</span>
         <h1>Bom dia, Admin!</h1>
-        <p>Veja um resumo sobre as pessoas, finanças e outras informações importantes da sua igreja.</p>
+        <p>Resumo executivo da Igreja Viva com pessoas, finanças, doações, cultos e engajamento reunidos em uma visão única.</p>
     </div>
-    <button class="icon-button filter-trigger" type="button" data-bs-toggle="modal" data-bs-target="#filtrosDashboard" aria-label="Abrir filtros">
-        <i data-lucide="list-filter"></i>
-        <span class="notification-dot">1</span>
-    </button>
-</div>
+    <div class="dashboard-showcase-actions">
+        <a class="btn btn-light" href="{{ url_for('listar_membros') }}">
+            <i data-lucide="user-plus"></i>
+            Pessoas
+        </a>
+        <a class="btn btn-primary" href="{{ url_for('listar_financeiro') }}">
+            <i data-lucide="line-chart"></i>
+            Financeiro
+        </a>
+        <button class="icon-button filter-trigger" type="button" data-bs-toggle="modal" data-bs-target="#filtrosDashboard" aria-label="Abrir filtros do dashboard">
+            <i data-lucide="list-filter"></i>
+            <span class="notification-dot">1</span>
+        </button>
+    </div>
+</section>
 
-<section class="metric-grid" aria-label="Indicadores principais">
+<section class="metric-grid dashboard-metrics" aria-label="Indicadores principais">
     <a class="metric-card metric-card-link" href="{{ url_for('painel_pessoas') }}">
-        <span class="metric-title">Total de Pessoas</span>
-        <span class="metric-value-row"><i data-lucide="users-round"></i><strong>{{ metricas.total_pessoas }}</strong></span>
-        <small>{{ metricas.visitantes }} pessoas aguardando acompanhamento.</small>
+        <span class="metric-card-head">
+            <span class="metric-title">Total de Pessoas</span>
+            <span class="metric-icon metric-icon-blue"><i data-lucide="users-round"></i></span>
+        </span>
+        <span class="metric-value-row"><strong>{{ metricas.total_pessoas }}</strong></span>
+        <small>{{ metricas.visitantes }} visitante(s) em acompanhamento.</small>
     </a>
     <a class="metric-card metric-card-link" href="{{ url_for('listar_aniversarios') }}">
-        <span class="metric-title">Aniversariantes</span>
-        <span class="metric-value-row"><i data-lucide="cake"></i><strong>{{ metricas.aniversariantes_mes }}</strong></span>
-        <small>Total de aniversariantes no mês.</small>
+        <span class="metric-card-head">
+            <span class="metric-title">Aniversariantes</span>
+            <span class="metric-icon metric-icon-teal"><i data-lucide="cake"></i></span>
+        </span>
+        <span class="metric-value-row"><strong>{{ metricas.aniversariantes_mes }}</strong></span>
+        <small>Total de aniversariantes no mês atual.</small>
     </a>
     <a class="metric-card metric-card-link" href="{{ url_for('painel_celulas') }}">
-        <span class="metric-title">Células</span>
-        <span class="metric-value-row"><i data-lucide="table-2"></i><strong>{{ metricas.celulas }}</strong></span>
-        <small>{{ metricas.presencas }} presenças registradas.</small>
+        <span class="metric-card-head">
+            <span class="metric-title">Células</span>
+            <span class="metric-icon metric-icon-orange"><i data-lucide="table-2"></i></span>
+        </span>
+        <span class="metric-value-row"><strong>{{ metricas.celulas }}</strong></span>
+        <small>{{ metricas.presencas }} presença(s) registradas.</small>
     </a>
     <a class="metric-card metric-card-link" href="{{ url_for('painel_ministerios') }}">
-        <span class="metric-title">Ministérios</span>
-        <span class="metric-value-row"><i data-lucide="crown"></i><strong>{{ metricas.ministerios }}</strong></span>
-        <small>{{ metricas.vagas }} vagas cadastradas.</small>
+        <span class="metric-card-head">
+            <span class="metric-title">Ministérios</span>
+            <span class="metric-icon metric-icon-purple"><i data-lucide="crown"></i></span>
+        </span>
+        <span class="metric-value-row"><strong>{{ metricas.ministerios }}</strong></span>
+        <small>{{ metricas.vagas }} vaga(s) cadastrada(s).</small>
     </a>
 </section>
 
-<div class="dashboard-grid">
-    <section class="content-card people-card">
-        <div class="card-heading">
+<div class="dashboard-grid dashboard-home-grid">
+    <section class="content-card dashboard-panel dashboard-panel-main">
+        <div class="dashboard-panel-header">
             <div>
-                <h2>Pessoas por tipos</h2>
-                <p>Junho 2026</p>
+                <span class="page-eyebrow">Membresia</span>
+                <h2>Pessoas por tipo</h2>
+                <p class="panel-subtitle">Distribuição atual dos cadastros no sistema.</p>
             </div>
+            <a class="icon-button" href="{{ url_for('painel_pessoas') }}" aria-label="Abrir módulo de pessoas">
+                <i data-lucide="arrow-up-right"></i>
+            </a>
         </div>
-        <div class="donut-wrap">
-            <div class="donut-chart">
-                <span>{{ metricas.total_pessoas }}</span>
+
+        <div class="people-dashboard-chart">
+            <div class="donut-wrap">
+                <div class="donut-chart"
+                    style="background: {% if metricas.total_pessoas %}conic-gradient({% for tipo in pessoas_por_status %}{{ tipo.cor }} {{ tipo.inicio }}deg {{ tipo.fim }}deg{% if not loop.last %}, {% endif %}{% endfor %}){% else %}#e9edf5{% endif %};">
+                    <span>{{ metricas.total_pessoas }}</span>
+                </div>
+                <small>Total de pessoas</small>
             </div>
-        </div>
-        <div class="legend-row">
-            {% for tipo in pessoas_por_status %}
-            <span><i style="background: var(--chart-color-{{ loop.index }});"></i>{{ tipo.label }}</span>
-            {% endfor %}
+            <div class="chart-legend dashboard-chart-legend" aria-label="Legenda do gráfico de pessoas">
+                {% for tipo in pessoas_por_status %}
+                <span class="legend-item">
+                    <i class="legend-swatch" style="background: {{ tipo.cor }};"></i>
+                    <strong>{{ tipo.label }}</strong>
+                    <small>{{ tipo.valor }} · {{ tipo.percentual }}%</small>
+                </span>
+                {% endfor %}
+            </div>
         </div>
     </section>
 
     <aside class="dashboard-side">
-        <section class="content-card">
-            <div class="card-heading">
-                <h2>Engajamento do Aplicativo</h2>
+        <section class="content-card dashboard-panel">
+            <div class="dashboard-panel-header">
+                <div>
+                    <span class="page-eyebrow">App</span>
+                    <h2>Engajamento</h2>
+                </div>
+                <i data-lucide="activity"></i>
             </div>
             <div class="progress-list">
                 {% for item in engajamento_app %}
-                <div>
+                <div class="progress-row">
                     <div class="progress-label">
                         <span>{{ item.periodo }}</span>
-                        <span>{{ item.valor }} ({{ item.percentual }}%)</span>
+                        <strong>{{ item.valor }} interação(ões)</strong>
                     </div>
-                    <div class="soft-progress"><span style="width: {{ item.percentual }}%;"></span></div>
+                    <div class="progress-track"><span class="progress-fill" style="width: {{ item.percentual }}%;"></span></div>
+                    <small>{{ item.percentual }}% da base de pessoas</small>
                 </div>
                 {% endfor %}
             </div>
         </section>
 
-        <a class="content-card summary-card-link" href="{{ url_for('listar_financeiro') }}">
-            <div class="card-heading">
-                <h2>Financeiro</h2>
-                <i data-lucide="arrow-up-right"></i>
+        <a class="content-card dashboard-panel summary-card-link dashboard-finance-card" href="{{ url_for('listar_financeiro') }}">
+            <div class="dashboard-panel-header">
+                <div>
+                    <span class="page-eyebrow">Financeiro</span>
+                    <h2>Saldo atual</h2>
+                </div>
+                <i data-lucide="wallet-cards"></i>
             </div>
             <strong>{{ metricas.saldo|moeda_br }}</strong>
-            <small>Saldo atual</small>
-        </a>
-
-        <a class="content-card summary-card-link" href="{{ url_for('painel_comunicacao') }}">
-            <div class="card-heading">
-                <h2>Devocionais</h2>
-                <i data-lucide="arrow-up-right"></i>
-            </div>
-            <small>{{ metricas.devocionais }} devocionais publicado(s)</small>
-            <div class="mini-table-row">
-                <span>Título</span>
-                <span>Tipo</span>
-                <span>Leituras</span>
-            </div>
+            <small>Receitas: {{ metricas.entradas|moeda_br }} · Despesas: {{ metricas.saidas|moeda_br }}</small>
         </a>
     </aside>
 </div>
 
+<section class="dashboard-grid dashboard-lists-grid" aria-label="Atividades recentes">
+    <div class="content-card dashboard-panel">
+        <div class="dashboard-panel-header">
+            <div>
+                <span class="page-eyebrow">Agenda</span>
+                <h2>Próximos cultos</h2>
+            </div>
+            <a class="icon-button" href="{{ url_for('listar_eventos') }}" aria-label="Abrir cultos">
+                <i data-lucide="calendar-days"></i>
+            </a>
+        </div>
+        <div class="dashboard-list">
+            {% for evento in eventos %}
+            <a href="{{ url_for('listar_eventos') }}">
+                <span>{{ evento.nome }}</span>
+                <small>{{ evento.data|data_br }} · {{ evento.status }}</small>
+            </a>
+            {% else %}
+            <div class="dashboard-empty">Nenhum culto agendado.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="content-card dashboard-panel">
+        <div class="dashboard-panel-header">
+            <div>
+                <span class="page-eyebrow">Secretaria</span>
+                <h2>Cadastros recentes</h2>
+            </div>
+            <a class="icon-button" href="{{ url_for('listar_membros') }}" aria-label="Abrir membros">
+                <i data-lucide="users"></i>
+            </a>
+        </div>
+        <div class="dashboard-list">
+            {% for membro in membros_recentes %}
+            <a href="{{ url_for('editar_membro', membro_id=membro.id) }}">
+                <span>{{ membro.nome }}</span>
+                <small>{{ membro.situacao }} · {{ membro.telefone or "Sem telefone" }}</small>
+            </a>
+            {% else %}
+            <div class="dashboard-empty">Nenhum cadastro recente.</div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
 <div class="modal fade" id="filtrosDashboard" tabindex="-1" aria-labelledby="filtrosDashboardLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered filter-dialog">
-        <div class="modal-content filter-modal">
+        <form class="modal-content filter-modal" method="get" action="{{ url_for('dashboard') }}">
             <div class="modal-header">
                 <h2 class="modal-title" id="filtrosDashboardLabel">Filtros</h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="modal-body">
-                <label class="form-label" for="dashboardPeriodo">Período</label>
-                <input class="form-control" id="dashboardPeriodo" type="text" value="01/06/2026 - 30/06/2026">
+            <div class="modal-body filter-grid">
+                <div>
+                    <label class="form-label" for="dashboardInicio">Data inicial</label>
+                    <input class="form-control" id="dashboardInicio" name="inicio" type="date" value="{{ request.args.get('inicio', '2026-06-01') }}">
+                </div>
+                <div>
+                    <label class="form-label" for="dashboardFim">Data final</label>
+                    <input class="form-control" id="dashboardFim" name="fim" type="date" value="{{ request.args.get('fim', '2026-06-30') }}">
+                </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-outline-secondary" type="button">Limpar</button>
-                <button class="btn btn-primary" type="button" data-bs-dismiss="modal">Filtrar</button>
+                <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Limpar</a>
+                <button class="btn btn-primary" type="submit">Filtrar</button>
             </div>
-        </div>
+        </form>
     </div>
 </div>
 {% endblock %}
