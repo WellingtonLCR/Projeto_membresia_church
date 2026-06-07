@@ -1684,11 +1684,15 @@ def rotulo_tela(valor):
 
 @app.context_processor
 def inject_layout_context():
+    metricas_layout = {}
+    if session.get("usuario_logado") and session.get("usuario_perfil") != PERFIL_VISITANTE:
+        metricas_layout = gerar_metricas()
+
     return {
         "usuario_logado": session.get("usuario_logado"),
         "usuario_nome": session.get("usuario_nome"),
         "usuario_perfil": session.get("usuario_perfil"),
-        "metricas_layout": gerar_metricas(),
+        "metricas_layout": metricas_layout,
         "menu_lateral": MENU_LATERAL,
         "breadcrumbs": montar_breadcrumbs(request.endpoint),
     }

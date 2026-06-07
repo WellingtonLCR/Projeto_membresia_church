@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import patch
 
 from werkzeug.security import generate_password_hash
@@ -37,6 +38,101 @@ class MembresiaAppTestCase(unittest.TestCase):
             with self.subTest(rota=rota):
                 resposta = self.client.get(rota)
                 self.assertEqual(resposta.status_code, 200)
+
+    def test_assets_essenciais_sao_entregues(self):
+        for rota, trecho in [
+            ("/static/css/styles.css", b"admin-shell"),
+            ("/static/js/script.js", b"DOMContentLoaded"),
+        ]:
+            with self.subTest(rota=rota):
+                resposta = self.client.get(rota)
+                conteudo = resposta.get_data()
+                resposta.close()
+
+                self.assertEqual(resposta.status_code, 200)
+                self.assertIn(trecho, conteudo)
+
+    def test_css_fallback_preserva_responsividade_do_layout_admin(self):
+        resposta = self.client.get("/static/css/styles.css")
+        css = resposta.get_data(as_text=True)
+        resposta.close()
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertIn(".d-none", css)
+        self.assertIn(".d-lg-flex", css)
+        self.assertLess(css.index(".d-none"), css.index(".d-lg-flex"))
+
+    def test_identidade_visual_usa_nome_correto_da_aplicacao(self):
+        self.autenticar()
+
+        resposta = self.client.get("/dashboard")
+        html = resposta.get_data(as_text=True)
+        resposta.close()
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertIn("Sistema de Membresia Church", html)
+        self.assertIn("Membresia Church", html)
+        marca_antiga = "Do" + "mus Control"
+        self.assertNotIn(marca_antiga, html)
+
+    def test_codigo_principal_nao_usa_identidade_antiga(self):
+        marca_antiga = "Do" + "mus"
+        arquivos = [
+            "README.md",
+            "app.py",
+            "templates/base.html",
+            "templates/base_publica.html",
+            "static/css/styles.css",
+            "static/js/script.js",
+            "material_TCC/gerar_docx_abnt.py",
+        ]
+
+        for arquivo in arquivos:
+            with self.subTest(arquivo=arquivo):
+                conteudo = Path(arquivo).read_text(encoding="utf-8")
+                self.assertNotIn(marca_antiga, conteudo)
+
+    def test_tema_e_filtros_tem_fallback_estavel(self):
+        self.autenticar()
+        resposta = self.client.get("/dashboard")
+        html = resposta.get_data(as_text=True)
+        resposta.close()
+
+        script = Path("static/js/script.js").read_text(encoding="utf-8")
+        css = Path("static/css/styles.css").read_text(encoding="utf-8")
+
+        self.assertIn("data-theme-toggle", html)
+        self.assertIn("membresia-theme", script)
+        self.assertIn("membresia-backdrop", script)
+        self.assertIn("membresia-backdrop", css)
+        self.assertIn("hidden.bs.modal", script)
+        self.assertIn("liberarPagina", script)
+        self.assertIn(':root[data-theme="dark"] body.admin-shell', css)
+        self.assertNotIn("domus-backdrop", script)
+        self.assertNotIn("domus-backdrop", css)
+
+    def test_busca_superior_tem_comportamento_local(self):
+        resposta = self.client.get("/static/js/script.js")
+        script = resposta.get_data(as_text=True)
+        resposta.close()
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertIn("data-local-search", script)
+        self.assertIn("local-search-hidden", script)
+        self.assertIn("Nenhum resultado encontrado", script)
+
+    def test_rotas_get_sem_parametros_nao_quebram_com_admin_logado(self):
+        self.autenticar()
+        rotas_ignoradas = {"static", "logout"}
+
+        for regra in app.url_map.iter_rules():
+            if regra.endpoint in rotas_ignoradas or "GET" not in regra.methods or regra.arguments:
+                continue
+
+            with self.subTest(rota=regra.rule, endpoint=regra.endpoint):
+                resposta = self.client.get(regra.rule, follow_redirects=False)
+
+                self.assertLess(resposta.status_code, 500)
 
     def test_app_usuario_home_exibe_conteudo_alimentado_pelo_admin(self):
         evento = {

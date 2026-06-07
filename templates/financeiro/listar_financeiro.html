@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block titulo %}{{ titulo_lista or "Financeiro" }} · Domus Control{% endblock %}
+{% block titulo %}{{ titulo_lista or "Financeiro" }} · Sistema de Membresia Church{% endblock %}
 
 {% block conteudo %}
 {% set subtipo = "Receita" if tipo_atual == "Entrada" else ("Despesa" if tipo_atual == "Saida" else "Movimentação") %}
@@ -75,11 +75,7 @@
                     </td>
                     <td>{{ lancamento.situacao_baixa }}</td>
                     <td class="table-money">{{ lancamento.valor|moeda_br }}</td>
-                    <td>
-                        <button class="icon-button icon-button-sm" type="button" aria-label="Ações do lançamento">
-                            <i data-lucide="ellipsis"></i>
-                        </button>
-                    </td>
+                    <td><span class="table-muted-action">Sem ações</span></td>
                 </tr>
                 {% else %}
                 <tr>

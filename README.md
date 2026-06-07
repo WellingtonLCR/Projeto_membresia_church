@@ -59,40 +59,40 @@ Figura 15. Página da equipe.
 
 ## SUMÁRIO
 
-1. INTRODUÇÃO
-1.1 PROBLEMATIZAÇÃO
-1.2 Objetivo geral
-1.3 Objetivos específicos
-1.4 METODOLOGIA DA PESQUISA
-1.5 ESTRUTURA DO TRABALHO
-2. REVISÃO BIBLIOGRÁFICA
-2.1 SISTEMAS WEB PARA GESTÃO ADMINISTRATIVA
-2.2 ARQUITETURA E INFRAESTRUTURA DA APLICAÇÃO
-2.3 FRONT-END: HTML, CSS, BOOTSTRAP, JINJA2 E JAVASCRIPT
-2.4 BACK-END: PYTHON E FLASK
-2.5 ROTAS HTTP E API DA APLICAÇÃO
-2.6 PERSISTÊNCIA DE DADOS COM MYSQL
-2.7 SEGURANÇA, VALIDAÇÃO E ORGANIZAÇÃO DOS DADOS
-2.8 TESTES E FERRAMENTAS DE DESENVOLVIMENTO
-2.9 USABILIDADE E ORGANIZAÇÃO DA INFORMAÇÃO
-2.10 VIBE CODING NO DESENVOLVIMENTO DO PROJETO
-3. MODELO DE NEGÓCIOS
-3.1 CANVAS
-3.2 O QUE SERÁ ELABORADO
-3.3 PARA QUEM SERÁ ELABORADO
-3.4 COMO SERÁ ELABORADO
-3.5 QUANTO CUSTARÁ
-4. DOCUMENTAÇÃO
-4.1 DECLARAÇÃO DE ABRANGÊNCIA DO PROJETO
-4.2 Requisitos funcionais
-4.3 Requisitos não funcionais
-4.4 Casos de uso
-4.5 Modelo conceitual
-4.6 Benchmarking e melhorias identificadas
-4.7 Alinhamento com o plano de estudos da disciplina
-5. MANUAL DO USUÁRIO
-6. CONSIDERAÇÕES FINAIS
-REFERÊNCIAS
+1. INTRODUÇÃO ............................................................. 6
+1.1 PROBLEMATIZAÇÃO ...................................................... 6
+1.2 Objetivo geral ....................................................... 7
+1.3 Objetivos específicos ................................................ 7
+1.4 METODOLOGIA DA PESQUISA .............................................. 8
+1.5 ESTRUTURA DO TRABALHO ................................................ 9
+2. REVISÃO BIBLIOGRÁFICA ................................................ 10
+2.1 SISTEMAS WEB PARA GESTÃO ADMINISTRATIVA ............................. 10
+2.2 ARQUITETURA E INFRAESTRUTURA DA APLICAÇÃO ........................... 11
+2.3 FRONT-END: HTML, CSS, BOOTSTRAP, JINJA2 E JAVASCRIPT ................ 13
+2.4 BACK-END: PYTHON E FLASK ............................................ 14
+2.5 ROTAS HTTP E API DA APLICAÇÃO ....................................... 15
+2.6 PERSISTÊNCIA DE DADOS COM MYSQL ..................................... 16
+2.7 SEGURANÇA, VALIDAÇÃO E ORGANIZAÇÃO DOS DADOS ....................... 17
+2.8 TESTES E FERRAMENTAS DE DESENVOLVIMENTO ............................ 18
+2.9 USABILIDADE E ORGANIZAÇÃO DA INFORMAÇÃO ............................ 19
+2.10 VIBE CODING NO DESENVOLVIMENTO DO PROJETO ......................... 20
+3. MODELO DE NEGÓCIOS ................................................... 21
+3.1 CANVAS .............................................................. 21
+3.2 O QUE SERÁ ELABORADO ................................................ 22
+3.3 PARA QUEM SERÁ ELABORADO ........................................... 22
+3.4 COMO SERÁ ELABORADO ................................................. 23
+3.5 QUANTO CUSTARÁ ...................................................... 23
+4. DOCUMENTAÇÃO .......................................................... 24
+4.1 DECLARAÇÃO DE ABRANGÊNCIA DO PROJETO ............................... 24
+4.2 Requisitos funcionais ............................................... 25
+4.3 Requisitos não funcionais ........................................... 27
+4.4 Casos de uso ........................................................ 28
+4.5 Modelo conceitual ................................................... 29
+4.6 Benchmarking e melhorias identificadas .............................. 30
+4.7 Alinhamento com o plano de estudos da disciplina .................... 31
+5. MANUAL DO USUÁRIO .................................................... 32
+6. CONSIDERAÇÕES FINAIS ................................................. 40
+REFERÊNCIAS .............................................................. 42
 
 ## 1. INTRODUÇÃO
 
@@ -483,9 +483,11 @@ RNF7. O sistema deve manter arquivos estáticos em `static` e templates em `temp
 RNF8. O sistema deve possuir `.gitignore` para evitar versionamento de cache, ambiente virtual e uploads dinâmicos.
 RNF9. O sistema deve ter testes automatizados básicos.
 RNF10. O sistema deve ser simples de executar em ambiente local.
-RNF11. O app do usuário deve reutilizar a mesma infraestrutura Flask, Jinja2 e MySQL, evitando dependência de framework mobile nativo no escopo atual.
-RNF12. A navegação administrativa deve ser agrupada por categorias recolhíveis, reduzindo repetição de menus nas páginas internas.
-RNF13. Relatórios devem ser organizados por categoria, evitando mistura de indicadores de áreas diferentes no mesmo bloco visual.
+RNF11. O sistema deve manter identidade visual única e consistente em todas as páginas administrativas.
+RNF12. O sistema deve permitir alternância entre tema claro e escuro sem redirecionar o usuário para outra página.
+RNF13. O app do usuário deve reutilizar a mesma infraestrutura Flask, Jinja2 e MySQL, evitando dependência de framework mobile nativo no escopo atual.
+RNF14. A navegação administrativa deve ser agrupada por categorias recolhíveis, reduzindo repetição de menus nas páginas internas.
+RNF15. Relatórios devem ser organizados por categoria, evitando mistura de indicadores de áreas diferentes no mesmo bloco visual.
 
 ### 4.4 Casos de uso
 
@@ -869,6 +871,8 @@ Para executar os testes:
 python -m unittest discover -s tests -q
 ```
 
+A revisão final também adicionou testes de entrega dos arquivos estáticos essenciais e uma varredura automática das rotas `GET` sem parâmetros com sessão administrativa autenticada. Essa verificação ajuda a identificar rapidamente páginas quebradas, erros de template, referências de rota incorretas e falhas de renderização antes da apresentação.
+
 ## 6. CONSIDERAÇÕES FINAIS
 
 O Sistema de Membresia Church atende ao objetivo de centralizar os principais processos administrativos de uma igreja em uma aplicação web. O projeto evoluiu de uma estrutura inicial com telas básicas para uma aplicação com banco MySQL real, módulos organizados, ações administrativas, relatórios, validações e uma frente pública em formato de app web para o usuário final.
@@ -878,6 +882,18 @@ A utilização de Flask, Jinja2, Bootstrap e MySQL permitiu aplicar os conteúdo
 O estudo de sistemas similares, registrado no benchmarking visual, também contribuiu para orientar a evolução da aplicação. A partir dele, foram identificadas melhorias como painéis por módulo, reorganização do menu por áreas recolhíveis, relatórios específicos, aniversários, testemunhos, devocional, centro de custos, formas de pagamento, formas de recebimento, configurações mais detalhadas da igreja, separação entre painel administrativo e app do usuário, login direcionado por perfil e interações públicas em pedidos de oração respondidos.
 
 Como evoluções futuras, podem ser adicionadas permissões mais detalhadas por perfil, envio real de mensagens, integração com e-mail, dashboards gráficos, controle de backups automatizados, deploy em ambiente de produção, notificações para o app do usuário e as melhorias planejadas a partir do benchmarking.
+
+### Revisão final das melhorias implementadas
+
+Na revisão final do projeto foram incorporadas melhorias visuais e funcionais inspiradas em sistemas profissionais de gestão eclesiástica, como Eklesia, InPeace e inChurch, mantendo a identidade do Sistema de Membresia Church. O login passou a aceitar identificador por e-mail, celular, CPF ou username, mantendo a autenticação protegida por sessão. O painel administrativo recebeu navegação lateral agrupada por módulos, barra superior com breadcrumbs, busca funcional na página atual, atalhos visuais, microinterações, estados de foco, rodapé padronizado e alternância real entre tema claro e escuro sem redirecionamento.
+
+Também foram revisadas as telas de dashboard, financeiro, doações e cultos. O dashboard passou a apresentar cards de métricas, gráfico visual de pessoas por tipo, indicadores de engajamento, resumo financeiro e devocionais. O módulo financeiro foi organizado em visão de competências, receitas, despesas, movimentações e cadastros auxiliares, com filtros por período, tipo, conta, categoria, status e usuário. O módulo de doações recebeu resumo, lista de doações, parcelas, recorrências, relatórios e configurações, além de fluxos para doador cadastrado, sem cadastro ou anônimo. O módulo de cultos passou a contar com listagem, filtros, cadastro de culto recorrente ou único e tela de reuniões.
+
+Durante essa etapa também foi corrigida a referência de rota `painel_doacoes` no menu lateral. A validação final confirmou que todos os endpoints usados pelo menu existem no `url_map` do Flask, evitando o erro `BuildError` na renderização do template base.
+
+Para reduzir riscos durante a apresentação, a interface recebeu uma camada local de segurança visual e funcional. O arquivo `static/css/styles.css` passou a conter estilos de fallback para botões, modais, offcanvas, filtros, badges, tabelas, cards, modo escuro, estados de foco e estados do menu lateral. O arquivo `static/js/script.js` passou a tratar abertura e fechamento de modais/offcanvas mesmo quando o JavaScript do Bootstrap não estiver disponível, limpar backdrops travados após filtros e impedir que a tela fique bloqueada após fechar uma janela. Também foram mantidos fallback textual para ícones, recolhimento do menu lateral, foco rápido na busca com `Ctrl+K`, troca de tema persistida em `localStorage` e máscara simples para campos monetários.
+
+Os dados demonstrativos permanecem centralizados nos scripts de migração e seed executados por `python db_setup.py`, incluindo perfis, permissões, usuários iniciais, membros, visitantes, ministérios, células, eventos, mural, devocional, pedidos de oração, doações, lançamentos financeiros e dados históricos de 2024 a 2026. Assim, o projeto pode ser apresentado com ambiente populado e com os principais fluxos administrativos navegáveis.
 
 ## REFERÊNCIAS
 

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block titulo %}Doações · Domus Control{% endblock %}
+{% block titulo %}Doações · Sistema de Membresia Church{% endblock %}
 
 {% block conteudo %}
 <div class="page-header">
@@ -91,9 +91,7 @@
                                 </button>
                             </form>
                             {% else %}
-                            <button class="icon-button icon-button-sm" type="button" aria-label="Ações da doação">
-                                <i data-lucide="ellipsis"></i>
-                            </button>
+                            <span class="table-muted-action">Sem ações</span>
                             {% endif %}
                         </div>
                     </td>

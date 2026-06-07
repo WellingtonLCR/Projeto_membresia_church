@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block titulo %}Cultos · Domus Control{% endblock %}
+{% block titulo %}Cultos · Sistema de Membresia Church{% endblock %}
 
 {% block conteudo %}
 <div class="page-header">
@@ -72,11 +72,7 @@
                             {{ evento.status or "Agendado" }}
                         </span>
                     </td>
-                    <td>
-                        <button class="icon-button icon-button-sm" type="button" aria-label="Ações do culto">
-                            <i data-lucide="ellipsis"></i>
-                        </button>
-                    </td>
+                    <td><span class="table-muted-action">Sem ações</span></td>
                 </tr>
                 {% else %}
                 <tr>

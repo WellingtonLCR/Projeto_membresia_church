@@ -1,30 +1,30 @@
 {% extends "base_publica.html" %}
 
-{% block titulo %}Entrar · Domus Control{% endblock %}
+{% block titulo %}Entrar · Sistema de Membresia Church{% endblock %}
 {% block body_class %}login-shell{% endblock %}
 {% block public_nav %}{% endblock %}
 {% block main_class %}login-main{% endblock %}
 {% block public_footer %}{% endblock %}
 
 {% block conteudo %}
-<section class="auth-screen" aria-label="Acesso ao Domus Control">
+<section class="auth-screen" aria-label="Acesso ao Sistema de Membresia Church">
     <div class="auth-visual">
         <div class="auth-quote">
-            <strong>"Igrejas cuidam de pessoas,<br>nós cuidamos de igrejas."</strong>
-            <span>— Domus Control</span>
+            <strong>"Cuidar de pessoas também exige cuidar bem da gestão."</strong>
+            <span>— Sistema de Membresia Church</span>
         </div>
     </div>
 
     <div class="auth-panel">
         <div class="auth-brand-row">
             <span class="brand-mini"><i data-lucide="church"></i></span>
-            <strong>Domus Control</strong>
+            <strong>Membresia Church</strong>
         </div>
 
         <form method="post" class="auth-form" novalidate>
             <div>
                 <h1>Fazer login</h1>
-                <p>Bem-vindo de volta! Use sua conta <strong>Domus</strong> para continuar</p>
+                <p>Bem-vindo de volta! Use sua conta da igreja para continuar.</p>
             </div>
 
             <label class="form-label" for="identificador">Identificador</label>
@@ -35,7 +35,7 @@
                     <option value="cpf">CPF</option>
                     <option value="username">Username</option>
                 </select>
-                <input class="form-control" id="identificador" name="identificador" type="text" placeholder="domuschurchapp@gmail.com" autocomplete="username" required>
+                <input class="form-control" id="identificador" name="identificador" type="text" placeholder="admin@igreja.org" autocomplete="username" required>
             </div>
 
             <label class="form-label" for="senha">Senha</label>
