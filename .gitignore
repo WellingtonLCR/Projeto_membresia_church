@@ -11,3 +11,6 @@ instance/
 static/imgs/eventos/*
 static/imgs/mural/*
 material_TCC/
+!material_TCC/
+material_TCC/*
+!material_TCC/Sistema_de_Membresia_Church_TCC_ABNT.docx
