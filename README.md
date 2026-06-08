@@ -1,5 +1,406 @@
 ﻿# Sistema de Membresia da Igreja Viva
 
+> **TCC - Tecnologia em Sistemas para Internet**  
+> FATEC Jahu | Prof. Ronan Adriel Zenatti | 2026
+
+## 📋 Sobre o Projeto
+
+Sistema web completo para gerenciamento administrativo de igrejas, centraliza cadastros, controles e processos que normalmente ficam espalhados em planilhas e registros informais.
+
+**Desenvolvido com:** Python, Flask, Jinja2, Bootstrap, MySQL
+
+---
+
+## ✨ Funcionalidades Principais
+
+### 🔐 Autenticação e Controle de Acesso
+- ✅ Login seguro com hash de senha (Werkzeug)
+- ✅ Controle de perfis (Administrador, Pastor, Secretaria, Líder, Financeiro, Visitante)
+- ✅ Rotas protegidas com decorador `@login_required`
+- ✅ Sessões de usuário gerenciadas pelo Flask
+- ✅ Cadastro público para visitantes
+
+### 👥 Módulo de Pessoas
+- ✅ Cadastro de membros e visitantes
+- ✅ Gerenciamento de famílias
+- ✅ Histórico espiritual (Batismo, Conversão, Profissão de fé, etc.)
+- ✅ Consulta de aniversários
+- ✅ Filtros e busca avançada
+
+### 📊 Módulo Financeiro
+- ✅ Gestão de receitas e despesas
+- ✅ Controle de categorias (Dízimo, Oferta, Contribuição, etc.)
+- ✅ Múltiplas contas (Caixa, Banco, POV, etc.)
+- ✅ Formas de pagamento/recebimento
+- ✅ Dashboard com métricas financeiras
+- ✅ Relatórios de fluxo de caixa
+
+### ⛪ Módulo de Eventos e Cultos
+- ✅ Cadastro de eventos (Cultos, Retiros, Conferências)
+- ✅ Gerenciamento de presença
+- ✅ Dias da semana de reuniões
+- ✅ Status de eventos (Agendado, Realizado, Cancelado)
+
+### 🙏 Módulo de Intercessão
+- ✅ Pedidos de oração públicos e privados
+- ✅ Sistema de reações (Estou orando, Amém, Força)
+- ✅ Comentários em pedidos
+- ✅ Categorias de oração (Saúde, Família, Trabalho, etc.)
+
+### 📢 Comunicação e Mural
+- ✅ Publicação de avisos (Rascunho, Publicado, Arquivado)
+- ✅ Devocional diário
+- ✅ Feed público de notícias
+- ✅ Sistema de categorias
+
+### 💰 Doações
+- ✅ Registro de doações (Recebida, Pendente, Cancelada)
+- ✅ Tipos de doação e campanhas
+- ✅ Rastreamento de doantes
+
+### 📋 Relatórios e Exportação
+- ✅ Relatórios financeiros
+- ✅ Exportação para Excel
+- ✅ Impressão de documentos
+- ✅ Gráficos de análise
+
+---
+
+## 🏗️ Arquitetura
+
+```
+Projeto_membresia_church/
+├── app.py                 # Aplicação Flask (rotas, validações)
+├── db.py                  # Camada de banco de dados
+├── db_setup.py            # Script de inicialização do banco
+├── requirements.txt       # Dependências Python
+│
+├── database/
+│   ├── migrations/        # Scripts SQL (criação de tabelas)
+│   │   ├── 0001_core_security.sql
+│   │   └── 0002_membresia_core.sql
+│   └── seeds/             # Dados iniciais (RBAC, demo)
+│       ├── 0001_rbac_perfis_permissoes.sql
+│       ├── 0002_dados_demo_app.sql
+│       └── 0003_dados_historicos_2024_2026.sql
+│
+├── templates/             # Templates Jinja2
+│   ├── base.html          # Template base admin
+│   ├── base_publica.html  # Template base público
+│   ├── dashboard.html
+│   ├── login.html
+│   ├── membros/
+│   ├── eventos/
+│   ├── financeiro/
+│   ├── doacoes/
+│   ├── comunicacao/
+│   ├── app_usuario/       # Interface do usuário final
+│   └── ...
+│
+├── static/
+│   ├── css/
+│   │   └── styles.css     # Estilos customizados (4900+ linhas)
+│   ├── js/
+│   │   └── script.js      # JavaScript customizado
+│   └── imgs/              # Imagens do sistema
+│
+├── tests/
+│   └── test_membresia_app.py  # Testes automatizados
+│
+└── README.md              # Este arquivo
+```
+
+---
+
+## 🚀 Configuração e Instalação
+
+### Pré-requisitos
+- Python 3.8+
+- MySQL 5.7+
+- Git
+
+### Passo 1: Clonar o Repositório
+```bash
+git clone https://github.com/WellingtonLCR/Projeto_membresia_church.git
+cd Projeto_membresia_church
+```
+
+### Passo 2: Criar Ambiente Virtual
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# ou
+venv\Scripts\activate     # Windows
+```
+
+### Passo 3: Instalar Dependências
+```bash
+pip install -r requirements.txt
+```
+
+### Passo 4: Configurar Banco de Dados
+```bash
+# Editar variáveis de ambiente (ou criar .env)
+export MYSQL_HOST=localhost
+export MYSQL_PORT=3306
+export MYSQL_USER=root
+export MYSQL_PASSWORD=sua_senha
+export MYSQL_DATABASE=membresia_church
+export SECRET_KEY=sua_chave_secreta
+
+# Windows
+set MYSQL_HOST=localhost
+set MYSQL_USER=root
+set MYSQL_PASSWORD=sua_senha
+```
+
+### Passo 5: Inicializar Banco de Dados
+```bash
+python db_setup.py
+```
+
+### Passo 6: Executar a Aplicação
+```bash
+python app.py
+```
+
+Acesse: **http://127.0.0.1:5000**
+
+---
+
+## 👤 Usuários Padrão
+
+Após executar `db_setup.py`, use:
+
+| Tipo | Email | Senha | Perfil |
+|------|-------|-------|--------|
+| Admin | admin@igreja.org | senha123 | Administrador |
+| Visitante | visitante@igreja.org | senha123 | Visitante |
+
+---
+
+## 📂 Principais Rotas
+
+### Públicas
+| Rota | Descrição |
+|------|-----------|
+| `/` | Página inicial |
+| `/login` | Autenticação |
+| `/cadastro` | Registro de visitantes |
+| `/sobre-equipe` | Informações da equipe |
+| `/app` | Dashboard do usuário |
+| `/app/eventos` | Lista de eventos |
+| `/app/cultos` | Cultos e reuniões |
+| `/app/feed` | Feed de notícias |
+| `/app/devocional` | Devocional diário |
+| `/app/oracao` | Pedidos de oração |
+| `/app/doacoes` | Doações |
+
+### Administrativas
+| Rota | Descrição |
+|------|-----------|
+| `/dashboard` | Painel executivo |
+| `/membros/listar` | Lista de membros |
+| `/usuarios/listar` | Gerenciamento de usuários |
+| `/financeiro/receitas` | Receitas |
+| `/financeiro/despesas` | Despesas |
+| `/eventos/listar` | Gerenciamento de eventos |
+| `/ministerios/listar` | Lista de ministérios |
+| `/doacoes/listar` | Doações recebidas |
+| `/relatorios/listar` | Relatórios diversos |
+
+---
+
+## 🗄️ Modelo de Dados
+
+### Principais Entidades
+- **usuarios**: Conta de acesso
+- **membros**: Pessoas (membros, visitantes, afastados)
+- **familias**: Agrupamento de membros
+- **ministerios**: Áreas de serviço
+- **celulas**: Pequenos grupos
+- **eventos**: Reuniões e atividades
+- **presencas**: Registro de comparecimento
+- **lancamentos_financeiros**: Receitas e despesas
+- **contas**: Caixas e bancos
+- **categorias_financeiras**: Tipos de movimento
+- **doacoes**: Contribuições de membros
+- **mural**: Avisos e notícias
+- **pedidos_oracao**: Oração de membros
+- **fornecedores**: Prestadores de serviço
+
+---
+
+## 🔒 Segurança
+
+✅ **Implementado:**
+- Hash de senha com Werkzeug
+- Queries parametrizadas (SQL injection prevention)
+- Exclusão lógica de dados
+- Controle de acesso por perfil
+- Sessões seguras do Flask
+- Validação de formulários no back-end
+
+---
+
+## 🧪 Testes
+
+Executar testes:
+```bash
+python -m pytest tests/
+# ou
+python -m unittest discover tests/
+```
+
+Os testes cobrem:
+- ✅ Renderização de rotas públicas
+- ✅ Bloqueio de rotas protegidas sem autenticação
+- ✅ Validação de formulários
+- ✅ Operações CRUD
+- ✅ Redirecionamentos após ações
+
+---
+
+## 📊 Dependências
+
+| Pacote | Versão | Descrição |
+|--------|--------|-----------|
+| Flask | 3.1.3 | Framework web |
+| Jinja2 | 3.1.6 | Motor de templates |
+| Werkzeug | 3.1.7 | Utilitários web |
+| mysql-connector-python | 9.5.0 | Driver MySQL |
+| Click | 8.3.1 | CLI |
+| Blinker | 1.9.0 | Event dispatcher |
+
+Ver `requirements.txt` para lista completa.
+
+---
+
+## 🎨 Customizações CSS
+
+O arquivo `static/css/styles.css` contém:
+- Layout responsivo (mobile-first)
+- Sistema de cores (primary: #2454e8, teal: #008c7a, orange: #ff6b2c)
+- Menu lateral colapsável
+- Dashboard com cards
+- Tabelas administrativas
+- Modais de filtro (sem fade animation)
+- Backdrop com tint azul
+- Z-index strategy (backdrop: 1040, modal: 1095)
+
+---
+
+## 🌐 API Endpoints
+
+O sistema não expõe uma API REST pública separada. A comunicação ocorre via:
+- **GET**: Renderização de páginas
+- **POST**: Envio de formulários
+- Responses em HTML (Jinja2)
+- Redirecionamentos com Flash messages
+
+---
+
+## 📝 Convenções de Código
+
+### Rotas
+```python
+@app.route("/caminho/<tipo>/<id>", methods=["GET", "POST"])
+@login_required
+def nome_funcao():
+    ...
+```
+
+### Funções de Banco
+```python
+def listar_algo_db(filtros=""):
+    sql = "SELECT * FROM tabela WHERE ..."
+    return execute_query(sql, params)
+```
+
+### Templates
+- `templates/entidade/listar_entidade.html`
+- `templates/entidade/inserir_entidade.html`
+- Herança: `{% extends "base.html" %}`
+
+---
+
+## 🐛 Troubleshooting
+
+### Erro de conexão MySQL
+```
+Error: Failed to connect to MySQL
+```
+**Solução:** Verificar variáveis de ambiente e credenciais no banco
+
+### Erro de imports
+```
+ModuleNotFoundError: No module named 'flask'
+```
+**Solução:** Executar `pip install -r requirements.txt`
+
+### Templates não encontrados
+```
+jinja2.exceptions.TemplateNotFound
+```
+**Solução:** Verificar caminho do arquivo em `templates/`
+
+---
+
+## 📚 Referências e Benchmarking
+
+O projeto foi desenvolvido com base em:
+- Material de aulas de Programação para Internet (FATEC Jahu)
+- Boas práticas Flask e Jinja2
+- Padrões de organização de projetos
+- Convenções MySQL e SQL parametrizado
+
+Sistemas analisados como referência:
+- ERPNext
+- Odoo
+- Church Management Systems
+
+---
+
+## 👨‍💻 Autor
+
+**Wellington Luis Costa Ribeiro**  
+- GitHub: [@WellingtonLCR](https://github.com/WellingtonLCR)
+- Email: wellington.lcr@fatec.sp.gov.br
+
+Desenvolvido para TCC em 2026 sob orientação do Prof. Ronan Adriel Zenatti
+
+---
+
+## 📄 Licença
+
+Projeto acadêmico - FATEC Jahu
+
+---
+
+## 📞 Suporte
+
+Para dúvidas ou problemas:
+1. Verifique a documentação do TCC em `material_TCC/`
+2. Consulte os testes em `tests/`
+3. Abra uma issue no GitHub
+
+---
+
+## ✅ Status do Projeto
+
+| Etapa | Status |
+|-------|--------|
+| Análise | ✅ Concluída |
+| Design | ✅ Concluída |
+| Desenvolvimento | ✅ Concluída |
+| Testes | ✅ Concluída |
+| Documentação | ✅ Concluída |
+| **Finalizado** | **✅ 100%** |
+
+---
+
+**Última atualização:** 07/06/2026
+
 CENTRO PAULA SOUZA
 FACULDADE DE TECNOLOGIA DE JAHU
 CURSO DE TECNOLOGIA EM SISTEMAS PARA INTERNET
