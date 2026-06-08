@@ -3,6 +3,412 @@
 > **TCC - Tecnologia em Sistemas para Internet**  
 > FATEC Jahu | Prof. Ronan Adriel Zenatti | 2026
 
+## Atualização geral do README
+
+Esta seção foi atualizada após revisão dos arquivos do repositório (`app.py`, camada de banco, migrations, seeds, templates, static, testes, documentação Markdown e material TCC). Ela consolida o estado atual do sistema e serve como guia rápido para instalação, uso e entendimento das funcionalidades implementadas.
+
+### Stack utilizada
+
+| Camada | Tecnologias |
+| --- | --- |
+| Back-end | Python, Flask, Werkzeug |
+| Templates | Jinja2, Bootstrap, Lucide Icons |
+| Front-end | HTML, CSS, JavaScript |
+| Banco | MySQL, `mysql-connector-python` |
+| Testes | `unittest`, Flask test client, `unittest.mock` |
+
+### Estrutura real do projeto
+
+```text
+Projeto_membresia_church/
+├── app.py
+├── db.py
+├── db_setup.py
+├── requirements.txt
+├── README.md
+├── CHECKLIST_FINAL.md
+├── GUIA_TCC.md
+├── SUMARIO_EXECUTIVO.md
+├── VALIDACAO_TECNICA.md
+├── database/
+│   ├── migrations/
+│   │   ├── 0001_core_security.sql
+│   │   └── 0002_membresia_core.sql
+│   └── seeds/
+│       ├── 0001_rbac_perfis_permissoes.sql
+│       ├── 0002_dados_demo_app.sql
+│       └── 0003_dados_historicos_2024_2026.sql
+├── material_TCC/
+│   └── Sistema_de_Membresia_Church_TCC_ABNT.docx
+├── static/
+│   ├── css/styles.css
+│   ├── js/script.js
+│   └── imgs/
+├── templates/
+│   ├── app_usuario/
+│   ├── celulas/
+│   ├── comunicacao/
+│   ├── configuracoes/
+│   ├── doacoes/
+│   ├── eventos/
+│   ├── familias/
+│   ├── financeiro/
+│   ├── fornecedores/
+│   ├── intercessao/
+│   ├── membros/
+│   ├── ministerios/
+│   ├── modulos/
+│   ├── mural/
+│   ├── partials/
+│   ├── presencas/
+│   ├── relatorios/
+│   └── usuarios/
+└── tests/test_membresia_app.py
+```
+
+### Função dos arquivos principais
+
+| Arquivo | Finalidade |
+| --- | --- |
+| `app.py` | Aplicação Flask principal: constantes de domínio, helpers, consultas, métricas, filtros, validações, menus e rotas. |
+| `db.py` | Configuração do pool MySQL e funções `execute_query`/`execute_one` com commit e rollback. |
+| `db_setup.py` | Cria o banco, executa migrations/seeds e aplica ajustes de compatibilidade. |
+| `database/migrations/0001_core_security.sql` | Tabelas de perfis, usuários, permissões e auditoria. |
+| `database/migrations/0002_membresia_core.sql` | Tabelas de igreja, membros, famílias, ministérios, células, eventos, financeiro, doações, comunicação, mural, oração e configurações. |
+| `database/seeds/0001_rbac_perfis_permissoes.sql` | Perfis, permissões, usuários iniciais, configurações e categorias financeiras base. |
+| `database/seeds/0002_dados_demo_app.sql` | Dados demonstrativos para app, membros, células, ministérios, eventos, mural e oração. |
+| `database/seeds/0003_dados_historicos_2024_2026.sql` | Dados históricos de fornecedores, membros, eventos, mural, intercessão e doações. |
+| `static/css/styles.css` | Identidade visual, layout público/admin, app do usuário, dashboards, cards, modais, responsividade e temas. |
+| `static/js/script.js` | Confirmação de exclusão, força de senha, troca de tema, correção de overlays/modais, busca local, filtros e interações de UI. |
+| `templates/` | Telas públicas, administrativas e componentes Jinja2. |
+| `tests/test_membresia_app.py` | Testes de rotas, assets, login, permissões, validações, app público, ações POST e regressões visuais. |
+
+### Funcionalidades implementadas por módulo
+
+#### Área pública e app do usuário
+
+- Página inicial institucional da Igreja Viva.
+- Página pública sobre a equipe de desenvolvimento.
+- Cadastro público de visitante em `/cadastro` e `/app/cadastro`.
+- App do usuário em `/app` e `/app/inicio`.
+- Agenda pública de eventos com detalhe por evento.
+- Programação de cultos e encontros.
+- Feed de notícias e avisos publicados no mural administrativo.
+- Devocional separado do feed geral.
+- Tela pública de pedidos de oração.
+- Envio de pedido de oração com categoria, contato e opção de privacidade.
+- Testemunhos baseados em pedidos respondidos e públicos.
+- Reações públicas em pedidos de oração: `orando`, `amem` e `forca`.
+- Comentários públicos em pedidos de oração.
+- Tela pública de doações com PIX, dados bancários, mensagem institucional e formas aceitas.
+
+#### Autenticação, sessão e perfis
+
+- Login por e-mail, nome de usuário, CPF, telefone/celular ou campo legado compatível.
+- Senhas com hash Werkzeug.
+- Controle de sessão Flask.
+- Logout.
+- Recuperação de senha com resposta segura, sem revelar se o e-mail existe.
+- Bloqueio de rotas privadas com `@login_required`.
+- Redirecionamento por perfil: administradores vão para `/dashboard`; visitantes vão para `/app`.
+- Impedimento de acesso administrativo para perfil Visitante.
+- Perfis: Administrador, Pastor, Secretaria, Líder, Financeiro e Visitante.
+- Status de usuário: Ativo, Bloqueado e Inativo.
+- CRUD administrativo de usuários com perfil, status e senha provisória.
+
+#### Dashboard e navegação administrativa
+
+- Dashboard executivo em `/dashboard`.
+- Métricas de membros, visitantes, famílias, ministérios, células, eventos, presenças, financeiro, doações, mural, comunicação e intercessão.
+- Cards de indicadores, gráficos/listas de pessoas por status, engajamento, próximos cultos e cadastros recentes.
+- Filtro por período.
+- Menu lateral por módulos: Dashboard, Financeiro, Doações, Cultos, Pessoas, Ministérios, Células, Conteúdo, Comunicação, Intercessão, Relatórios e Configurações.
+- Painéis intermediários por módulo com atalhos e resumos.
+
+#### Pessoas, membros, visitantes e famílias
+
+- Painel de pessoas com indicadores de membros ativos, visitantes, famílias, afastados e aniversariantes.
+- Listagem de membros e visitantes, com busca e filtros.
+- Cadastro, edição, inativação e exclusão lógica de pessoas.
+- Dados pessoais, contato, endereço, estado civil, profissão e dados eclesiásticos.
+- Vínculo com célula e ministérios.
+- Histórico espiritual por membro, com batismo, conversão, profissão de fé, transferência, desligamento, discipulado, acompanhamento pastoral, pedido de oração, testemunho, aconselhamento e observações.
+- Gestão de famílias com responsável, telefone, endereço, observações e vínculo de membros.
+- Consulta de aniversariantes por mês.
+
+#### Ministérios, células e presenças
+
+- Painel, listagem, busca, filtro, cadastro, edição e exclusão lógica/inativação de ministérios.
+- Campos de ministério: nome, descrição, líder, dia de reunião, vagas e status.
+- Painel, listagem e cadastro de células.
+- Campos de célula: nome, líder, bairro, endereço, dia, horário e status.
+- Registro e listagem de presenças.
+- Tipos de presença: Culto, Evento e Célula.
+
+#### Cultos, reuniões e eventos
+
+- Painel de cultos.
+- Listagem administrativa de cultos/eventos.
+- Cadastro de evento/culto com nome, descrição, datas, local, banner e status.
+- Upload de banner para eventos.
+- Filtro por status e dia da semana.
+- Status de evento: Agendado, Realizado e Cancelado.
+- Tela de reuniões/cultos.
+- Eventos válidos alimentam automaticamente o app do usuário.
+
+#### Financeiro e fornecedores
+
+- Painel financeiro, visão de competência, receitas, despesas, resumo e movimentações.
+- Cadastro e listagem de lançamentos financeiros.
+- Campos de lançamento: tipo, categoria, conta, membro, fornecedor, descrição, valor, data e usuário responsável.
+- Filtros por período, tipo, conta, categoria, usuário, membro, fornecedor e status de baixa.
+- Categorias financeiras de entrada e saída.
+- Centros de custo/resumos financeiros.
+- Contas financeiras com banco, status, saldo inicial e saldo atual calculado.
+- Formas de recebimento e pagamento.
+- Cadastro, listagem, busca e exclusão lógica de fornecedores.
+
+#### Doações
+
+- Painel, listagem, cadastro, parcelas, recorrentes, relatórios e configurações de doações.
+- Tipos: Dizimo, Oferta, Contribuicao, Campanha, Missao e Outros.
+- Formas de recebimento: Dinheiro, Espécie, PIX, cartão, transferência, depósito, boleto, cheque e outros.
+- Status: Recebida, Pendente e Cancelada.
+- Doador por nome livre ou membro cadastrado.
+- Categoria financeira e conta de destino.
+- Ações para receber doação pendente, cancelar e baixar para o financeiro.
+- Cadastros auxiliares de tipos, categorias e chaves PIX.
+
+#### Comunicação, conteúdo e mural
+
+- Painel de comunicação.
+- Listagem e cadastro de mensagens.
+- Canais: WhatsApp, Email e Interna.
+- Destinos: Geral, Ministério, Célula, Lista, Aniversariantes e Individual.
+- Status de mensagem: Rascunho, Agendada, Enviada e Falha.
+- Mural de avisos com título, categoria, conteúdo, imagem e status.
+- Status de mural: Rascunho, Publicado e Arquivado.
+- Publicação e arquivamento de avisos via POST.
+- Feed público e devocionais alimentados por avisos publicados.
+
+#### Intercessão e acompanhamento pastoral
+
+- Painel, listagem e cadastro administrativo de pedidos de oração.
+- Categorias: Saúde, Família, Trabalho, Vida espiritual e Outro.
+- Status: Pendente, Em oração, Respondido e Arquivado.
+- Marcação de pedido privado.
+- Contagem de orações.
+- Ações administrativas para registrar oração, marcar como respondido e arquivar.
+- Tela de testemunhos com pedidos públicos respondidos.
+- Reações e comentários públicos no app do usuário.
+
+#### Relatórios e exportações
+
+- Página de relatórios.
+- Grupos de relatórios: Pessoas, Eclesiástico, Financeiro, Comunicação e Intercessão.
+- Indicadores agregados por módulo.
+- Exportação em Excel.
+- Exportação em PDF simples.
+
+#### Configurações
+
+- Tela geral de configurações.
+- Atualização de dados da igreja, história institucional, informações exibidas, programação fixa, permissões, app, módulos e equipe.
+- Configurações gravadas na tabela `configuracoes_sistema`.
+
+#### Interface e experiência do usuário
+
+- Layout administrativo com sidebar desktop e offcanvas mobile.
+- Layout público independente e layout específico do app do usuário.
+- Cards, métricas, dashboards, badges de status, tabelas e formulários.
+- Modais e drawers para filtros e cadastros rápidos.
+- Busca local na interface administrativa.
+- Temas claro, escuro, alto contraste e sistema.
+- Ajustes de responsividade para mobile.
+- Backdrop customizado para modais/offcanvas.
+- Confirmação antes de exclusões.
+- Indicador de força de senha.
+
+### Banco de dados
+
+O banco padrão é `membresia_church` e pode ser alterado por variável de ambiente. As tabelas são criadas por duas migrations principais e populadas por três seeds.
+
+#### Variáveis de conexão
+
+| Variável | Padrão |
+| --- | --- |
+| `MYSQL_HOST` | `localhost` |
+| `MYSQL_PORT` | `3306` |
+| `MYSQL_USER` | `root` |
+| `MYSQL_PASSWORD` | vazio |
+| `MYSQL_DATABASE` | `membresia_church` |
+| `MYSQL_POOL_SIZE` | `5` |
+| `SECRET_KEY` | valor local definido em `app.py` se não informado |
+
+#### Tabelas de segurança
+
+- `perfis`
+- `usuarios`
+- `permissoes`
+- `usuario_perfil`
+- `perfil_permissao`
+- `usuario_permissao`
+- `auditoria_logs`
+
+#### Tabelas de negócio
+
+- `igrejas`
+- `ministerios`
+- `celulas`
+- `membros`
+- `familias`
+- `familia_membros`
+- `membro_ministerio`
+- `historico_espiritual`
+- `celula_reunioes`
+- `celula_presencas`
+- `eventos`
+- `evento_inscricoes`
+- `presencas`
+- `fornecedores`
+- `categorias_financeiras`
+- `contas_financeiras`
+- `lancamentos_financeiros`
+- `doacoes`
+- `comunicacao_listas`
+- `comunicacao_lista_membros`
+- `mensagens`
+- `mensagem_destinatarios`
+- `mural_avisos`
+- `pedidos_oracao`
+- `pedido_oracao_reacoes`
+- `pedido_oracao_comentarios`
+- `configuracoes_sistema`
+
+### Instalação e execução atualizadas
+
+```bash
+git clone https://github.com/WellingtonLCR/Projeto_membresia_church.git
+cd Projeto_membresia_church
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+Configure o MySQL:
+
+```bash
+export MYSQL_HOST=localhost
+export MYSQL_PORT=3306
+export MYSQL_USER=root
+export MYSQL_PASSWORD=sua_senha
+export MYSQL_DATABASE=membresia_church
+export SECRET_KEY=sua_chave_secreta
+```
+
+Inicialize o banco e rode a aplicação:
+
+```bash
+python db_setup.py
+python app.py
+```
+
+Acesse:
+
+- Aplicação: `http://127.0.0.1:5000`
+- Admin: `http://127.0.0.1:5000/login`
+- App do usuário: `http://127.0.0.1:5000/app`
+
+### Usuários iniciais corretos
+
+Após `python db_setup.py`:
+
+| Tipo | E-mail | Senha | Perfil |
+| --- | --- | --- | --- |
+| Administrador | `admin@igreja.org` | `admin123` | Administrador |
+| Visitante demo | `visitante@igreja.org` | `visitante123` | Visitante |
+
+### Mapa de rotas
+
+#### Públicas e app do usuário
+
+| Rota | Descrição |
+| --- | --- |
+| `/` | Página inicial institucional. |
+| `/sobre-equipe` | Página sobre o autor/equipe. |
+| `/login` | Login. |
+| `/recuperar-senha` | Recuperação de senha. |
+| `/cadastro` | Cadastro público de visitante. |
+| `/app`, `/app/inicio` | Início do app do usuário. |
+| `/app/cadastro` | Cadastro de visitante pelo app. |
+| `/app/eventos` | Agenda pública. |
+| `/app/eventos/<evento_id>` | Detalhe de evento. |
+| `/app/cultos` | Programação de cultos. |
+| `/app/feed` | Feed de avisos. |
+| `/app/devocional` | Devocional. |
+| `/app/oracao` | Pedidos de oração e testemunhos. |
+| `/app/oracao/<pedido_id>/reagir` | Reação pública a pedido de oração. |
+| `/app/oracao/<pedido_id>/comentar` | Comentário público em pedido de oração. |
+| `/app/doacoes` | Formas públicas de contribuição. |
+| `/logout` | Encerramento de sessão. |
+
+#### Administrativas
+
+| Módulo | Rotas |
+| --- | --- |
+| Dashboard | `/dashboard` |
+| Pessoas | `/pessoas/painel`, `/pessoas/aniversarios`, `/membros/listar`, `/visitantes/listar`, `/membros/inserir`, `/membros/editar/<id>`, `/membros/inativar/<id>`, `/membros/excluir/<id>`, `/membros/historico/<id>` |
+| Famílias | `/familias/listar`, `/familias/inserir`, `/familias/excluir/<id>` |
+| Usuários | `/usuarios/listar`, `/usuarios/inserir`, `/usuarios/editar/<id>`, `/usuarios/excluir/<id>` |
+| Ministérios | `/ministerios/painel`, `/ministerios/listar`, `/ministerios/inserir`, `/ministerios/editar/<id>`, `/ministerios/excluir/<id>` |
+| Células | `/celulas/painel`, `/celulas/listar`, `/celulas/inserir` |
+| Presenças | `/presencas/listar`, `/presencas/inserir` |
+| Cultos/Eventos | `/painel/cultos`, `/eventos/listar`, `/painel/cultos/reunioes`, `/painel/cultos/novo`, `/eventos/inserir` |
+| Financeiro | `/financeiro/painel`, `/financeiro/receitas`, `/financeiro/despesas`, `/financeiro/cadastros`, `/financeiro/categorias`, `/financeiro/centros-custo`, `/financeiro/contas`, `/financeiro/formas-recebimento`, `/financeiro/formas-pagamento`, `/financeiro/listar`, `/financeiro/lancamentos/inserir` |
+| Fornecedores | `/fornecedores/listar`, `/fornecedores/inserir`, `/fornecedores/excluir/<id>` |
+| Doações | `/painel/doacoes/resumo`, `/painel/doacoes/parcelas`, `/painel/doacoes/recorrentes`, `/painel/doacoes/relatorios`, `/painel/doacoes/configuracoes`, `/painel/doacoes/cadastros/tipos`, `/painel/doacoes/cadastros/categorias`, `/painel/doacoes/cadastros/chaves-pix`, `/doacoes/listar`, `/doacoes/inserir`, `/doacoes/receber/<id>`, `/doacoes/cancelar/<id>` |
+| Comunicação | `/comunicacao/painel`, `/comunicacao/listar`, `/comunicacao/mensagens/inserir` |
+| Mural | `/mural/listar`, `/mural/inserir`, `/mural/publicar/<id>`, `/mural/arquivar/<id>` |
+| Intercessão | `/intercessao/painel`, `/intercessao/testemunhos`, `/intercessao/listar`, `/intercessao/inserir`, `/intercessao/orar/<id>`, `/intercessao/responder/<id>`, `/intercessao/arquivar/<id>` |
+| Relatórios | `/relatorios/listar`, `/relatorios/exportar/excel`, `/relatorios/exportar/pdf` |
+| Configurações | `/configuracoes/listar`, `/configuracoes/igreja`, `/configuracoes/historia`, `/configuracoes/informacoes`, `/configuracoes/programacao`, `/configuracoes/permissoes`, `/configuracoes/app`, `/configuracoes/modulos` |
+
+### Segurança e validações
+
+- Hash de senha com Werkzeug.
+- Sessões Flask para autenticação.
+- Perfis e permissões por RBAC.
+- Bloqueio de usuários inativos ou bloqueados.
+- Restrições para visitante não acessar painel administrativo.
+- Queries parametrizadas.
+- Pool de conexões MySQL.
+- Transações com commit e rollback.
+- Exclusão lógica em entidades sensíveis.
+- Validação de e-mail, telefone, CPF, valores monetários, status e tipos permitidos.
+- Validação de upload de imagens de evento/mural.
+- Ações destrutivas e operacionais importantes restritas a POST.
+- Mensagens flash para retorno de operações.
+
+### Testes
+
+```bash
+python -m unittest discover tests
+```
+
+Os testes cobrem rotas públicas, assets, tema, responsividade, rotas privadas, login, perfis, visitante sem acesso ao admin, app do usuário, validações, filtros, cadastro público, oração pública e ações POST.
+
+### Material acadêmico e documentação
+
+| Arquivo | Conteúdo |
+| --- | --- |
+| `GUIA_TCC.md` | Guia de organização do TCC e estrutura do projeto. |
+| `SUMARIO_EXECUTIVO.md` | Visão executiva do sistema e funcionalidades. |
+| `VALIDACAO_TECNICA.md` | Validação técnica de arquitetura, rotas, banco e testes. |
+| `CHECKLIST_FINAL.md` | Checklist de entrega e itens concluídos. |
+| `material_TCC/Sistema_de_Membresia_Church_TCC_ABNT.docx` | Documento TCC em formato ABNT revisado com funcionalidades do sistema. |
+
+---
+
 ## 📋 Sobre o Projeto
 
 Sistema web completo para gerenciamento administrativo de igrejas, centraliza cadastros, controles e processos que normalmente ficam espalhados em planilhas e registros informais.
@@ -174,8 +580,8 @@ Após executar `db_setup.py`, use:
 
 | Tipo | Email | Senha | Perfil |
 |------|-------|-------|--------|
-| Admin | admin@igreja.org | senha123 | Administrador |
-| Visitante | visitante@igreja.org | senha123 | Visitante |
+| Admin | admin@igreja.org | admin123 | Administrador |
+| Visitante | visitante@igreja.org | visitante123 | Visitante |
 
 ---
 
