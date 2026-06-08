@@ -2516,26 +2516,12 @@ body.admin-shell .icon-button-sm {
     width: 32px;
 }
 
-body.admin-shell .filter-dialog {
-    max-width: min(672px, calc(100vw - 2rem));
-}
+/* Removed duplicate definitions - consolidated below */
 
-body.admin-shell .filter-modal {
-    border: 1px solid var(--admin-line);
-    border-radius: var(--admin-radius);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
-}
-
-body.admin-shell .filter-modal .modal-header,
-body.admin-shell .filter-modal .modal-footer {
-    border-color: var(--admin-line);
-    padding: 1.25rem 1.5rem;
-}
-
-body.admin-shell .filter-modal .modal-footer {
+body.admin-shell .date-range {
     display: grid;
-    gap: 1rem;
-    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 body.admin-shell .date-range {
@@ -3683,9 +3669,18 @@ body.admin-shell .notification-dot {
 
 body.admin-shell .modal.show {
     background: transparent;
-    display: block !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     overflow-x: hidden;
     overflow-y: auto;
+    pointer-events: auto !important;
+    z-index: 1095 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
 }
 
 body.admin-shell .modal.is-open {
@@ -3700,7 +3695,6 @@ body.admin-shell .modal.is-open {
     z-index: 2000;
 }
 
-body.admin-shell .filter-modal,
 body.admin-shell .offcanvas {
     border: 0;
     border-radius: 8px;
@@ -3928,19 +3922,19 @@ body.admin-shell.modal-open {
 }
 
 body.admin-shell .modal-backdrop {
-    z-index: 1040;
-    opacity: 0 !important;
+    z-index: 1040 !important;
+    opacity: 1 !important;
     transition: none !important;
+    background-color: rgba(36, 84, 232, 0.08) !important;
     pointer-events: none !important;
-    display: none !important;
 }
 
 body.admin-shell .modal-backdrop.show {
-    z-index: 1040;
-    opacity: 0 !important;
+    z-index: 1040 !important;
+    opacity: 1 !important;
     transition: none !important;
+    background-color: rgba(36, 84, 232, 0.08) !important;
     pointer-events: none !important;
-    display: none !important;
 }
 
 body.admin-shell .modal {
@@ -3967,25 +3961,49 @@ body.admin-shell .membresia-backdrop {
     z-index: 1040;
 }
 
-body.admin-shell .modal.show,
-body.admin-shell .filter-modal {
-    pointer-events: auto;
-}
-
 body.admin-shell .modal.show {
-    align-items: center;
+    display: flex !important;
+    pointer-events: auto !important;
+    z-index: 1095 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
 }
 
 body.admin-shell .filter-dialog {
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0 auto !important;
     max-width: min(720px, calc(100vw - 2rem));
     width: min(720px, calc(100vw - 2rem));
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 body.admin-shell .filter-modal {
+    pointer-events: auto;
     max-height: calc(100dvh - 2rem);
     overflow: hidden;
+    box-shadow: 0 20px 60px rgba(36, 84, 232, 0.25), 0 0 40px rgba(36, 84, 232, 0.15) !important;
+    border: 1px solid rgba(36, 84, 232, 0.2) !important;
+    border-radius: var(--admin-radius);
+    background: #ffffff !important;
+}
+
+body.admin-shell .filter-modal .modal-header,
+body.admin-shell .filter-modal .modal-footer {
+    border-color: rgba(36, 84, 232, 0.2);
+    padding: 1.25rem 1.5rem;
+}
+
+body.admin-shell .filter-modal .modal-footer {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr 1fr;
 }
 
 body.admin-shell .filter-modal .modal-body {
@@ -4098,12 +4116,6 @@ body.admin-shell .theme-option.active::after {
     margin-left: auto;
 }
 
-body.admin-shell .modal.show {
-    display: block;
-    pointer-events: auto;
-    z-index: 1095;
-}
-
 body.admin-shell .modal.show .modal-dialog,
 body.admin-shell .modal.show .modal-content,
 body.admin-shell .modal.show .modal-body,
@@ -4115,13 +4127,7 @@ body.admin-shell .modal.show button,
 body.admin-shell .modal.show a,
 body.admin-shell .filter-modal,
 body.admin-shell .filter-modal * {
-    pointer-events: auto;
-}
-
-body.admin-shell .modal-backdrop.show {
-    z-index: 1040;
-    opacity: 1 !important;
-    transition: none !important;
+    pointer-events: auto !important;
 }
 
 body.admin-shell .admin-mobile-menu {
@@ -4884,12 +4890,6 @@ body.admin-shell .modal-content {
     pointer-events: auto;
 }
 
-body.admin-shell .modal.show {
-    display: block !important;
-    pointer-events: auto !important;
-    z-index: 1095 !important;
-}
-
 body.admin-shell .modal.show .modal-dialog {
     pointer-events: auto !important;
     z-index: 1096 !important;
@@ -4906,25 +4906,10 @@ body.admin-shell .modal.show form,
 body.admin-shell .modal.show label,
 body.admin-shell .modal.show input,
 body.admin-shell .modal.show select,
-body.admin-shell .modal.show textarea,
-body.admin-shell .modal.show button,
-body.admin-shell .modal.show a,
-body.admin-shell .filter-modal,
-body.admin-shell .filter-modal * {
-    pointer-events: auto !important;
-}
-
-body.admin-shell .modal-backdrop.show {
-    z-index: 1040 !important;
-}
-
-body.admin-shell .modal.show {
+body.admin-shell .modal.show textarea {
     display: block !important;
-    z-index: 9999 !important;
-}
-
-body.admin-shell .modal.show .modal-dialog {
-    z-index: 10000 !important;
+    pointer-events: auto !important;
+    z-index: auto !important;
 }
 
 @media (max-width: 991.98px) {
