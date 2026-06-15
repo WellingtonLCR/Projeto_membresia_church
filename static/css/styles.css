@@ -2995,6 +2995,7 @@ body.admin-shell .status-pill.status-primary {
 .btn-close {
     align-items: center;
     background: #ffffff;
+    background-image: none !important;
     border: 1px solid #dfe3eb;
     border-radius: 8px;
     color: #111827;
@@ -3003,13 +3004,16 @@ body.admin-shell .status-pill.status-primary {
     flex: 0 0 auto;
     height: 38px;
     justify-content: center;
+    margin: 0 !important;
     opacity: 1;
+    padding: 0 !important;
     width: 38px;
 }
 
 .btn-close::before {
-    content: "x";
+    content: "×";
     font-size: 1.15rem;
+    font-weight: 700;
     line-height: 1;
 }
 

@@ -15,6 +15,30 @@ from db import execute_one, execute_query, get_connection
 app = Flask(__name__, static_folder="static")
 app.secret_key = os.environ.get("SECRET_KEY", "chave-dev-membresia-igreja-viva")
 
+
+def garantir_banco_inicializado():
+    try:
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+            finally:
+                cursor.close()
+        return True, None
+    except Exception as exc:
+        mensagem = str(exc)
+        if "Unknown database" not in mensagem:
+            return False, mensagem
+
+    try:
+        from db_setup import main as configurar_banco
+
+        configurar_banco()
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
+
 PERFIS_ADMINISTRATIVOS = ["Administrador", "Pastor", "Secretaria", "Líder", "Financeiro"]
 PERFIL_VISITANTE = "Visitante"
 PERFIS_USUARIO = PERFIS_ADMINISTRATIVOS + [PERFIL_VISITANTE]
@@ -1477,6 +1501,7 @@ def listar_lancamentos_financeiros(tipo="", filtros=None):
 def renderizar_lancamentos_financeiros(tipo, titulo_lista, descricao_lista):
     filtros = montar_filtros_financeiros(tipo)
     categorias_tipo = tipo or None
+    retorno_url = request.full_path[:-1] if request.full_path.endswith("?") else request.full_path
     return render_template(
         "financeiro/listar_financeiro.html",
         lancamentos=listar_lancamentos_financeiros(tipo, filtros),
@@ -1496,6 +1521,7 @@ def renderizar_lancamentos_financeiros(tipo, titulo_lista, descricao_lista):
         formas_recebimento=FORMAS_RECEBIMENTO,
         formas_pagamento=FORMAS_PAGAMENTO,
         status_baixa_opcoes=["Baixado", "Não baixado"],
+        retorno_url=retorno_url,
     )
 
 
@@ -2518,6 +2544,11 @@ def listar_testemunhos():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    banco_ok, erro_banco = garantir_banco_inicializado()
+    if not banco_ok:
+        flash(f"Nao foi possivel inicializar o banco de dados: {erro_banco}", "danger")
+        return render_template("login.html")
+
     if request.method == "POST":
         identificador_tipo = request.form.get("identificador_tipo", "email").strip().lower()
         identificador = request.form.get("identificador", "").strip()
@@ -3437,38 +3468,75 @@ def listar_financeiro():
     return renderizar_lancamentos_financeiros("", "Movimentações", "Histórico geral de entradas e saídas financeiras.")
 
 
+def contexto_form_lancamento_financeiro():
+    return {
+        "categorias": listar_categorias_financeiras(),
+        "contas": listar_contas_financeiras(),
+        "membros": listar_membros_select(),
+        "fornecedores": listar_fornecedores_select(),
+    }
+
+
+def obter_lancamento_financeiro(lancamento_id):
+    lancamento = db_one(
+        """
+        SELECT id, tipo, categoria_id, conta_id, membro_id, fornecedor_id, descricao, valor, data_lancamento
+        FROM lancamentos_financeiros
+        WHERE id = %s
+        """,
+        (lancamento_id,),
+    )
+    if not lancamento:
+        return None
+    if isinstance(lancamento.get("data_lancamento"), datetime):
+        lancamento["data_lancamento"] = lancamento["data_lancamento"].date()
+    lancamento["valor_input"] = f'{float(lancamento.get("valor") or 0):.2f}'
+    return lancamento
+
+
+def ler_form_lancamento_financeiro():
+    return {
+        "tipo": request.form.get("tipo", "").strip(),
+        "categoria_id": request.form.get("categoria_id", "").strip(),
+        "conta_id": request.form.get("conta_id", "").strip(),
+        "membro_id": request.form.get("membro_id", "").strip(),
+        "fornecedor_id": request.form.get("fornecedor_id", "").strip(),
+        "descricao": request.form.get("descricao", "").strip(),
+        "valor_raw": request.form.get("valor", "").strip(),
+        "data_lancamento": request.form.get("data_lancamento", "").strip(),
+    }
+
+
+def validar_form_lancamento_financeiro(dados):
+    if (
+        dados["tipo"] not in ["Entrada", "Saida"]
+        or not dados["categoria_id"]
+        or not dados["conta_id"]
+        or not dados["valor_raw"]
+        or not dados["data_lancamento"]
+    ):
+        return "Tipo, categoria, conta, valor e data são obrigatórios.", None
+
+    try:
+        valor = parse_valor_monetario(dados["valor_raw"])
+    except ValueError:
+        return "Informe um valor válido.", None
+
+    if valor < 0:
+        return "Valor não pode ser negativo.", None
+
+    return None, valor
+
 @app.route("/painel/financeiro/movimentacoes/nova", methods=["GET", "POST"])
 @app.route("/financeiro/lancamentos/inserir", methods=["GET", "POST"])
 @login_required
 def inserir_lancamento_financeiro():
-    categorias = listar_categorias_financeiras()
-    contas = listar_contas_financeiras()
-    membros = listar_membros_select()
-    fornecedores = listar_fornecedores_select()
-
     if request.method == "POST":
-        tipo = request.form.get("tipo", "").strip()
-        categoria_id = request.form.get("categoria_id", "").strip()
-        conta_id = request.form.get("conta_id", "").strip()
-        membro_id = request.form.get("membro_id", "").strip()
-        fornecedor_id = request.form.get("fornecedor_id", "").strip()
-        descricao = request.form.get("descricao", "").strip()
-        valor_raw = request.form.get("valor", "").strip()
-        data_lancamento = request.form.get("data_lancamento", "").strip()
-
-        if tipo not in ["Entrada", "Saida"] or not categoria_id or not conta_id or not valor_raw or not data_lancamento:
-            flash("Tipo, categoria, conta, valor e data são obrigatórios.", "danger")
-            return redirect(url_for("inserir_lancamento_financeiro"))
-
-        try:
-            valor = parse_valor_monetario(valor_raw)
-        except ValueError:
-            flash("Informe um valor válido.", "danger")
-            return redirect(url_for("inserir_lancamento_financeiro"))
-
-        if valor < 0:
-            flash("Valor não pode ser negativo.", "danger")
-            return redirect(url_for("inserir_lancamento_financeiro"))
+        dados = ler_form_lancamento_financeiro()
+        erro, valor = validar_form_lancamento_financeiro(dados)
+        if erro:
+            flash(erro, "danger")
+            return redirect(request.url)
 
         db_write(
             """
@@ -3477,27 +3545,100 @@ def inserir_lancamento_financeiro():
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
-                tipo,
-                int(categoria_id),
-                int(conta_id),
-                int(membro_id) if membro_id else None,
-                int(fornecedor_id) if fornecedor_id else None,
-                valor_ou_none(descricao),
+                dados["tipo"],
+                int(dados["categoria_id"]),
+                int(dados["conta_id"]),
+                int(dados["membro_id"]) if dados["membro_id"] else None,
+                int(dados["fornecedor_id"]) if dados["fornecedor_id"] else None,
+                valor_ou_none(dados["descricao"]),
                 valor,
-                data_lancamento,
+                dados["data_lancamento"],
                 session.get("usuario_id"),
             ),
         )
         flash("Lançamento financeiro cadastrado com sucesso.", "success")
-        return redirect(url_for("listar_financeiro"))
+        return redirect_destino("listar_financeiro")
 
     return render_template(
         "financeiro/inserir_lancamento.html",
-        categorias=categorias,
-        contas=contas,
-        membros=membros,
-        fornecedores=fornecedores,
+        **contexto_form_lancamento_financeiro(),
+        lancamento=None,
+        titulo_pagina="Novo Lançamento",
+        titulo_form="Cadastrar lançamento",
+        subtitulo_form="Registre entradas ou gastos usando categorias e contas do banco.",
+        texto_botao="Salvar",
+        return_to=request.args.get("next") or url_for("listar_financeiro"),
     )
+
+
+@app.route("/painel/financeiro/movimentacoes/editar/<int:lancamento_id>", methods=["GET", "POST"])
+@app.route("/financeiro/lancamentos/editar/<int:lancamento_id>", methods=["GET", "POST"])
+@login_required
+def editar_lancamento_financeiro(lancamento_id):
+    lancamento = obter_lancamento_financeiro(lancamento_id)
+    if not lancamento:
+        flash("Lançamento financeiro não encontrado.", "danger")
+        return redirect_destino("listar_financeiro")
+
+    if request.method == "POST":
+        dados = ler_form_lancamento_financeiro()
+        erro, valor = validar_form_lancamento_financeiro(dados)
+        if erro:
+            flash(erro, "danger")
+            return redirect(request.url)
+
+        db_write(
+            """
+            UPDATE lancamentos_financeiros
+            SET tipo = %s,
+                categoria_id = %s,
+                conta_id = %s,
+                membro_id = %s,
+                fornecedor_id = %s,
+                descricao = %s,
+                valor = %s,
+                data_lancamento = %s
+            WHERE id = %s
+            """,
+            (
+                dados["tipo"],
+                int(dados["categoria_id"]),
+                int(dados["conta_id"]),
+                int(dados["membro_id"]) if dados["membro_id"] else None,
+                int(dados["fornecedor_id"]) if dados["fornecedor_id"] else None,
+                valor_ou_none(dados["descricao"]),
+                valor,
+                dados["data_lancamento"],
+                lancamento_id,
+            ),
+        )
+        flash("Lançamento financeiro atualizado com sucesso.", "success")
+        return redirect_destino("listar_financeiro")
+
+    return render_template(
+        "financeiro/inserir_lancamento.html",
+        **contexto_form_lancamento_financeiro(),
+        lancamento=lancamento,
+        titulo_pagina="Editar Lançamento",
+        titulo_form="Editar lançamento",
+        subtitulo_form="Atualize a receita ou despesa já registrada no sistema.",
+        texto_botao="Salvar alterações",
+        return_to=request.args.get("next") or url_for("listar_financeiro"),
+    )
+
+
+@app.route("/painel/financeiro/movimentacoes/excluir/<int:lancamento_id>", methods=["POST"])
+@app.route("/financeiro/lancamentos/excluir/<int:lancamento_id>", methods=["POST"])
+@login_required
+def excluir_lancamento_financeiro(lancamento_id):
+    lancamento = obter_lancamento_financeiro(lancamento_id)
+    if not lancamento:
+        flash("Lançamento financeiro não encontrado.", "danger")
+        return redirect_destino("listar_financeiro")
+
+    db_write("DELETE FROM lancamentos_financeiros WHERE id = %s", (lancamento_id,))
+    flash("Lançamento financeiro excluído com sucesso.", "success")
+    return redirect_destino("listar_financeiro")
 
 
 @app.route("/painel/financeiro/cadastros/fornecedores")
@@ -4558,4 +4699,7 @@ def equipe():
 
 
 if __name__ == "__main__":
+    banco_ok, erro_banco = garantir_banco_inicializado()
+    if not banco_ok:
+        raise RuntimeError(f"Falha ao inicializar o banco de dados: {erro_banco}")
     app.run(debug=True)

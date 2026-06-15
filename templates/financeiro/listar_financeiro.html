@@ -75,7 +75,15 @@
                     </td>
                     <td>{{ lancamento.situacao_baixa }}</td>
                     <td class="table-money">{{ lancamento.valor|moeda_br }}</td>
-                    <td><span class="table-muted-action">Sem ações</span></td>
+                    <td>
+                        <div class="action-row" aria-label="Ações do lançamento {{ lancamento.id }}">
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('editar_lancamento_financeiro', lancamento_id=lancamento.id, next=retorno_url) }}">Editar</a>
+                            <form method="post" action="{{ url_for('excluir_lancamento_financeiro', lancamento_id=lancamento.id) }}">
+                                <input type="hidden" name="return_to" value="{{ retorno_url }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger btn-excluir" data-confirm-message="Deseja excluir este lançamento financeiro?">Excluir</button>
+                            </form>
+                        </div>
+                    </td>
                 </tr>
                 {% else %}
                 <tr>
